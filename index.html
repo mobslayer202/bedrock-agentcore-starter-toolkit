@@ -1690,8 +1690,8 @@
 </div>
 <h2 id="from-local-development-to-bedrock-agentcore">🚀 From Local Development to Bedrock AgentCore<a class="headerlink" href="#from-local-development-to-bedrock-agentcore" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># Your existing agent (any framework)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">langgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateGraph</span>
-<span class="c1"># or CrewAI, Autogen, custom logic - doesn&#39;t matter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">strands</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="c1"># or LangGraph, CrewAI, Autogen, custom logic - doesn&#39;t matter</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">my_local_agent</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
     <span class="c1"># Your carefully crafted agent logic</span>
@@ -1708,7 +1708,7 @@
 <span class="n">production_agent</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="c1"># Ready to run on Bedrock AgentCore</span>
 </code></pre></div>
 <p><strong>What you get with Bedrock AgentCore:</strong>
-- ✅ <strong>Keep your agent logic</strong> - Works with LangGraph, CrewAI, Autogen, custom frameworks.
+- ✅ <strong>Keep your agent logic</strong> - Works with Strands, LangGraph, CrewAI, Autogen, custom frameworks.
 - ✅ <strong>Zero infrastructure management</strong> - No servers, containers, or scaling concerns.
 - ✅ <strong>Enterprise-grade platform</strong> - Built-in auth, memory, observability, security.
 - ✅ <strong>Production-ready deployment</strong> - Reliable, scalable, compliant hosting.</p>

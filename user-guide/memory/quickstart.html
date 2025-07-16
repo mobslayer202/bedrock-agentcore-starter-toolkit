@@ -859,13 +859,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-a-memory-with-long-term-memory" class="md-nav__link">
+  <a href="#long-term-memory" class="md-nav__link">
     <span class="md-ellipsis">
-      Create a Memory with Long-term Memory
+      Long-term Memory
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Create a Memory with Long-term Memory">
+    <nav class="md-nav" aria-label="Long-term Memory">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1788,13 +1788,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-a-memory-with-long-term-memory" class="md-nav__link">
+  <a href="#long-term-memory" class="md-nav__link">
     <span class="md-ellipsis">
-      Create a Memory with Long-term Memory
+      Long-term Memory
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Create a Memory with Long-term Memory">
+    <nav class="md-nav" aria-label="Long-term Memory">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1985,7 +1985,7 @@
     <span class="n">max_results</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
-<h2 id="create-a-memory-with-long-term-memory">Create a Memory with Long-term Memory<a class="headerlink" href="#create-a-memory-with-long-term-memory" title="Permanent link">&para;</a></h2>
+<h2 id="long-term-memory">Long-term Memory<a class="headerlink" href="#long-term-memory" title="Permanent link">&para;</a></h2>
 <h3 id="create-memory-with-long-term-memory">Create Memory with Long-term Memory<a class="headerlink" href="#create-memory-with-long-term-memory" title="Permanent link">&para;</a></h3>
 <p>With long-term memory, you can extract and store information from conversations for future use. When you add long-term memory, you can use one of the following strategies:</p>
 <ul>
@@ -1999,7 +1999,7 @@
 <p><strong>Session Summaries (SummaryMemoryStrategy)</strong>: Creates condensed representations of interaction content and outcomes. These summaries provide quick reference points for past activities and help optimize context window usage for future interactions.</p>
 </li>
 </ul>
-<p>To create a memory resource with long-term memory, use the create_memory_and_wait method with a strategy. Long-term memory takes 2-3 minutes to become ACTIVE:</p>
+<p>To create a memory resource with long-term memory, use the create_memory_and_wait method with a strategy. When you add a memory strategy for the first time to a memory resource (either on create or update), it may take 2-3 minutes for it to become ACTIVE:</p>
 <div class="highlight"><pre><span></span><code><span class="n">memory</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">create_memory_and_wait</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;MyAgentMemory&quot;</span><span class="p">,</span>
     <span class="n">strategies</span><span class="o">=</span><span class="p">[{</span>
@@ -2007,7 +2007,7 @@
             <span class="c1"># Name of the extraction model/strategy</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SessionSummarizer&quot;</span><span class="p">,</span>
             <span class="c1"># Organize facts by session ID for easy retrieval</span>
-            <span class="c1"># Example: &quot;summaries/session123&quot; contains summary of session123</span>
+            <span class="c1"># Example: &quot;summaries/User84/session123&quot; contains summary of session123</span>
             <span class="s2">&quot;namespaces&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/summaries/</span><span class="si">{actorId}</span><span class="s2">/</span><span class="si">{sessionId}</span><span class="s2">&quot;</span><span class="p">]</span>
         <span class="p">}</span>
     <span class="p">}]</span>

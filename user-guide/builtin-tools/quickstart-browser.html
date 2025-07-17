@@ -79,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started-with-browser-sandbox" class="md-skip">
+        <a href="#getting-started-with-browser" class="md-skip">
           Skip to content
         </a>
       
@@ -965,18 +965,51 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#interact-with-web-applications" class="md-nav__link">
+  <a href="#integration-examples" class="md-nav__link">
     <span class="md-ellipsis">
-      Interact with Web Applications
+      Integration Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-browser-automation-with-nova-act" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: Browser Automation with Nova Act
     </span>
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-browser-tool-with-strands-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 2: Browser Tool with Strands Framework
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-using-playwright-for-browser-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 3: Using Playwright for Browser Control
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#browser-agent-integration" class="md-nav__link">
+  <a href="#browser-tool-architecture" class="md-nav__link">
     <span class="md-ellipsis">
-      Browser Agent Integration
+      Browser Tool Architecture
     </span>
   </a>
   
@@ -1602,18 +1635,51 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#interact-with-web-applications" class="md-nav__link">
+  <a href="#integration-examples" class="md-nav__link">
     <span class="md-ellipsis">
-      Interact with Web Applications
+      Integration Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-browser-automation-with-nova-act" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: Browser Automation with Nova Act
     </span>
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-browser-tool-with-strands-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 2: Browser Tool with Strands Framework
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-using-playwright-for-browser-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 3: Using Playwright for Browser Control
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#browser-agent-integration" class="md-nav__link">
+  <a href="#browser-tool-architecture" class="md-nav__link">
     <span class="md-ellipsis">
-      Browser Agent Integration
+      Browser Tool Architecture
     </span>
   </a>
   
@@ -1647,10 +1713,10 @@
   
 
 
-<h1 id="getting-started-with-browser-sandbox">Getting Started with Browser Sandbox<a class="headerlink" href="#getting-started-with-browser-sandbox" title="Permanent link">&para;</a></h1>
-<p>The Amazon Bedrock AgentCore Browser Sandbox provides a secure environment for interacting with web applications. This guide will help you get started with implementing browser automation in your agent applications.</p>
+<h1 id="getting-started-with-browser">Getting Started with Browser<a class="headerlink" href="#getting-started-with-browser" title="Permanent link">&para;</a></h1>
+<p>The Amazon Bedrock AgentCore Browser provides a secure, managed environment for web browsing and automation. This guide will help you implement powerful browser capabilities in your agent applications.</p>
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
-<p>Before using the browser sandbox, ensure you have:</p>
+<p>Before using the browser tool, ensure you have:</p>
 <ul>
 <li>An AWS account with appropriate permissions</li>
 <li>Python 3.10+ installed</li>
@@ -1659,7 +1725,7 @@
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>bedrock-agentcore
 </code></pre></div>
 <h2 id="create-a-browser-session">Create a Browser Session<a class="headerlink" href="#create-a-browser-session" title="Permanent link">&para;</a></h2>
-<p>The bedrock-agentcore SDK provides a convenient way to create browser sessions using the managed browser <code>aws.browser.v1</code>:</p>
+<p>The bedrock-agentcore SDK provides a convenient way to create browser sessions:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
 
 <span class="c1"># Create a browser session using the context manager</span>
@@ -1667,9 +1733,15 @@
     <span class="c1"># The session_id is automatically generated</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session ID: </span><span class="si">{</span><span class="n">client</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+    <span class="c1"># Generate WebSocket URL and headers for connecting automation frameworks</span>
+    <span class="n">websocket_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
+
+    <span class="c1"># Use these to connect your preferred browser automation tool</span>
+    <span class="c1"># (See examples below)</span>
+
 <span class="c1"># The session is automatically closed when exiting the context manager</span>
 </code></pre></div>
-<p>If you need more control over the session lifecycle, you can also use the client without a context manager:</p>
+<p>For more control over the session lifecycle:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserClient</span>
 
 <span class="c1"># Create a browser client</span>
@@ -1683,128 +1755,177 @@
     <span class="c1"># Generate WebSocket URL and headers</span>
     <span class="n">url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
 
-    <span class="c1"># Perform browser operations...</span>
+    <span class="c1"># Perform browser operations with your preferred automation tool</span>
 
 <span class="k">finally</span><span class="p">:</span>
     <span class="c1"># Always close the session when done</span>
     <span class="n">client</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 </code></pre></div>
-<h2 id="interact-with-web-applications">Interact with Web Applications<a class="headerlink" href="#interact-with-web-applications" title="Permanent link">&para;</a></h2>
-<p>Use the <code>browser-use</code> library to interact with web applications:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">browser_use</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserUse</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-
-<span class="c1"># Create a browser session</span>
-<span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-    <span class="c1"># Generate WebSocket URL and headers</span>
-    <span class="n">websocket_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
-
-    <span class="c1"># Connect to the browser using the WebSocket URL</span>
-    <span class="n">browser</span> <span class="o">=</span> <span class="n">BrowserUse</span><span class="p">(</span><span class="n">websocket_url</span><span class="o">=</span><span class="n">websocket_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
-    <span class="n">browser</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="c1"># Navigate to a website</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Navigating to AWS website...&quot;</span><span class="p">)</span>
-        <span class="n">browser</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;https://aws.amazon.com&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Wait for page to load</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-
-        <span class="c1"># Take a screenshot</span>
-        <span class="n">screenshot</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">()</span>
-
-        <span class="c1"># Save screenshot to file (optional)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;screenshot.png&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">screenshot</span><span class="p">)</span>
-
-        <span class="c1"># Click on a link</span>
-        <span class="n">browser</span><span class="o">.</span><span class="n">click</span><span class="p">(</span><span class="s2">&quot;Products&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Wait for page to load</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-
-        <span class="c1"># Type in a search box</span>
-        <span class="n">browser</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="s2">&quot;input[name=&#39;searchField&#39;]&quot;</span><span class="p">,</span> <span class="s2">&quot;Lambda&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Press Enter</span>
-        <span class="n">browser</span><span class="o">.</span><span class="n">press</span><span class="p">(</span><span class="s2">&quot;Enter&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Wait for search results</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-
-        <span class="c1"># Extract text from the page</span>
-        <span class="n">page_text</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Page text:&quot;</span><span class="p">,</span> <span class="n">page_text</span><span class="p">[:</span><span class="mi">200</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>  <span class="c1"># Print first 200 characters</span>
-
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="c1"># Always disconnect when done</span>
-        <span class="n">browser</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
-</code></pre></div>
-<h2 id="browser-agent-integration">Browser Agent Integration<a class="headerlink" href="#browser-agent-integration" title="Permanent link">&para;</a></h2>
-<p>Here's a complete example of how to integrate the browser sandbox with an agent to perform browser actions through natural language:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<h2 id="integration-examples">Integration Examples<a class="headerlink" href="#integration-examples" title="Permanent link">&para;</a></h2>
+<h3 id="example-1-browser-automation-with-nova-act">Example 1: Browser Automation with Nova Act<a class="headerlink" href="#example-1-browser-automation-with-nova-act" title="Permanent link">&para;</a></h3>
+<p>You can build a browser agent using Nova Act to automate web interactions:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">browser_use</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">langchain_aws</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatBedrockConverse</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">browser_use.browser</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserProfile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">browser_use.browser.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nova_act</span><span class="w"> </span><span class="kn">import</span> <span class="n">NovaAct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span>
 
+<span class="n">NOVA_ACT_API_KEY</span> <span class="o">=</span> <span class="s2">&quot;YOUR_NOVA_ACT_API_KEY&quot;</span>
 
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">demo</span><span class="p">():</span>
-    <span class="c1"># Create ChatBedrockConverse once</span>
-    <span class="n">bedrock_chat</span> <span class="o">=</span> <span class="n">ChatBedrockConverse</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;us.anthropic.claude-3-7-sonnet-20250219-v1:0&quot;</span><span class="p">,</span>
-        <span class="n">region_name</span><span class="o">=</span><span class="s2">&quot;us-west-2&quot;</span>
-    <span class="p">)</span>
+<span class="n">console</span> <span class="o">=</span> <span class="n">Console</span><span class="p">()</span>
 
-    <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-        <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
-        <span class="c1"># Create browser profile with headers</span>
-        <span class="n">browser_profile</span> <span class="o">=</span> <span class="n">BrowserProfile</span><span class="p">(</span>
-            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-            <span class="n">timeout</span><span class="o">=</span><span class="mi">600000</span><span class="p">,</span>  <span class="c1"># 600 seconds timeout</span>
-        <span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Step 1: Create browser session</span>
+        <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">   ✅ Browser ready!                    &quot;</span><span class="p">)</span>
+            <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
 
-        <span class="c1"># Create a browser session with CDP URL and keep_alive=True for persistence</span>
-        <span class="n">session</span> <span class="o">=</span> <span class="n">BrowserSession</span><span class="p">(</span>
-            <span class="n">cdp_url</span><span class="o">=</span><span class="n">ws_url</span><span class="p">,</span>
-            <span class="n">browser_profile</span><span class="o">=</span><span class="n">browser_profile</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="c1"># Step 2: Use Nova Act to interact with the browser</span>
+            <span class="k">with</span> <span class="n">NovaAct</span><span class="p">(</span>
+                    <span class="n">cdp_endpoint_url</span><span class="o">=</span><span class="n">ws_url</span><span class="p">,</span>
+                    <span class="n">cdp_headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                    <span class="n">preview</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;playwright_actuation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                    <span class="n">nova_act_api_key</span><span class="o">=</span><span class="n">NOVA_ACT_API_KEY</span><span class="p">,</span>
+                    <span class="n">starting_page</span><span class="o">=</span><span class="s2">&quot;https://www.amazon.com&quot;</span><span class="p">,</span>
+                <span class="p">)</span> <span class="k">as</span> <span class="n">nova_act</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">nova_act</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="s2">&quot;Search for coffee maker and get the details of the lowest priced one on the first page&quot;</span><span class="p">)</span>
+                    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[bold green]Nova Act Result:[/bold green] </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Use BrowserUse with the existing browser session</span>
-        <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-            <span class="n">task</span><span class="o">=</span><span class="s2">&quot;Goto amazon.com and search for coffee makers, take a screenshot and store it in the current directory&quot;</span><span class="p">,</span>
-            <span class="n">llm</span><span class="o">=</span><span class="n">bedrock_chat</span><span class="p">,</span>  <span class="c1"># Specify your LLM</span>
-            <span class="n">browser_session</span><span class="o">=</span><span class="n">session</span>
-        <span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[yellow]Shutting down...[/yellow]&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;client&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Browser session terminated&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">[/red]&quot;</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">demo</span><span class="p">())</span>
+    <span class="n">main</span><span class="p">()</span>
 </code></pre></div>
-<p>This example demonstrates:</p>
-<ol>
-<li>Creating a browser session using the <code>browser_session</code> context manager</li>
-<li>Generating WebSocket URL and headers for browser interaction</li>
-<li>Processing natural language commands</li>
-<li>Handling various browser actions like navigation, clicking, typing, and taking screenshots</li>
-<li>Proper cleanup of resources when done</li>
-</ol>
-<p>You can extend this example to integrate with your own agent framework, adding more sophisticated command parsing and error handling as needed.</p>
+<h3 id="example-2-browser-tool-with-strands-framework">Example 2: Browser Tool with Strands Framework<a class="headerlink" href="#example-2-browser-tool-with-strands-framework" title="Permanent link">&para;</a></h3>
+<p>You can build an agent that uses the Browser Tool as one of its tools using the Strands framework:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">strands</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">tool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nova_act</span><span class="w"> </span><span class="kn">import</span> <span class="n">NovaAct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">browser_viewer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserViewerServer</span>
+
+<span class="c1"># Constants</span>
+<span class="n">NOVA_ACT_API_KEY</span> <span class="o">=</span> <span class="s2">&quot;YOUR_NOVA_ACT_API_KEY&quot;</span>
+
+<span class="nd">@tool</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">browser_automation_tool</span><span class="p">(</span><span class="n">starting_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">instr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Automates browser tasks starting from a given URL based on natural language instructions.</span>
+<span class="sd">    Supports parallel execution and can handle moderately complex tasks with some reasoning.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        starting_url (str): The initial URL to open in the browser.</span>
+<span class="sd">        instr (str): A natural language instruction describing the task to be automated.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The result of the action performed in the browser.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+
+        <span class="c1"># Retrieve CDP WebSocket URL and headers for control</span>
+        <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
+
+        <span class="c1"># Use a random port to avoid conflicts</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">8000</span><span class="p">,</span> <span class="mi">9000</span><span class="p">)</span>
+
+        <span class="c1"># Start the browser viewer server (optional GUI)</span>
+        <span class="n">viewer</span> <span class="o">=</span> <span class="n">BrowserViewerServer</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+        <span class="n">viewer_url</span> <span class="o">=</span> <span class="n">viewer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">open_browser</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Viewer started at: </span><span class="si">{</span><span class="n">viewer_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">NovaAct</span><span class="p">(</span>
+                <span class="n">cdp_endpoint_url</span><span class="o">=</span><span class="n">ws_url</span><span class="p">,</span>
+                <span class="n">cdp_headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                <span class="n">preview</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;playwright_actuation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                <span class="n">nova_act_api_key</span><span class="o">=</span><span class="n">NOVA_ACT_API_KEY</span><span class="p">,</span>
+                <span class="n">starting_page</span><span class="o">=</span><span class="n">starting_url</span><span class="p">,</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">nova_act</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">nova_act</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">instr</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Failed to perform browser automation: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+
+<span class="c1"># Initialize the supervisor agent with available tools</span>
+<span class="n">supervisor_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">browser_automation_tool</span><span class="p">])</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Example task for the agent</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    I have the following tasks. Feel free to run them in parallel if it improves performance.</span>
+<span class="s2">    If a CAPTCHA is encountered, instruct the browser tool to wait for manual resolution.</span>
+
+<span class="s2">    1. Get the top 1 current market gainer and loser from Yahoo Finance.</span>
+<span class="s2">    2. Fetch the most recent news about these gainer and loser stocks.</span>
+<span class="s2">    3. Generate a short report for both the gainer and the loser.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">supervisor_agent</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="example-3-using-playwright-for-browser-control">Example 3: Using Playwright for Browser Control<a class="headerlink" href="#example-3-using-playwright-for-browser-control" title="Permanent link">&para;</a></h3>
+<p>You can use the Playwright automation framework with the Browser Tool:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span><span class="p">,</span> <span class="n">Playwright</span><span class="p">,</span> <span class="n">BrowserType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">browser_viewer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserViewerServer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">playwright</span><span class="p">:</span> <span class="n">Playwright</span><span class="p">):</span>
+    <span class="c1"># Create the browser session and keep it alive</span>
+    <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
+
+        <span class="c1"># Start viewer server</span>
+        <span class="n">viewer</span> <span class="o">=</span> <span class="n">BrowserViewerServer</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8005</span><span class="p">)</span>
+        <span class="n">viewer_url</span> <span class="o">=</span> <span class="n">viewer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">open_browser</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Connect using headers</span>
+        <span class="n">chromium</span><span class="p">:</span> <span class="n">BrowserType</span> <span class="o">=</span> <span class="n">playwright</span><span class="o">.</span><span class="n">chromium</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">chromium</span><span class="o">.</span><span class="n">connect_over_cdp</span><span class="p">(</span>
+            <span class="n">ws_url</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
+        <span class="p">)</span>
+
+        <span class="n">context</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;https://amazon.com/&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">title</span><span class="p">())</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">playwright</span><span class="p">:</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">playwright</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="browser-tool-architecture">Browser Tool Architecture<a class="headerlink" href="#browser-tool-architecture" title="Permanent link">&para;</a></h2>
+<p>The AWS Browser Tool provides:</p>
+<ul>
+<li><strong>Fully managed browser environment</strong> running in the AWS cloud</li>
+<li><strong>WebSocket-based CDP interface</strong> for browser control</li>
+<li><strong>Integration with popular automation frameworks</strong> like Playwright, Puppeteer, and NovaAct</li>
+<li><strong>Security and isolation</strong> between browser sessions</li>
+</ul>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
-<p>To get the most out of the browser sandbox:</p>
+<p>To get the most out of the browser tool:</p>
 <ol>
-<li><strong>Use context managers</strong>: The <code>browser_session</code> context manager ensures proper cleanup</li>
-<li><strong>Handle errors gracefully</strong>: Always include proper error handling and cleanup</li>
-<li><strong>Implement timeouts</strong>: Add appropriate waits for page loading and element interactions</li>
-<li><strong>Secure credentials</strong>: Never hardcode sensitive information in your browser automation code</li>
-<li><strong>Disconnect properly</strong>: Always disconnect from the browser when done</li>
+<li><strong>Use context managers</strong> for proper resource cleanup</li>
+<li><strong>Handle exceptions properly</strong> to ensure browser sessions are closed</li>
+<li><strong>Consider performance</strong> when making multiple browser requests</li>
+<li><strong>Secure sensitive data</strong> - never hardcode credentials in browser automation code</li>
+<li><strong>Use appropriate timeouts</strong> for network and page load operations</li>
+<li><strong>Add error recovery</strong> for common browser automation challenges</li>
 </ol>
 
 

@@ -23,7 +23,7 @@
 
     
       
-        <title>Quickstart Browser Sandbox - Amazon Bedrock AgentCore</title>
+        <title>Quickstart Browser Tool - Amazon Bedrock AgentCore</title>
       
     
     
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Quickstart Browser Sandbox
+              Quickstart Browser Tool
             
           </span>
         </div>
@@ -900,7 +900,7 @@
   
   
   <span class="md-ellipsis">
-    Quickstart Browser Sandbox
+    Quickstart Browser Tool
     
   </span>
   
@@ -913,7 +913,7 @@
   
   
   <span class="md-ellipsis">
-    Quickstart Browser Sandbox
+    Quickstart Browser Tool
     
   </span>
   
@@ -981,23 +981,44 @@
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Example 1: Browser Automation with Nova Act">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-2-browser-tool-with-strands-framework" class="md-nav__link">
+  <a href="#install-dependencies" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Browser Tool with Strands Framework
+      Install dependencies
     </span>
   </a>
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
           <li class="md-nav__item">
-  <a href="#example-3-using-playwright-for-browser-control" class="md-nav__link">
+  <a href="#example-2-using-playwright-for-browser-control" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 3: Using Playwright for Browser Control
+      Example 2: Using Playwright for Browser Control
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Example 2: Using Playwright for Browser Control">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-dependencies_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install dependencies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1651,23 +1672,44 @@
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Example 1: Browser Automation with Nova Act">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#example-2-browser-tool-with-strands-framework" class="md-nav__link">
+  <a href="#install-dependencies" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Browser Tool with Strands Framework
+      Install dependencies
     </span>
   </a>
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
           <li class="md-nav__item">
-  <a href="#example-3-using-playwright-for-browser-control" class="md-nav__link">
+  <a href="#example-2-using-playwright-for-browser-control" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 3: Using Playwright for Browser Control
+      Example 2: Using Playwright for Browser Control
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Example 2: Using Playwright for Browser Control">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-dependencies_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install dependencies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1745,7 +1787,7 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserClient</span>
 
 <span class="c1"># Create a browser client</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">BrowserClient</span><span class="p">(</span><span class="n">region_name</span><span class="o">=</span><span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">BrowserClient</span><span class="p">(</span><span class="n">region</span><span class="o">=</span><span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span>
 
 <span class="c1"># Start a browser session</span>
 <span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -1763,7 +1805,10 @@
 </code></pre></div>
 <h2 id="integration-examples">Integration Examples<a class="headerlink" href="#integration-examples" title="Permanent link">&para;</a></h2>
 <h3 id="example-1-browser-automation-with-nova-act">Example 1: Browser Automation with Nova Act<a class="headerlink" href="#example-1-browser-automation-with-nova-act" title="Permanent link">&para;</a></h3>
-<p>You can build a browser agent using Nova Act to automate web interactions:</p>
+<h5 id="install-dependencies">Install dependencies<a class="headerlink" href="#install-dependencies" title="Permanent link">&para;</a></h5>
+<p><div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>nova-act
+</code></pre></div>
+You can build a browser agent using Nova Act to automate web interactions:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">nova_act</span><span class="w"> </span><span class="kn">import</span> <span class="n">NovaAct</span>
@@ -1776,7 +1821,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># Step 1: Create browser session</span>
-        <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">   ✅ Browser ready!                    &quot;</span><span class="p">)</span>
             <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
 
@@ -1804,110 +1849,73 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </code></pre></div>
-<h3 id="example-2-browser-tool-with-strands-framework">Example 2: Browser Tool with Strands Framework<a class="headerlink" href="#example-2-browser-tool-with-strands-framework" title="Permanent link">&para;</a></h3>
-<p>You can build an agent that uses the Browser Tool as one of its tools using the Strands framework:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">strands</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">tool</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">nova_act</span><span class="w"> </span><span class="kn">import</span> <span class="n">NovaAct</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">browser_viewer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserViewerServer</span>
-
-<span class="c1"># Constants</span>
-<span class="n">NOVA_ACT_API_KEY</span> <span class="o">=</span> <span class="s2">&quot;YOUR_NOVA_ACT_API_KEY&quot;</span>
-
-<span class="nd">@tool</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">browser_automation_tool</span><span class="p">(</span><span class="n">starting_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">instr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Automates browser tasks starting from a given URL based on natural language instructions.</span>
-<span class="sd">    Supports parallel execution and can handle moderately complex tasks with some reasoning.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        starting_url (str): The initial URL to open in the browser.</span>
-<span class="sd">        instr (str): A natural language instruction describing the task to be automated.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        str: The result of the action performed in the browser.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-
-        <span class="c1"># Retrieve CDP WebSocket URL and headers for control</span>
-        <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
-
-        <span class="c1"># Use a random port to avoid conflicts</span>
-        <span class="n">port</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">8000</span><span class="p">,</span> <span class="mi">9000</span><span class="p">)</span>
-
-        <span class="c1"># Start the browser viewer server (optional GUI)</span>
-        <span class="n">viewer</span> <span class="o">=</span> <span class="n">BrowserViewerServer</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
-        <span class="n">viewer_url</span> <span class="o">=</span> <span class="n">viewer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">open_browser</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Viewer started at: </span><span class="si">{</span><span class="n">viewer_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">NovaAct</span><span class="p">(</span>
-                <span class="n">cdp_endpoint_url</span><span class="o">=</span><span class="n">ws_url</span><span class="p">,</span>
-                <span class="n">cdp_headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-                <span class="n">preview</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;playwright_actuation&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-                <span class="n">nova_act_api_key</span><span class="o">=</span><span class="n">NOVA_ACT_API_KEY</span><span class="p">,</span>
-                <span class="n">starting_page</span><span class="o">=</span><span class="n">starting_url</span><span class="p">,</span>
-            <span class="p">)</span> <span class="k">as</span> <span class="n">nova_act</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="n">nova_act</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">instr</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">result</span>
-
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ERROR] Failed to perform browser automation: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span>
-
-
-<span class="c1"># Initialize the supervisor agent with available tools</span>
-<span class="n">supervisor_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">browser_automation_tool</span><span class="p">])</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="c1"># Example task for the agent</span>
-    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    I have the following tasks. Feel free to run them in parallel if it improves performance.</span>
-<span class="s2">    If a CAPTCHA is encountered, instruct the browser tool to wait for manual resolution.</span>
-
-<span class="s2">    1. Get the top 1 current market gainer and loser from Yahoo Finance.</span>
-<span class="s2">    2. Fetch the most recent news about these gainer and loser stocks.</span>
-<span class="s2">    3. Generate a short report for both the gainer and the loser.</span>
-<span class="s2">    &quot;&quot;&quot;</span>
-    <span class="n">supervisor_agent</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+<h3 id="example-2-using-playwright-for-browser-control">Example 2: Using Playwright for Browser Control<a class="headerlink" href="#example-2-using-playwright-for-browser-control" title="Permanent link">&para;</a></h3>
+<h5 id="install-dependencies_1">Install dependencies<a class="headerlink" href="#install-dependencies_1" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>playwright
 </code></pre></div>
-<h3 id="example-3-using-playwright-for-browser-control">Example 3: Using Playwright for Browser Control<a class="headerlink" href="#example-3-using-playwright-for-browser-control" title="Permanent link">&para;</a></h3>
 <p>You can use the Playwright automation framework with the Browser Tool:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span><span class="p">,</span> <span class="n">Playwright</span><span class="p">,</span> <span class="n">BrowserType</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span><span class="p">,</span> <span class="n">Playwright</span><span class="p">,</span> <span class="n">BrowserType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.tools.browser_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">browser_session</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">browser_viewer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserViewerServer</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">playwright</span><span class="p">:</span> <span class="n">Playwright</span><span class="p">):</span>
-    <span class="c1"># Create the browser session and keep it alive</span>
-    <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">capture_cdp_screenshot</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="n">filename_prefix</span><span class="o">=</span><span class="s2">&quot;screenshot&quot;</span><span class="p">,</span> <span class="n">image_format</span><span class="o">=</span><span class="s2">&quot;jpeg&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Capture a screenshot using the CDP API and save to file.&quot;&quot;&quot;</span>
+    <span class="n">cdp_client</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_cdp_session</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+    <span class="n">screenshot_data</span> <span class="o">=</span> <span class="n">cdp_client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;Page.captureScreenshot&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="n">image_format</span><span class="p">,</span>
+        <span class="s2">&quot;quality&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+        <span class="s2">&quot;captureBeyondViewport&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">})</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S&quot;</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">image_format</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">screenshot_data</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Screenshot saved: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">filename</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">playwright</span><span class="p">:</span> <span class="n">Playwright</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">browser_session</span><span class="p">(</span><span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;📡 Browser session started... waiting for readiness&quot;</span><span class="p">)</span>
+
         <span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_ws_headers</span><span class="p">()</span>
-
-        <span class="c1"># Start viewer server</span>
-        <span class="n">viewer</span> <span class="o">=</span> <span class="n">BrowserViewerServer</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8005</span><span class="p">)</span>
-        <span class="n">viewer_url</span> <span class="o">=</span> <span class="n">viewer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">open_browser</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># Connect using headers</span>
         <span class="n">chromium</span><span class="p">:</span> <span class="n">BrowserType</span> <span class="o">=</span> <span class="n">playwright</span><span class="o">.</span><span class="n">chromium</span>
-        <span class="n">browser</span> <span class="o">=</span> <span class="n">chromium</span><span class="o">.</span><span class="n">connect_over_cdp</span><span class="p">(</span>
-            <span class="n">ws_url</span><span class="p">,</span>
-            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
-        <span class="p">)</span>
-
-        <span class="n">context</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">chromium</span><span class="o">.</span><span class="n">connect_over_cdp</span><span class="p">(</span><span class="n">ws_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;https://amazon.com/&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">title</span><span class="p">())</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">browser</span><span class="o">.</span><span class="n">contexts</span> <span class="k">else</span> <span class="n">browser</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">pages</span> <span class="k">else</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+
+            <span class="c1"># Step 1: Navigate to Amazon</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🌐 Navigating to Amazon...&quot;</span><span class="p">)</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;https://www.amazon.com&quot;</span><span class="p">,</span> <span class="n">wait_until</span><span class="o">=</span><span class="s2">&quot;domcontentloaded&quot;</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">capture_cdp_screenshot</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;amazon_home&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Step 2: Search for &quot;coffee maker&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🔎 Searching for &#39;coffee maker&#39;...&quot;</span><span class="p">)</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="s2">&quot;input#twotabsearchtextbox&quot;</span><span class="p">,</span> <span class="s2">&quot;coffee maker&quot;</span><span class="p">)</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">keyboard</span><span class="o">.</span><span class="n">press</span><span class="p">(</span><span class="s2">&quot;Enter&quot;</span><span class="p">)</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">wait_for_selector</span><span class="p">(</span><span class="s2">&quot;.s-result-item&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">capture_cdp_screenshot</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="s2">&quot;coffee_maker_results&quot;</span><span class="p">)</span>
+
         <span class="k">finally</span><span class="p">:</span>
-            <span class="n">page</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;🔒 Closing browser session...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">page</span><span class="o">.</span><span class="n">is_closed</span><span class="p">():</span>
+                <span class="n">page</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">playwright</span><span class="p">:</span>
-    <span class="n">run</span><span class="p">(</span><span class="n">playwright</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="browser-tool-architecture">Browser Tool Architecture<a class="headerlink" href="#browser-tool-architecture" title="Permanent link">&para;</a></h2>
 <p>The AWS Browser Tool provides:</p>

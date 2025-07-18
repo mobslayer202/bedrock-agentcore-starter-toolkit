@@ -32,11 +32,13 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         if not self.is_collaborator:
             self.imports_code += """
     from bedrock_agentcore import BedrockAgentCoreApp
-        
+
     app = BedrockAgentCoreApp()"""
 
         # make prompts more readable
-        self.prompts_code = textwrap.fill(self.prompts_code, width=150, break_long_words=False, replace_whitespace=False)
+        self.prompts_code = textwrap.fill(
+            self.prompts_code, width=150, break_long_words=False, replace_whitespace=False
+        )
         self.code_sections = [
             self.imports_code,
             self.models_code,
@@ -145,7 +147,9 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         for i, collaborator in enumerate(self.collaborators):
             collaborator_file_name = f"strands_collaborator_{collaborator.get('collaboratorName', '')}"
             collaborator_path = os.path.join(self.output_dir, f"{collaborator_file_name}.py")
-            BedrockStrandsTranslation(collaborator, debug=self.debug, output_dir=self.output_dir, enabled_primitives=self.enabled_primitives).translate_bedrock_to_strands(collaborator_path)
+            BedrockStrandsTranslation(
+                collaborator, debug=self.debug, output_dir=self.output_dir, enabled_primitives=self.enabled_primitives
+            ).translate_bedrock_to_strands(collaborator_path)
 
             self.imports_code += f"\nfrom {collaborator_file_name} import invoke_agent as invoke_{collaborator.get('collaboratorName', '')}_collaborator"
 
@@ -185,7 +189,9 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             tool_code += code_to_add
             tool_instances.extend(tool_instances_to_add)
 
-        self.single_kb_optimization_enabled = self.single_kb and self.kb_generation_prompt_enabled and not tool_instances
+        self.single_kb_optimization_enabled = (
+            self.single_kb and self.kb_generation_prompt_enabled and not tool_instances
+        )
 
         if self.user_input_enabled:
             tool_code += """
@@ -230,7 +236,9 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             func_name = func.get("name", "")
             clean_func_name = clean_variable_name(func_name)
             func_desc = func.get("description", "").replace('"', '\\"')
-            func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}" + (f" (description: {action_group_desc})" if action_group_desc else "")
+            func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}" + (
+                f" (description: {action_group_desc})" if action_group_desc else ""
+            )
             params = func.get("parameters", {})
             param_list = []
             tool_name = f"{action_group_name}_{clean_func_name}"
@@ -243,7 +251,12 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             spec_code += f"""
     class {model_name}(BaseModel):"""
 
-            params_input = ", ".join([f"{{'name': '{param_name}', 'type': '{param_info.get('type', 'string')}', 'value': {param_name}}}" for param_name, param_info in params.items()])
+            params_input = ", ".join(
+                [
+                    f"{{'name': '{param_name}', 'type': '{param_info.get('type', 'string')}', 'value': {param_name}}}"
+                    for param_name, param_info in params.items()
+                ]
+            )
 
             if params:
                 for param_name, param_info in params.items():
@@ -400,7 +413,9 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     """.format(
                         input_model_name,
                         f"{param_model_name} |" if params else "",
-                        f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")' if content_models else "",
+                        f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
+                        if content_models
+                        else "",
                     )
                 elif params:
                     input_model_name = param_model_name
@@ -425,7 +440,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
                     nested_code = """
         request_body_dump = model_dump.get("request_body", model_dump)
         content_type = request_body_dump.get("content_type_annotation", "*") if request_body_dump else None
-        
+
         request_body = {"content": {content_type: {"properties": []}}}
         for param_name, param_value in request_body_dump.items():
             if param_name != "content_type_annotation":
@@ -561,9 +576,13 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         return _agent
     """.format(
             'last_agent = ""' if self.multi_agent_enabled and self.supervision_type == "SUPERVISOR_ROUTER" else "",
-            "if _agent is None or memory_manager.has_memory_changed():" if self.memory_enabled else "if _agent is None:",
+            "if _agent is None or memory_manager.has_memory_changed():"
+            if self.memory_enabled
+            else "if _agent is None:",
             "memory_synopsis = memory_manager.get_memory_synopsis()" if self.memory_enabled else "",
-            "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)" if self.memory_enabled else "",
+            "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
+            if self.memory_enabled
+            else "",
         )
 
         # Generate routing code if needed
@@ -630,8 +649,8 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         # Combine it all into the invoke_agent function
         agent_code += f"""
     def invoke_agent(question: str{relay_param_def}):
-        {"global last_agent" if self.supervision_type == "SUPERVISOR_ROUTER" else ''}
-        {"global first_turn" if self.single_kb_optimization_enabled else ''}
+        {"global last_agent" if self.supervision_type == "SUPERVISOR_ROUTER" else ""}
+        {"global first_turn" if self.single_kb_optimization_enabled else ""}
         global last_input
         last_input = question
         agent = get_agent()

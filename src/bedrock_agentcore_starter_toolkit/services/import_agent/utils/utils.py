@@ -1,8 +1,8 @@
 """Utilities for Agent Info and Pydantic Model Generation."""
 
 import json
-import re
 import os
+import re
 import secrets
 import textwrap
 from typing import Any, Dict, List, Union
@@ -35,7 +35,6 @@ def fix_field(obj, field=None):
 
 def clean_variable_name(text):
     """Clean a string to create a valid Python variable name. Useful for cleaning Bedrock Agents fields."""
-
     text = str(text)
     cleaned = re.sub(r"[^a-zA-Z0-9\s]", " ", text)
     cleaned = cleaned.lower()
@@ -59,9 +58,10 @@ def unindent_by_one(input_code, spaces_per_indent=4):
     Args:
         input_code (str): The code to unindent.
         spaces_per_indent (int): The number of spaces per indentation level (default is 4).
-    Returns:
-        str: The unindented code."""
 
+    Returns:
+        str: The unindented code.
+    """
     lines = input_code.splitlines(True)  # Keep the line endings
     # Process each line
     unindented = []
@@ -364,8 +364,7 @@ def prune_tool_name(tool_name: str) -> str:
 
 
 def get_template_fixtures(field: str = "orchestrationBasePrompts", group: str = "REACT_MULTI_ACTION") -> dict:
-    """
-    Extract all templateFixtures from a specified field in template_fixtures_merged.json.
+    """Extract all templateFixtures from a specified field in template_fixtures_merged.json.
     For orchestrationBasePrompts, uses the specified group (defaults to REACT_MULTI_ACTION).
 
     Args:
@@ -403,9 +402,7 @@ def get_template_fixtures(field: str = "orchestrationBasePrompts", group: str = 
 
 
 def safe_substitute_placeholders(template_str, substitutions):
-    """
-    Safely substitute placeholders in a string, leaving non-matching placeholders unchanged.
-    """
+    """Safely substitute placeholders in a string, leaving non-matching placeholders unchanged."""
     result = template_str
     for key, value in substitutions.items():
         # Only replace if the key exists in the substitutions dict

@@ -3,8 +3,8 @@ import json
 import os
 
 import boto3
-from ruamel.yaml import YAML  # pylint: disable=import-error # type: ignore
 from prance import ResolvingParser
+from ruamel.yaml import YAML  # pylint: disable=import-error # type: ignore
 
 from .utils import clean_variable_name, fix_field
 
@@ -30,6 +30,7 @@ def get_agents(bedrock_agent_client):
     Args:
         bedrock_client: The Bedrock client.
         bedrock_agent_client: The Bedrock Agent client.
+
     Returns:
         list: A list of dictionaries containing agent information.
     """
@@ -51,6 +52,7 @@ def get_agent_aliases(bedrock_agent_client, agent_id):
         bedrock_client: The Bedrock client.
         bedrock_agent_client: The Bedrock Agent client.
         agent_id (str): The ID of the agent.
+
     Returns:
         list: A list of dictionaries containing alias information for the specified agent.
     """
@@ -73,10 +75,13 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
         agent_alias_id (str): The ID of the agent alias.
         bedrock_client: The Bedrock client.
         bedrock_agent_client: The Bedrock Agent client.
+
     Returns:
         dict: A dictionary containing detailed information about the agent, its alias, action groups, knowledge bases, and collaborators.
     """
-    agent_version = bedrock_agent_client.get_agent_alias(agentId=agent_id, agentAliasId=agent_alias_id)["agentAlias"]["routingConfiguration"][0]["agentVersion"]
+    agent_version = bedrock_agent_client.get_agent_alias(agentId=agent_id, agentAliasId=agent_alias_id)["agentAlias"][
+        "routingConfiguration"
+    ][0]["agentVersion"]
 
     identifier = agent_id
     version = agent_version
@@ -88,7 +93,9 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
     # reduce agent prompt configurations to only the enabled set
     if agentinfo["orchestrationType"] == "DEFAULT":
         agentinfo["promptOverrideConfiguration"]["promptConfigurations"] = [
-            fix_field(config, "basePromptTemplate") for config in agentinfo["promptOverrideConfiguration"]["promptConfigurations"] if config["promptState"] == "ENABLED"
+            fix_field(config, "basePromptTemplate")
+            for config in agentinfo["promptOverrideConfiguration"]["promptConfigurations"]
+            if config["promptState"] == "ENABLED"
         ]
 
     # get agent guardrail information
@@ -109,7 +116,9 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
     agentinfo["alias"] = agent_alias_id
 
     # get agent action groups and lambdas in them
-    action_groups = bedrock_agent_client.list_agent_action_groups(agentId=identifier, agentVersion=version)["actionGroupSummaries"]
+    action_groups = bedrock_agent_client.list_agent_action_groups(agentId=identifier, agentVersion=version)[
+        "actionGroupSummaries"
+    ]
     for action_group in action_groups:
         action_group_info = bedrock_agent_client.get_agent_action_group(
             agentId=identifier,
@@ -138,7 +147,9 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
             action_group["apiSchema"]["payload"] = parser.specification
 
     # get agent knowledge bases
-    knowledge_bases = bedrock_agent_client.list_agent_knowledge_bases(agentId=identifier, agentVersion=version)["agentKnowledgeBaseSummaries"]
+    knowledge_bases = bedrock_agent_client.list_agent_knowledge_bases(agentId=identifier, agentVersion=version)[
+        "agentKnowledgeBaseSummaries"
+    ]
     for knowledge_base in knowledge_bases:
         knowledge_base_info = bedrock_agent_client.get_knowledge_base(
             knowledgeBaseId=knowledge_base["knowledgeBaseId"],
@@ -159,7 +170,9 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
 
     # get agent collaborators and recursively fetch their information
     targets["collaborators"] = []
-    collaborators = bedrock_agent_client.list_agent_collaborators(agentId=agent_id, agentVersion=agent_version)["agentCollaboratorSummaries"]
+    collaborators = bedrock_agent_client.list_agent_collaborators(agentId=agent_id, agentVersion=agent_version)[
+        "agentCollaboratorSummaries"
+    ]
 
     for collaborator in collaborators:
         arn = collaborator["agentDescriptor"]["aliasArn"].split("/")
@@ -168,7 +181,14 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
         if collab_alias_id == agent_alias_id:
             continue
         collaborator_info = get_agent_info(collab_id, collab_alias_id, bedrock_client, bedrock_agent_client)
-        collaborator_info["collaboratorName"] = collaborator["collaboratorName"].replace(" ", "_").replace("-", "_").replace(".", "_").replace(":", "_").replace("/", "_")
+        collaborator_info["collaboratorName"] = (
+            collaborator["collaboratorName"]
+            .replace(" ", "_")
+            .replace("-", "_")
+            .replace(".", "_")
+            .replace(":", "_")
+            .replace("/", "_")
+        )
         collaborator_info["collaborationInstruction"] = collaborator.get("collaborationInstruction", "")
         collaborator_info["relayConversationHistory"] = collaborator.get("relayConversationHistory", "DISABLED")
 
@@ -187,8 +207,10 @@ def auth_and_get_info(agent_id: str, agent_alias_id: str, output_dir: str):
     Args:
         agent_id (str): The ID of the agent.
         agent_alias_id (str): The ID of the agent alias.
+
     Returns:
-        dict: A dictionary containing detailed information about the agent, its alias, action groups, knowledge bases, and collaborators."""
+        dict: A dictionary containing detailed information about the agent, its alias, action groups, knowledge bases, and collaborators.
+    """
     credentials = boto3.Session().get_credentials()
     bedrock_client, bedrock_agent_client = get_clients(credentials)
     output = get_agent_info(agent_id, agent_alias_id, bedrock_client, bedrock_agent_client)

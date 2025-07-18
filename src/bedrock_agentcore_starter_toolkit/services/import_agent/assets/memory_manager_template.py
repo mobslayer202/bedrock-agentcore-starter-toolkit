@@ -68,16 +68,22 @@ class LongTermMemoryManager:
 
     def _generate_session_summary(self) -> str:
         try:
-            conversation_str = "\n\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in self.current_session_messages])
+            conversation_str = "\n\n".join(
+                [f"{msg['role'].capitalize()}: {msg['content']}" for msg in self.current_session_messages]
+            )
 
             past_summaries = "\n".join([summary["summary"] for summary in self.session_summaries])
 
-            summarization_prompt = self.summarization_prompt.replace("$past_conversation_summary$", past_summaries).replace("$conversation$", conversation_str)
+            summarization_prompt = self.summarization_prompt.replace(
+                "$past_conversation_summary$", past_summaries
+            ).replace("$conversation$", conversation_str)
 
             if self.platform == "langchain":
                 summary_response = self.llm_summarizer.invoke(summarization_prompt).content
             else:
-                response = self.llm_summarizer.converse(messages=[{"role": "user", "content": [{"text": summarization_prompt}]}])
+                response = self.llm_summarizer.converse(
+                    messages=[{"role": "user", "content": [{"text": summarization_prompt}]}]
+                )
                 # Handle async generator
                 import asyncio
 
@@ -145,7 +151,12 @@ class LongTermMemoryManager:
             self.session_summaries.append(session_summary)
 
             self.session_summaries = [
-                summary for summary in self.session_summaries if (datetime.fromisoformat(session_summary["timestamp"]) - datetime.fromisoformat(summary["timestamp"])).days <= self.max_days
+                summary
+                for summary in self.session_summaries
+                if (
+                    datetime.fromisoformat(session_summary["timestamp"]) - datetime.fromisoformat(summary["timestamp"])
+                ).days
+                <= self.max_days
             ]
 
             if len(self.session_summaries) > self.max_sessions:

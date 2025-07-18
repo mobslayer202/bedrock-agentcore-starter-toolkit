@@ -33,7 +33,10 @@ def _verify_aws_credentials() -> bool:
     except Exception as e:
         console.print(
             Panel(
-                f"[bold red]AWS credentials are invalid![/bold red]\n" f"Error: {str(e)}\n" f"Please reconfigure your AWS credentials by running:\n" f"[bold]aws configure[/bold]",
+                f"[bold red]AWS credentials are invalid![/bold red]\n"
+                f"Error: {str(e)}\n"
+                f"Please reconfigure your AWS credentials by running:\n"
+                f"[bold]aws configure[/bold]",
                 title="Authentication Error",
                 border_style="red",
             )
@@ -85,10 +88,17 @@ def _agentcore_invoke_cli():
         try:
             os.system("agentcore invoke " + json.dumps({"message": query}))  # nosec
         except Exception as e:
-            console.print(Panel(f"[bold red]Error invoking agent![/bold red]\n" f"Error: {str(e)}", title="Invocation Error", border_style="red"))
+            console.print(
+                Panel(
+                    f"[bold red]Error invoking agent![/bold red]\nError: {str(e)}",
+                    title="Invocation Error",
+                    border_style="red",
+                )
+            )
             continue
 
 
+@app.command()
 def import_agent():
     """Migrate a Bedrock Agent to LangChain or Strands."""
     try:
@@ -121,7 +131,9 @@ def import_agent():
         agents = get_agents(bedrock_agent_client)
 
         if not agents:
-            console.print(Panel("[bold red]No agents found in your account![/bold red]", title="Error", border_style="red"))
+            console.print(
+                Panel("[bold red]No agents found in your account![/bold red]", title="Error", border_style="red")
+            )
             return
 
         # Display agents in a table
@@ -235,12 +247,16 @@ def import_agent():
             "observability": False,
         }
 
-        selected_primitives = questionary.checkbox("Select AgentCore primitives to include:", choices=[option["name"] for option in primitive_options]).ask()
+        selected_primitives = questionary.checkbox(
+            "Select AgentCore primitives to include:", choices=[option["name"] for option in primitive_options]
+        ).ask()
         for option in primitive_options:
             if option["name"] in selected_primitives:
                 primitives_opt_in[option["value"]] = True
 
-        console.print(f"[bold green]✓[/bold green] Selected primitives: {[k for k,v in primitives_opt_in.items() if v]}")
+        console.print(
+            f"[bold green]✓[/bold green] Selected primitives: {[k for k, v in primitives_opt_in.items() if v]}"
+        )
 
         if selected_primitives is None:  # Handle case where user presses Esc
             console.print("\n[yellow]Primitives selection cancelled by user.[/yellow]")
@@ -251,11 +267,15 @@ def import_agent():
             try:
                 if target_platform == "langchain":
                     output_path = os.path.join(output_dir, "langchain_agent.py")
-                    translator = BedrockLangchainTranslation(agent_config, debug=debug, output_dir=output_dir, enabled_primitives=primitives_opt_in)
+                    translator = BedrockLangchainTranslation(
+                        agent_config, debug=debug, output_dir=output_dir, enabled_primitives=primitives_opt_in
+                    )
                     translator.translate_bedrock_to_langchain(output_path)
                 else:  # strands
                     output_path = os.path.join(output_dir, "strands_agent.py")
-                    translator = BedrockStrandsTranslation(agent_config, debug=debug, output_dir=output_dir, enabled_primitives=primitives_opt_in)
+                    translator = BedrockStrandsTranslation(
+                        agent_config, debug=debug, output_dir=output_dir, enabled_primitives=primitives_opt_in
+                    )
                     translator.translate_bedrock_to_strands(output_path)
 
                 console.print(f"[bold green]✓[/bold green] Agent translated to {target_platform}!")
@@ -271,7 +291,9 @@ def import_agent():
                 return
 
         # AgentCore Runtime deployment options
-        deploy_agentcore_runtime = questionary.confirm("Would you like to deploy the agent to AgentCore Runtime? (This will take a few minutes)", default=False).ask()
+        deploy_agentcore_runtime = questionary.confirm(
+            "Would you like to deploy the agent to AgentCore Runtime? (This will take a few minutes)", default=False
+        ).ask()
 
         output_path = os.path.abspath(output_path)
         output_dir = os.path.abspath(output_dir)
@@ -288,7 +310,13 @@ def import_agent():
                 )  # nosec
 
             except Exception as e:
-                console.print(Panel(f"[bold red]Failed to deploy agent to AgentCore Runtime![/bold red]\n" f"Error: {str(e)}", title="Deployment Error", border_style="red"))
+                console.print(
+                    Panel(
+                        f"[bold red]Failed to deploy agent to AgentCore Runtime![/bold red]\nError: {str(e)}",
+                        title="Deployment Error",
+                        border_style="red",
+                    )
+                )
                 return
 
         run_options = ["Run locally", "Don't run now"]
@@ -309,17 +337,31 @@ def import_agent():
     except SystemExit:
         console.print("\n[yellow]Migration process exited.[/yellow]")
     except Exception as e:
-        console.print(Panel(f"[bold red]An unexpected error occurred![/bold red]\n" f"Error: {str(e)}", title="Unexpected Error", border_style="red"))
+        console.print(
+            Panel(
+                f"[bold red]An unexpected error occurred![/bold red]\nError: {str(e)}",
+                title="Unexpected Error",
+                border_style="red",
+            )
+        )
 
     if run_agent_choice == "Run locally":
         _run_agent(output_path)
     elif run_agent_choice == "Run on AgentCore Runtime" and deploy_agentcore_runtime:
-        console.print(Panel("[bold green]Starting AgentCore Runtime interactive CLI...[/bold green]", title="AgentCore Runtime", border_style="green"))
+        console.print(
+            Panel(
+                "[bold green]Starting AgentCore Runtime interactive CLI...[/bold green]",
+                title="AgentCore Runtime",
+                border_style="green",
+            )
+        )
         _agentcore_invoke_cli()
     else:
         console.print(
             Panel(
-                f"[bold green]Migration completed successfully![/bold green]\n" f"You can run your agent later with:\n" f"[bold]python {output_path}[/bold]",
+                f"[bold green]Migration completed successfully![/bold green]\n"
+                f"You can run your agent later with:\n"
+                f"[bold]python {output_path}[/bold]",
                 title="Migration Complete",
                 border_style="green",
             )

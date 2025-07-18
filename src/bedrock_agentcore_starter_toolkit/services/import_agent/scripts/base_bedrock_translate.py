@@ -35,7 +35,8 @@ class BaseBedrockTranslator:
 
         # AgentCore
         self.enabled_primitives = enabled_primitives
-        self.gateway_enabled = enabled_primitives.get("gateway", False)
+        # gateway currently not supported
+        # self.gateway_enabled = enabled_primitives.get("gateway", False)
         self.agentcore_memory_enabled = enabled_primitives.get("memory", False)
         self.observability_enabled = enabled_primitives.get("observability", False)
         self.code1p = enabled_primitives.get("code_interpreter", False)

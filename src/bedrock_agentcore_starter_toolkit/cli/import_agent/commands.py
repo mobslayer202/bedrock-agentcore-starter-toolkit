@@ -74,16 +74,16 @@ def _run_agent(output_path):
         )
 
 
-def _genesis_invoke_cli():
+def _agentcore_invoke_cli():
     """Run the generated agent."""
     while True:
         query = input("\nEnter your query (or type 'exit' to quit): ")
         if query.lower() == "exit":
-            console.print("\n[yellow]Exiting Genesis CLI...[/yellow]")
+            console.print("\n[yellow]Exiting AgentCore CLI...[/yellow]")
             break
 
         try:
-            os.system("genesis invoke " + json.dumps({"message": query}))  # nosec
+            os.system("agentcore invoke " + json.dumps({"message": query}))  # nosec
         except Exception as e:
             console.print(Panel(f"[bold red]Error invoking agent![/bold red]\n" f"Error: {str(e)}", title="Invocation Error", border_style="red"))
             continue
@@ -100,7 +100,7 @@ def import_agent():
         console.print(
             Panel(
                 Text("Bedrock Agent Translation Tool", style="bold cyan"),
-                subtitle="Convert your Bedrock Agent to LangChain/Strands code with Genesis Primitives",
+                subtitle="Convert your Bedrock Agent to LangChain/Strands code with AgentCore Primitives",
                 border_style="cyan",
             )
         )
@@ -221,21 +221,21 @@ def import_agent():
 
         # Ask about primitives to opt into
         primitive_options = [
-            {"name": "Genesis Gateway (Tools for your agent)", "value": "gateway"},
-            {"name": "Genesis Memory (Maintain conversation context)", "value": "memory"},
-            {"name": "Genesis Code Interpreter (Run code in your agent)", "value": "code_interpreter"},
-            {"name": "Genesis Observability (Logging and monitoring)", "value": "observability"},
+            # {"name": "AgentCore Gateway (Tools for your agent)", "value": "gateway"},
+            {"name": "AgentCore Memory (Maintain conversation context)", "value": "memory"},
+            {"name": "AgentCore Code Interpreter (Run code in your agent)", "value": "code_interpreter"},
+            {"name": "AgentCore Observability (Logging and monitoring)", "value": "observability"},
         ]
 
-        # Default to all Genesis primitives enabled
+        # Default to all AgentCore primitives enabled
         primitives_opt_in = {
-            "gateway": False,
+            # "gateway": False,
             "memory": False,
             "code_interpreter": False,
             "observability": False,
         }
 
-        selected_primitives = questionary.checkbox("Select Genesis primitives to include:", choices=[option["name"] for option in primitive_options]).ask()
+        selected_primitives = questionary.checkbox("Select AgentCore primitives to include:", choices=[option["name"] for option in primitive_options]).ask()
         for option in primitive_options:
             if option["name"] in selected_primitives:
                 primitives_opt_in[option["value"]] = True
@@ -270,31 +270,31 @@ def import_agent():
                 )
                 return
 
-        # Genesis Runtime deployment options
-        deploy_genesis_runtime = questionary.confirm("Would you like to deploy the agent to Genesis Runtime? (This will take a few minutes)", default=False).ask()
+        # AgentCore Runtime deployment options
+        deploy_agentcore_runtime = questionary.confirm("Would you like to deploy the agent to AgentCore Runtime? (This will take a few minutes)", default=False).ask()
 
         output_path = os.path.abspath(output_path)
         output_dir = os.path.abspath(output_dir)
 
-        if deploy_genesis_runtime is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Genesis Runtime deployment selection cancelled by user.[/yellow]")
+        if deploy_agentcore_runtime is None:  # Handle case where user presses Esc
+            console.print("\n[yellow]AgentCore Runtime deployment selection cancelled by user.[/yellow]")
 
-        if deploy_genesis_runtime:
+        if deploy_agentcore_runtime:
             try:
                 agent_name = f"agent_{uuid.uuid4().hex[:8].lower()}"
-                console.print("[bold]  \nDeploying agent to Genesis Runtime...\n[/bold]")
+                console.print("[bold]  \nDeploying agent to AgentCore Runtime...\n[/bold]")
                 os.system(
-                    f"cd {output_dir} && genesis configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && genesis configure set-default '{agent_name}' && genesis launch"  # nosec
+                    f"cd {output_dir} && agentcore configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && agentcore configure set-default '{agent_name}' && agentcore launch"  # nosec
                 )  # nosec
 
             except Exception as e:
-                console.print(Panel(f"[bold red]Failed to deploy agent to Genesis Runtime![/bold red]\n" f"Error: {str(e)}", title="Deployment Error", border_style="red"))
+                console.print(Panel(f"[bold red]Failed to deploy agent to AgentCore Runtime![/bold red]\n" f"Error: {str(e)}", title="Deployment Error", border_style="red"))
                 return
 
         run_options = ["Run locally", "Don't run now"]
 
-        if deploy_genesis_runtime:
-            run_options.insert(1, "Run on Genesis Runtime")
+        if deploy_agentcore_runtime:
+            run_options.insert(1, "Run on AgentCore Runtime")
 
         run_agent_choice = questionary.select(
             "How would you like to run the agent?",
@@ -313,9 +313,9 @@ def import_agent():
 
     if run_agent_choice == "Run locally":
         _run_agent(output_path)
-    elif run_agent_choice == "Run on Genesis Runtime" and deploy_genesis_runtime:
-        console.print(Panel("[bold green]Starting Genesis Runtime interactive CLI...[/bold green]", title="Genesis Runtime", border_style="green"))
-        _genesis_invoke_cli()
+    elif run_agent_choice == "Run on AgentCore Runtime" and deploy_agentcore_runtime:
+        console.print(Panel("[bold green]Starting AgentCore Runtime interactive CLI...[/bold green]", title="AgentCore Runtime", border_style="green"))
+        _agentcore_invoke_cli()
     else:
         console.print(
             Panel(

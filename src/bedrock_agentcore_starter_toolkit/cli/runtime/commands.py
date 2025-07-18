@@ -264,14 +264,15 @@ def launch(
     ),
     local: bool = typer.Option(False, "--local", "-l", help="Run locally"),
     push_ecr: bool = typer.Option(False, "--push-ecr", "-p", help="Build and push to ECR only (no deployment)"),
+    codebuild: bool = typer.Option(False, "--codebuild", "-cb", help="Use CodeBuild for ARM64 builds"),
     envs: List[str] = typer.Option(  # noqa: B008
         None, "--env", "-env", help="Environment variables for agent (format: KEY=VALUE)"
     ),
 ):
     """Launch Bedrock AgentCore locally or to cloud."""
     # Validate mutually exclusive options
-    if local and push_ecr:
-        _handle_error("Error: --local and --push-ecr cannot be used together")
+    if sum([local, push_ecr, codebuild]) > 1:
+        _handle_error("Error: --local, --push-ecr, and --codebuild cannot be used together")
 
     config_path = Path.cwd() / ".bedrock_agentcore.yaml"
 
@@ -281,6 +282,8 @@ def launch(
             mode = "local"
         elif push_ecr:
             mode = "push-ecr"
+        elif codebuild:
+            mode = "codebuild"
         else:
             mode = "cloud"
 
@@ -304,6 +307,7 @@ def launch(
                 agent_name=agent,
                 local=local,
                 push_ecr_only=push_ecr,
+                use_codebuild=codebuild,
                 env_vars=env_vars,
             )
 
@@ -332,6 +336,48 @@ def launch(
                     f"Your image is now available in ECR.\n"
                     f"Run [cyan]agentcore launch[/cyan] to deploy to Bedrock AgentCore.",
                     title="Push to ECR Complete",
+                    border_style="green",
+                )
+            )
+
+        elif result.mode == "codebuild":
+            _print_success(f"CodeBuild completed: [cyan]{result.codebuild_id}[/cyan]")
+            _print_success(f"ARM64 image pushed to ECR: [cyan]{result.ecr_uri}:latest[/cyan]")
+
+            # Show deployment success panel
+            agent_name = result.tag.split(":")[0].replace("bedrock_agentcore-", "")
+            deploy_panel = (
+                f"[green]CodeBuild ARM64 Deployment Successful![/green]\n\n"
+                f"Agent Name: {agent_name}\n"
+                f"CodeBuild ID: [cyan]{result.codebuild_id}[/cyan]\n"
+                f"Agent ARN: [cyan]{result.agent_arn}[/cyan]\n"
+                f"ECR URI: [cyan]{result.ecr_uri}:latest[/cyan]\n\n"
+                f"ARM64 container deployed to Bedrock AgentCore.\n\n"
+                f"You can now check the status of your Bedrock AgentCore endpoint with:\n"
+                f"[cyan]agentcore status[/cyan]\n\n"
+                f"You can now invoke your Bedrock AgentCore endpoint with:\n"
+                f'[cyan]agentcore invoke \'{{"prompt": "Hello"}}\'[/cyan]'
+            )
+
+            # Add log information if we have agent_id
+            if result.agent_id:
+                from ...utils.runtime.logs import get_agent_log_paths, get_aws_tail_commands
+
+                runtime_logs, otel_logs = get_agent_log_paths(result.agent_id)
+                follow_cmd, since_cmd = get_aws_tail_commands(runtime_logs)
+                deploy_panel += (
+                    f"\n\n📋 [cyan]Agent logs available at:[/cyan]\n"
+                    f"   {runtime_logs}\n"
+                    f"   {otel_logs}\n\n"
+                    f"💡 [dim]Tail logs with:[/dim]\n"
+                    f"   {follow_cmd}\n"
+                    f"   {since_cmd}"
+                )
+
+            console.print(
+                Panel(
+                    deploy_panel,
+                    title="CodeBuild Deployment Complete",
                     border_style="green",
                 )
             )

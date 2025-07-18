@@ -1,18 +1,183 @@
 """Tests for Bedrock AgentCore Gateway create_role functionality."""
 
 import json
-from unittest.mock import Mock
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
 
 from bedrock_agentcore_starter_toolkit.operations.gateway.constants import (
     AGENTCORE_FULL_ACCESS,
+    BEDROCK_AGENTCORE_TRUST_POLICY,
     POLICIES,
+    POLICIES_TO_CREATE,
 )
 from bedrock_agentcore_starter_toolkit.operations.gateway.create_role import (
     _attach_policy,
+    create_gateway_execution_role,
 )
+
+
+class TestCreateGatewayExecutionRole:
+    """Test create_gateway_execution_role function."""
+
+    def setup_method(self):
+        """Setup test fixtures."""
+        self.mock_session = Mock()
+        self.mock_iam_client = Mock()
+        self.mock_session.client.return_value = self.mock_iam_client
+        self.logger = logging.getLogger(__name__)
+        self.role_name = "TestGatewayRole"
+        self.role_arn = f"arn:aws:iam::123456789012:role/{self.role_name}"
+
+    def test_create_gateway_execution_role_success(self):
+        """Test successful role creation."""
+        # Mock successful role creation
+        self.mock_iam_client.create_role.return_value = {
+            "Role": {
+                "Arn": self.role_arn,
+                "RoleName": self.role_name,
+                "Path": "/",
+                "RoleId": "AROAI23HZ27SI6FQMGNQ2",
+            }
+        }
+
+        with patch("bedrock_agentcore_starter_toolkit.operations.gateway.create_role._attach_policy") as mock_attach:
+            result = create_gateway_execution_role(self.mock_session, self.logger, self.role_name)
+
+        # Verify role creation
+        self.mock_iam_client.create_role.assert_called_once_with(
+            RoleName=self.role_name,
+            AssumeRolePolicyDocument=json.dumps(BEDROCK_AGENTCORE_TRUST_POLICY),
+            Description="Execution role for AgentCore Gateway",
+        )
+
+        # Verify policies were attached
+        expected_calls = len(POLICIES_TO_CREATE) + len(POLICIES)
+        assert mock_attach.call_count == expected_calls
+
+        # Verify return value
+        assert result == self.role_arn
+
+    def test_create_gateway_execution_role_default_name(self):
+        """Test role creation with default role name."""
+        default_role_name = "AgentCoreGatewayExecutionRole"
+        default_role_arn = f"arn:aws:iam::123456789012:role/{default_role_name}"
+
+        self.mock_iam_client.create_role.return_value = {
+            "Role": {"Arn": default_role_arn, "RoleName": default_role_name}
+        }
+
+        with patch("bedrock_agentcore_starter_toolkit.operations.gateway.create_role._attach_policy"):
+            result = create_gateway_execution_role(self.mock_session, self.logger)
+
+        # Verify default role name was used
+        self.mock_iam_client.create_role.assert_called_once_with(
+            RoleName=default_role_name,
+            AssumeRolePolicyDocument=json.dumps(BEDROCK_AGENTCORE_TRUST_POLICY),
+            Description="Execution role for AgentCore Gateway",
+        )
+
+        assert result == default_role_arn
+
+    def test_create_gateway_execution_role_already_exists(self):
+        """Test handling when role already exists."""
+        # Mock EntityAlreadyExistsException using proper ClientError
+        already_exists_error = ClientError(
+            error_response={"Error": {"Code": "EntityAlreadyExists", "Message": "Role already exists"}},
+            operation_name="CreateRole",
+        )
+        self.mock_iam_client.create_role.side_effect = already_exists_error
+
+        # Mock successful get_role
+        self.mock_iam_client.get_role.return_value = {"Role": {"Arn": self.role_arn, "RoleName": self.role_name}}
+
+        result = create_gateway_execution_role(self.mock_session, self.logger, self.role_name)
+
+        # Verify create_role was attempted
+        self.mock_iam_client.create_role.assert_called_once()
+
+        # Verify get_role was called
+        self.mock_iam_client.get_role.assert_called_once_with(RoleName=self.role_name)
+
+        # Verify return value
+        assert result == self.role_arn
+
+    def test_create_gateway_execution_role_exists_but_get_fails(self):
+        """Test handling when role exists but get_role fails."""
+        # Mock EntityAlreadyExistsException using proper ClientError
+        already_exists_error = ClientError(
+            error_response={"Error": {"Code": "EntityAlreadyExists", "Message": "Role already exists"}},
+            operation_name="CreateRole",
+        )
+        self.mock_iam_client.create_role.side_effect = already_exists_error
+
+        # Mock ClientError on get_role
+        get_role_error = ClientError(
+            error_response={"Error": {"Code": "AccessDenied", "Message": "Access denied"}},
+            operation_name="GetRole",
+        )
+        self.mock_iam_client.get_role.side_effect = get_role_error
+
+        with pytest.raises(ClientError) as exc_info:
+            create_gateway_execution_role(self.mock_session, self.logger, self.role_name)
+
+        # Verify the original exception is raised
+        assert exc_info.value == get_role_error
+
+    def test_create_gateway_execution_role_create_fails(self):
+        """Test handling when role creation fails."""
+        # Mock ClientError on create_role
+        create_role_error = ClientError(
+            error_response={"Error": {"Code": "MalformedPolicyDocument", "Message": "Invalid trust policy"}},
+            operation_name="CreateRole",
+        )
+        self.mock_iam_client.create_role.side_effect = create_role_error
+
+        with pytest.raises(ClientError) as exc_info:
+            create_gateway_execution_role(self.mock_session, self.logger, self.role_name)
+
+        # Verify the original exception is raised
+        assert exc_info.value == create_role_error
+
+    def test_create_gateway_execution_role_policy_attachment_patterns(self):
+        """Test that correct policy attachment patterns are used."""
+        self.mock_iam_client.create_role.return_value = {"Role": {"Arn": self.role_arn, "RoleName": self.role_name}}
+
+        with patch("bedrock_agentcore_starter_toolkit.operations.gateway.create_role._attach_policy") as mock_attach:
+            create_gateway_execution_role(self.mock_session, self.logger, self.role_name)
+
+            # Verify policy creation calls (POLICIES_TO_CREATE)
+            policy_creation_calls = [
+                call for call in mock_attach.call_args_list if call.kwargs.get("policy_document") is not None
+            ]
+            assert len(policy_creation_calls) == len(POLICIES_TO_CREATE)
+
+            # Verify policy ARN attachment calls (POLICIES)
+            policy_arn_calls = [
+                call for call in mock_attach.call_args_list if call.kwargs.get("policy_arn") is not None
+            ]
+            assert len(policy_arn_calls) == len(POLICIES)
+
+    def test_create_gateway_execution_role_attach_policy_integration(self):
+        """Test actual policy attachment without mocking _attach_policy."""
+        self.mock_iam_client.create_role.return_value = {"Role": {"Arn": self.role_arn, "RoleName": self.role_name}}
+
+        # Mock successful policy operations
+        self.mock_iam_client.create_policy.return_value = {
+            "Policy": {"Arn": "arn:aws:iam::123456789012:policy/TestPolicy"}
+        }
+        self.mock_iam_client.attach_role_policy.return_value = {}
+
+        result = create_gateway_execution_role(self.mock_session, self.logger, self.role_name)
+
+        # Verify role was created successfully
+        assert result == self.role_arn
+
+        # Verify policies were created and attached
+        assert self.mock_iam_client.create_policy.call_count == len(POLICIES_TO_CREATE)
+        assert self.mock_iam_client.attach_role_policy.call_count == len(POLICIES_TO_CREATE) + len(POLICIES)
 
 
 class TestAttachPolicy:

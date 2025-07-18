@@ -27,7 +27,7 @@ class ConfigureResult(BaseModel):
 class LaunchResult(BaseModel):
     """Result of launch operation."""
 
-    mode: str = Field(..., description="Launch mode: local, push-ecr, or cloud")
+    mode: str = Field(..., description="Launch mode: local, push-ecr, cloud, or codebuild")
     tag: str = Field(..., description="Docker image tag")
     env_vars: Optional[Dict[str, str]] = Field(default=None, description="Environment variables for local deployment")
 
@@ -39,6 +39,9 @@ class LaunchResult(BaseModel):
     ecr_uri: Optional[str] = Field(default=None, description="ECR repository URI")
     agent_id: Optional[str] = Field(default=None, description="BedrockAgentCore agent ID")
     agent_arn: Optional[str] = Field(default=None, description="BedrockAgentCore agent ARN")
+
+    # CodeBuild mode fields
+    codebuild_id: Optional[str] = Field(default=None, description="CodeBuild build ID for ARM64 builds")
 
     # Build output (optional)
     build_output: Optional[List[str]] = Field(default=None, description="Docker build output")

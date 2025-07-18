@@ -53,6 +53,14 @@ class AWSConfig(BaseModel):
         return v
 
 
+class CodeBuildConfig(BaseModel):
+    """CodeBuild deployment information."""
+
+    project_name: Optional[str] = Field(default=None, description="CodeBuild project name")
+    execution_role: Optional[str] = Field(default=None, description="CodeBuild execution role ARN")
+    source_bucket: Optional[str] = Field(default=None, description="S3 source bucket name")
+
+
 class BedrockAgentCoreDeploymentInfo(BaseModel):
     """BedrockAgentCore deployment information."""
 
@@ -70,6 +78,7 @@ class BedrockAgentCoreAgentSchema(BaseModel):
     container_runtime: str = Field(default="docker", description="Container runtime to use")
     aws: AWSConfig = Field(default_factory=AWSConfig)
     bedrock_agentcore: BedrockAgentCoreDeploymentInfo = Field(default_factory=BedrockAgentCoreDeploymentInfo)
+    codebuild: CodeBuildConfig = Field(default_factory=CodeBuildConfig)
     authorizer_configuration: Optional[dict] = Field(default=None, description="JWT authorizer configuration")
     oauth_configuration: Optional[dict] = Field(default=None, description="Oauth configuration")
 

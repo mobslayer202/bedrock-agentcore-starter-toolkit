@@ -43,17 +43,18 @@ def create_gateway_execution_role(
 
         return role["Role"]["Arn"]
 
-    except iam.exceptions.EntityAlreadyExistsException:
-        try:
-            role = iam.get_role(RoleName=role_name)
-            logger.info("✓ Role already exists: %s", role["Role"]["Arn"])
-            return role["Role"]["Arn"]
-        except ClientError as e:
-            logger.error("Error getting existing role: %s", e)
-            raise
     except ClientError as e:
-        logger.error("Error creating role: %s", e)
-        raise
+        if e.response["Error"]["Code"] == "EntityAlreadyExists":
+            try:
+                role = iam.get_role(RoleName=role_name)
+                logger.info("✓ Role already exists: %s", role["Role"]["Arn"])
+                return role["Role"]["Arn"]
+            except ClientError as get_error:
+                logger.error("Error getting existing role: %s", get_error)
+                raise
+        else:
+            logger.error("Error creating role: %s", e)
+            raise
 
 
 def _attach_policy(

@@ -2411,7 +2411,33 @@
 <span class="normal">444</span>
 <span class="normal">445</span>
 <span class="normal">446</span>
-<span class="normal">447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BedrockAgentCoreApp</span><span class="p">(</span><span class="n">Starlette</span><span class="p">):</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BedrockAgentCoreApp</span><span class="p">(</span><span class="n">Starlette</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Bedrock AgentCore application class that extends Starlette for AI agent deployment.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
@@ -2669,7 +2695,9 @@
                 <span class="k">return</span> <span class="n">StreamingResponse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stream_with_error_handling</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">media_type</span><span class="o">=</span><span class="s2">&quot;text/event-stream&quot;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Invocation completed successfully (</span><span class="si">%.3f</span><span class="s2">s)&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="c1"># Use safe serialization for consistency with streaming paths</span>
+            <span class="n">safe_json_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_serialize_to_json_string</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">safe_json_string</span><span class="p">,</span> <span class="n">media_type</span><span class="o">=</span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
@@ -2770,18 +2798,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Debug action &#39;</span><span class="si">%s</span><span class="s2">&#39; failed: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Debug action failed&quot;</span><span class="p">,</span> <span class="s2">&quot;details&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)},</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_sse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;data: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;data: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to serialize SSE chunk: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-                <span class="n">error_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Serialization failed&quot;</span><span class="p">,</span> <span class="s2">&quot;original_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">}</span>
-                <span class="n">sse_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;data: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">error_data</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-                <span class="k">return</span> <span class="n">sse_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_with_error_handling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap async generator to handle errors and convert to SSE format.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -2795,6 +2811,42 @@
                 <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;An error occurred during streaming&quot;</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_sse</span><span class="p">(</span><span class="n">error_event</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_safe_serialize_to_json_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Safely serialize object directly to JSON string with progressive fallback handling.</span>
+
+<span class="sd">        This method eliminates double JSON encoding by returning the JSON string directly,</span>
+<span class="sd">        avoiding the test-then-encode pattern that leads to redundant json.dumps() calls.</span>
+<span class="sd">        Used by both streaming and non-streaming responses for consistent behavior.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: JSON string representation of the object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># First attempt: direct JSON serialization with Unicode support</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">UnicodeEncodeError</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Second attempt: convert to string, then JSON encode the string</span>
+                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Final fallback: JSON encode error object with ASCII fallback for problematic Unicode</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to serialize object: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="n">error_obj</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Serialization failed&quot;</span><span class="p">,</span> <span class="s2">&quot;original_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">}</span>
+                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">error_obj</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_sse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert object to Server-Sent Events format using safe serialization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obj: Object to convert to SSE format</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bytes: SSE-formatted data ready for streaming</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">json_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_serialize_to_json_string</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="n">sse_data</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;data: </span><span class="si">{</span><span class="n">json_string</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">sse_data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sync_stream_with_error_handling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap sync generator to handle errors and convert to SSE format.&quot;&quot;&quot;</span>
@@ -3757,9 +3809,7 @@ Call this when your background work finishes.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/runtime/app.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">330</span>
 <span class="normal">331</span>
 <span class="normal">332</span>
 <span class="normal">333</span>
@@ -3773,7 +3823,9 @@ Call this when your background work finishes.</p>
 <span class="normal">341</span>
 <span class="normal">342</span>
 <span class="normal">343</span>
-<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Start the Bedrock AgentCore server.</span>
 
 <span class="sd">    Args:</span>

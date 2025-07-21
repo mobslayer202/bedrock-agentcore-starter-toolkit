@@ -1838,7 +1838,6 @@
 <span class="c1"># Create workload identity</span>
 <span class="n">workload_identity</span> <span class="o">=</span> <span class="n">identity_client</span><span class="o">.</span><span class="n">create_workload_identity</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my-research-agent&quot;</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Research agent that accesses Google Drive and web search&quot;</span>
 <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Workload Identity ARN: </span><span class="si">{</span><span class="n">workload_identity</span><span class="p">[</span><span class="s1">&#39;workloadIdentityArn&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1846,27 +1845,28 @@
 </code></pre></div>
 <p>You can also use the AWS CLI:</p>
 <div class="highlight"><pre><span></span><code>aws<span class="w"> </span>bedrock-agentcore<span class="w"> </span>create-workload-identity<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--agent-name<span class="w"> </span><span class="s2">&quot;my-research-agent&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--description<span class="w"> </span><span class="s2">&quot;Research agent that accesses Google Drive and web search&quot;</span>
+<span class="w">    </span>--name<span class="w"> </span><span class="s2">&quot;my-research-agent&quot;</span>
 </code></pre></div>
 <h2 id="configure-credential-providers">Configure Credential Providers<a class="headerlink" href="#configure-credential-providers" title="Permanent link">&para;</a></h2>
 <p>Credential providers define how your agent accesses external services:</p>
 <h3 id="oauth2-provider-example-google">OAuth2 Provider Example (Google)<a class="headerlink" href="#oauth2-provider-example-google" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Configure Google OAuth2 provider</span>
 <span class="n">google_provider</span> <span class="o">=</span> <span class="n">identity_client</span><span class="o">.</span><span class="n">create_oauth2_credential_provider</span><span class="p">(</span><span class="n">req</span><span class="o">=</span><span class="p">{</span>
-    <span class="s2">&quot;resourceCredentialProviderName&quot;</span><span class="p">:</span> <span class="s2">&quot;Google Workspace&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;providerType&quot;</span><span class="p">:</span> <span class="s2">&quot;OAuth2&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;googleOAuth2Config&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;clientId&quot;</span><span class="p">:</span> <span class="s2">&quot;your-google-client-id&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;clientSecretArn&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:secretsmanager:us-east-1:123456789012:secret:google-client-secret&quot;</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;myGoogleCredentialProvider&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;credentialProviderVendor&quot;</span><span class="p">:</span> <span class="s2">&quot;GoogleOauth2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oauth2ProviderConfigInput&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;googleOauth2ProviderConfig&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;clientId&quot;</span><span class="p">:</span> <span class="s2">&quot;your-google-client-id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;clientSecret&quot;</span><span class="p">:</span> <span class="s2">&quot;your-google-client-secret&quot;</span>
+        <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">})</span>
 </code></pre></div>
 <h3 id="api-key-provider-example-perplexity-ai">API Key Provider Example (Perplexity AI)<a class="headerlink" href="#api-key-provider-example-perplexity-ai" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Configure API key provider</span>
 <span class="n">perplexity_provider</span> <span class="o">=</span> <span class="n">identity_client</span><span class="o">.</span><span class="n">create_api_key_credential_provider</span><span class="p">(</span><span class="n">req</span><span class="o">=</span><span class="p">{</span>
-    <span class="s2">&quot;resourceCredentialProviderName&quot;</span><span class="p">:</span> <span class="s2">&quot;Perplexity AI&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;apiKeyArn&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:secretsmanager:us-east-1:123456789012:secret:perplexity-api-key&quot;</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;myPerplexityAPIKeyCredentialProvider&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;apiKey&quot;</span><span class="p">:</span> <span class="s2">&quot;myApiKey&quot;</span>
 <span class="p">})</span>
 </code></pre></div>
 <h2 id="configure-environment-variables">Configure Environment Variables<a class="headerlink" href="#configure-environment-variables" title="Permanent link">&para;</a></h2>
@@ -1904,7 +1904,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Search the web using Perplexity AI&quot;&quot;&quot;</span>
         <span class="c1"># Get API key from identity service</span>
         <span class="n">api_key</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_client</span><span class="o">.</span><span class="n">get_api_key</span><span class="p">(</span>
-            <span class="n">provider_name</span><span class="o">=</span><span class="s2">&quot;perplexity-provider&quot;</span><span class="p">,</span>
+            <span class="n">provider_name</span><span class="o">=</span><span class="s2">&quot;myPerplexityAPIKeyCredentialProvider&quot;</span><span class="p">,</span>
             <span class="n">agent_identity_token</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workload_token</span>
         <span class="p">)</span>
 
@@ -1933,7 +1933,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># Get OAuth2 access token from identity service</span>
             <span class="n">access_token</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">identity_client</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span>
-                <span class="n">provider_name</span><span class="o">=</span><span class="s2">&quot;google-provider&quot;</span><span class="p">,</span>
+                <span class="n">provider_name</span><span class="o">=</span><span class="s2">&quot;myGoogleCredentialProvider&quot;</span><span class="p">,</span>
                 <span class="n">scopes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;https://www.googleapis.com/auth/drive.file&quot;</span><span class="p">],</span>
                 <span class="n">agent_identity_token</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workload_token</span><span class="p">,</span>
                 <span class="n">auth_flow</span><span class="o">=</span><span class="s2">&quot;USER_FEDERATION&quot;</span><span class="p">,</span>

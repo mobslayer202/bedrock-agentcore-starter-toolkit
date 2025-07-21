@@ -58,7 +58,7 @@ def _run_agent(output_dir, output_path):
         # Run the agent file with subprocess under the current CLI
         subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])  # Ensure pip is available # nosec
         subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "-r", f"{output_dir}/requirements.txt"])  # nosec
-        process = subprocess.Popen([sys.executable, output_path, "--cli"])  # nosec
+        process = subprocess.Popen(["opentelemetry-instrument", sys.executable, output_path, "--cli"])  # nosec
 
         while True:
             try:

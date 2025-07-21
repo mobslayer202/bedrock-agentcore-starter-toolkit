@@ -668,8 +668,12 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         {post_process_code}
         """
 
-        agent_code += """
+        if not self.is_collaborator:
+            agent_code += """
     @app.entrypoint
+    """
+
+        agent_code += """
     def endpoint(payload):
         try:
             tools_used.clear()

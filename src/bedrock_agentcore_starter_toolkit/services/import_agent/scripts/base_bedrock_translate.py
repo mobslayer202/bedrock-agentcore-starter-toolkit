@@ -274,8 +274,7 @@ class BaseBedrockTranslator:
                 event_expiry_days=self.agent_info["memoryConfiguration"].get("storageDays", 30),
             )
 
-            memory_arn = memory.get("arn")
-            memory_id = memory_arn.split("/")[-1]
+            memory_id = memory["id"]
 
             output += f"""
     memory_client = MemoryClient(region_name='{self.agent_region}', environment="prod")
@@ -322,6 +321,8 @@ class BaseBedrockTranslator:
         return f"""
 
     def cli():
+        user_id = "{uuid.uuid4().hex[:8].lower()}" # change user_id if necessary
+        session_id = uuid.uuid4().hex[:8].lower()
         try:
             while True:
                 try:
@@ -330,7 +331,7 @@ class BaseBedrockTranslator:
                     if query.lower() == "exit":
                         break
 
-                    result = endpoint({{"message": query}}, RequestContext(session_id=None)).get('result', {{}})
+                    result = endpoint({{"message": query}}, RequestContext(session_id=session_id)).get('result', {{}})
                     if not result:
                         print("  Error:" + result)
                         continue

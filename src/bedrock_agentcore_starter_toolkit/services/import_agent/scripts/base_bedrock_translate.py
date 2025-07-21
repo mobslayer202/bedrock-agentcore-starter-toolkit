@@ -60,10 +60,14 @@ class BaseBedrockTranslator:
         self.single_kb_optimization_enabled = False
 
         # multi agent collaboration
-        self.multi_agent_enabled = self.agent_info.get("agentCollaboration", "DISABLED") != "DISABLED" and agent_config["collaborators"]
+        self.multi_agent_enabled = (
+            self.agent_info.get("agentCollaboration", "DISABLED") != "DISABLED" and agent_config["collaborators"]
+        )
         self.supervision_type = self.agent_info.get("agentCollaboration", "SUPERVISOR")
         self.collaborators = agent_config.get("collaborators", [])
-        self.collaborator_map = {collaborator.get("collaboratorName", ""): collaborator for collaborator in self.collaborators}
+        self.collaborator_map = {
+            collaborator.get("collaboratorName", ""): collaborator for collaborator in self.collaborators
+        }
         self.collaborator_descriptions = [
             f"{{'agentName': '{collaborator['agent'].get('agentName', '')}', 'collaboratorName (for invocation)': 'invoke_{collaborator.get('collaboratorName', '')}', 'collaboratorInstruction': '{collaborator.get('collaborationInstruction', '')}}}"
             for collaborator in self.collaborators
@@ -74,14 +78,24 @@ class BaseBedrockTranslator:
         self.collaborator_name = agent_config.get("collaboratorName", "")
 
         # action groups and tools
-        self.action_groups = [group for group in agent_config.get("action_groups", []) if group.get("actionGroupState", "DISABLED") == "ENABLED"]
+        self.action_groups = [
+            group
+            for group in agent_config.get("action_groups", [])
+            if group.get("actionGroupState", "DISABLED") == "ENABLED"
+        ]
         self.tools = []
         self.mcp_tools = []
         self.action_group_tools = []
 
         # user input and code interpreter
-        self.code_interpreter_enabled = any(group["actionGroupName"] == "codeinterpreteraction" and group["actionGroupState"] == "ENABLED" for group in self.action_groups)
-        self.user_input_enabled = any(group["actionGroupName"] == "userinputaction" and group["actionGroupState"] == "ENABLED" for group in self.action_groups)
+        self.code_interpreter_enabled = any(
+            group["actionGroupName"] == "codeinterpreteraction" and group["actionGroupState"] == "ENABLED"
+            for group in self.action_groups
+        )
+        self.user_input_enabled = any(
+            group["actionGroupName"] == "userinputaction" and group["actionGroupState"] == "ENABLED"
+            for group in self.action_groups
+        )
 
         # orchestration steps
         self.prompt_configs = self.agent_info.get("promptOverrideConfiguration", {}).get("promptConfigurations", [])
@@ -167,14 +181,24 @@ class BaseBedrockTranslator:
             orchestration_fixtures = get_template_fixtures("orchestrationBasePrompts", "REACT_MULTI_ACTION")
             orchestration_base_template: str = config["basePromptTemplate"]["system"]
 
-            orchestration_base_template, orchestration_fixtures = self._clean_fixtures_and_prompt(orchestration_base_template, orchestration_fixtures)
+            orchestration_base_template, orchestration_fixtures = self._clean_fixtures_and_prompt(
+                orchestration_base_template, orchestration_fixtures
+            )
 
-            injected_orchestration_prompt = safe_substitute_placeholders(orchestration_base_template, orchestration_fixtures)
-            injected_orchestration_prompt = safe_substitute_placeholders(injected_orchestration_prompt, {"instruction": self.instruction})
-            injected_orchestration_prompt = safe_substitute_placeholders(injected_orchestration_prompt, {"$agent_collaborators$ ": ",".join(self.collaborator_descriptions)})
+            injected_orchestration_prompt = safe_substitute_placeholders(
+                orchestration_base_template, orchestration_fixtures
+            )
+            injected_orchestration_prompt = safe_substitute_placeholders(
+                injected_orchestration_prompt, {"instruction": self.instruction}
+            )
+            injected_orchestration_prompt = safe_substitute_placeholders(
+                injected_orchestration_prompt, {"$agent_collaborators$ ": ",".join(self.collaborator_descriptions)}
+            )
 
             # This tool does not apply
-            injected_orchestration_prompt = injected_orchestration_prompt.replace("using the AgentCommunication__sendMessage tool", "")
+            injected_orchestration_prompt = injected_orchestration_prompt.replace(
+                "using the AgentCommunication__sendMessage tool", ""
+            )
 
             self.prompts_code += f"""
     ORCHESTRATION_TEMPLATE=\"""\n{injected_orchestration_prompt}\""" """
@@ -210,9 +234,15 @@ class BaseBedrockTranslator:
             routing_template: str = config.get("basePromptTemplate", "")
 
             injected_routing_template = safe_substitute_placeholders(routing_template, routing_fixtures)
-            injected_routing_template = safe_substitute_placeholders(injected_routing_template, {"$reachable_agents$": ",".join(self.collaborator_descriptions)})
-            injected_routing_template = safe_substitute_placeholders(injected_routing_template, {"$tools_for_routing$": str(self.action_group_tools + self.tools)})
-            injected_routing_template = safe_substitute_placeholders(injected_routing_template, {"$knowledge_bases_for_routing$": str(self.knowledge_bases)})
+            injected_routing_template = safe_substitute_placeholders(
+                injected_routing_template, {"$reachable_agents$": ",".join(self.collaborator_descriptions)}
+            )
+            injected_routing_template = safe_substitute_placeholders(
+                injected_routing_template, {"$tools_for_routing$": str(self.action_group_tools + self.tools)}
+            )
+            injected_routing_template = safe_substitute_placeholders(
+                injected_routing_template, {"$knowledge_bases_for_routing$": str(self.knowledge_bases)}
+            )
 
             self.prompts_code += f"""
     ROUTING_TEMPLATE=\"""\n
@@ -254,7 +284,11 @@ class BaseBedrockTranslator:
 
         elif self.memory_enabled:
             memory_manager_path = os.path.join(self.output_dir, "LTM_memory_manager.py")
-            max_sessions = self.agent_info["memoryConfiguration"].get("sessionSummaryConfiguration", {}).get("maxRecentSessions", 20)
+            max_sessions = (
+                self.agent_info["memoryConfiguration"]
+                .get("sessionSummaryConfiguration", {})
+                .get("maxRecentSessions", 20)
+            )
             max_days = self.agent_info["memoryConfiguration"].get("storageDays", 30)
 
             with (
@@ -280,7 +314,11 @@ class BaseBedrockTranslator:
 
     def generate_example_usage(self) -> str:
         """Generate example usage code for the agent."""
-        memory_code = "LongTermMemoryManager.end_all_sessions()" if (self.multi_agent_enabled or self.memory_enabled) and not self.agentcore_memory_enabled else ""
+        memory_code = (
+            "LongTermMemoryManager.end_all_sessions()"
+            if (self.multi_agent_enabled or self.memory_enabled) and not self.agentcore_memory_enabled
+            else ""
+        )
         return f"""
 
     def cli():
@@ -321,8 +359,7 @@ class BaseBedrockTranslator:
     if __name__ == "__main__":
         if len(sys.argv) > 1 and sys.argv[1] == "--cli":
             cli() # Run the CLI interface
-        else:
-            app.run() # Run the AgentCore app
+        {"else: app.run()" if not self.is_collaborator else ""}
         """
 
     def generate_code_interpreter(self, platform: str):

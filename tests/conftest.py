@@ -59,7 +59,7 @@ def mock_boto3_clients(monkeypatch):
             "arn": "arn:aws:bedrock-agentcore:us-east-1:123456789012:memory/test-memory-id-12345678",
             "id": "test-memory-id-12345678",
             "name": "test_agent_memory_12345678",
-            "status": "READY",
+            "status": "ACTIVE",
         }
     }
 
@@ -68,7 +68,7 @@ def mock_boto3_clients(monkeypatch):
             "arn": "arn:aws:bedrock-agentcore:us-east-1:123456789012:memory/test-memory-id-12345678",
             "id": "test-memory-id-12345678",
             "name": "test_agent_memory_12345678",
-            "status": "READY",
+            "status": "ACTIVE",
         }
     }
 

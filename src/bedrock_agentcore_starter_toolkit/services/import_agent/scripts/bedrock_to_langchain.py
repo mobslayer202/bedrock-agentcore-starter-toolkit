@@ -36,7 +36,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     """
 
         # Format prompts code
-        self.prompts_code = textwrap.fill(self.prompts_code, width=150, break_long_words=False, replace_whitespace=False)
+        self.prompts_code = textwrap.fill(
+            self.prompts_code, width=150, break_long_words=False, replace_whitespace=False
+        )
 
         self.code_sections = [
             self.imports_code,
@@ -54,7 +56,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         """Generate import statements for LangChain components."""
         return """
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    
+
     from langchain_aws import ChatBedrockConverse
     from langchain_aws.retrievers import AmazonKnowledgeBasesRetriever
 
@@ -63,7 +65,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
     from langchain.tools import tool
 
-    from langgraph.prebuilt import create_react_agent
+    from langgraph.prebuilt import create_react_agent, InjectedState
     from langgraph.checkpoint.memory import InMemorySaver
     """
 
@@ -94,9 +96,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             # Add guardrails if available
             if self.guardrail_config:
                 model_config += """,
-        guardrails={}""".format(
-                    self.guardrail_config
-                )
+        guardrails={}""".format(self.guardrail_config)
 
             model_config += "\n)"
             model_configs.append(model_config)
@@ -145,9 +145,13 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             collaborator_path = os.path.join(self.output_dir, f"{collaborator_file_name}.py")
 
             # Recursively translate the collaborator agent to LangChain
-            BedrockLangchainTranslation(collaborator, debug=self.debug, output_dir=self.output_dir, enabled_primitives=self.enabled_primitives).translate_bedrock_to_langchain(collaborator_path)
+            BedrockLangchainTranslation(
+                collaborator, debug=self.debug, output_dir=self.output_dir, enabled_primitives=self.enabled_primitives
+            ).translate_bedrock_to_langchain(collaborator_path)
 
-            self.imports_code += f"\nfrom {collaborator_file_name} import invoke_agent as invoke_{collaborator_name}_collaborator"
+            self.imports_code += (
+                f"\nfrom {collaborator_file_name} import invoke_agent as invoke_{collaborator_name}_collaborator"
+            )
 
             # conversation relay
             relay_conversation_history = collaborator.get("relayConversationHistory", "DISABLED") == "TO_COLLABORATOR"
@@ -159,7 +163,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         \"\"\"Invoke the collaborator agent/specialist with the following description: {1}\"\"\"
         {2}
         invoke_agent_response = invoke_{0}_collaborator(query{3})
-        tools_used.extend([msg.name for msg in invoke_agent_response if isinstance(msg, ToolMessage)])
+        tools_used.update([msg.name for msg in invoke_agent_response if isinstance(msg, ToolMessage)])
         return invoke_agent_response
         """.format(
                 collaborator_name,
@@ -201,7 +205,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
         # Apply most up to date single KB optimization logic
         # Need there to be no AG tools and only one KB for this to apply
-        self.single_kb_optimization_enabled = self.single_kb and self.kb_generation_prompt_enabled and not tool_instances
+        self.single_kb_optimization_enabled = (
+            self.single_kb and self.kb_generation_prompt_enabled and not tool_instances
+        )
 
         if self.user_input_enabled:
             self.imports_code += """
@@ -241,7 +247,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             func_name = func.get("name", "")
             clean_func_name = clean_variable_name(func_name)
             func_desc = func.get("description", "").replace('"', '\\"')
-            func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}" + (f" (description: {action_group_desc})" if action_group_desc else "")
+            func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}" + (
+                f" (description: {action_group_desc})" if action_group_desc else ""
+            )
             params = func.get("parameters", {})
             param_list = []
             tool_name = f"{action_group_name}_{clean_func_name}"
@@ -254,7 +262,12 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             tool_code += f"""
     class {model_name}(BaseModel):"""
 
-            params_input = ", ".join([f"{{'name': '{param_name}', 'type': '{param_info.get('type', 'string')}', 'value': {param_name}}}" for param_name, param_info in params.items()])
+            params_input = ", ".join(
+                [
+                    f"{{'name': '{param_name}', 'type': '{param_info.get('type', 'string')}', 'value': {param_name}}}"
+                    for param_name, param_info in params.items()
+                ]
+            )
 
             if params:
                 for param_name, param_info in params.items():
@@ -417,7 +430,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     """.format(
                         input_model_name,
                         f"{param_model_name} |" if params else "",
-                        f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")' if content_models else "",
+                        f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
+                        if content_models
+                        else "",
                     )
                 elif params:
                     input_model_name = param_model_name
@@ -578,9 +593,13 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             self.debug,
             self.debug,
             'last_agent = ""' if self.multi_agent_enabled and self.supervision_type == "SUPERVISOR_ROUTER" else "",
-            "if _agent is None or memory_manager.has_memory_changed():" if self.memory_enabled and not self.agentcore_memory_enabled else "if _agent is None:",
+            "if _agent is None or memory_manager.has_memory_changed():"
+            if self.memory_enabled and not self.agentcore_memory_enabled
+            else "if _agent is None:",
             memory_retrieve_code,
-            "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)" if self.memory_enabled else "",
+            "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
+            if self.memory_enabled
+            else "",
             self.debug,
         )
 
@@ -676,9 +695,13 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             else ""
         )
 
+        if not self.is_collaborator:
+            agent_code += """
+    @app.entrypoint
+    """
+
         agent_code += (
             """
-    @app.entrypoint
     def endpoint(payload, context):
         try:
             global user_id, tools_used
@@ -742,7 +765,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             conversation = {}
         messages = str(conversation.get("channel_values", {}).get("messages", []))
 
-        routing_template = ROUTING_TEMPLA
+        routing_template = ROUTING_TEMPLATE
         routing_template = routing_template.replace("$last_user_request$", question).replace("$conversation$", messages).replace("$last_most_specialized_agent$", last_agent)
         routing_choice = llm_ROUTING_CLASSIFIER.invoke([SystemMessage(routing_template), HumanMessage(question)]).content
 
@@ -758,7 +781,12 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
         for agent in self.collaborators:
             agent_name = agent.get("collaboratorName", "")
-            relay_param = ", messages" if self.collaborator_map.get(agent_name, {}).get("relayConversationHistory", "DISABLED") == "TO_COLLABORATOR" else ""
+            relay_param = (
+                ", messages"
+                if self.collaborator_map.get(agent_name, {}).get("relayConversationHistory", "DISABLED")
+                == "TO_COLLABORATOR"
+                else ""
+            )
             code += f"""
         elif choice == "{agent_name}":
             last_agent = "{agent_name}"

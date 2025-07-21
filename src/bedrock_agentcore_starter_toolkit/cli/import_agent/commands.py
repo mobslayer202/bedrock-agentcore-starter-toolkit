@@ -18,7 +18,7 @@ from rich.text import Text
 
 from ...services.import_agent.scripts.bedrock_to_langchain import BedrockLangchainTranslation
 from ...services.import_agent.scripts.bedrock_to_strands import BedrockStrandsTranslation
-from ...services.import_agent.utils import auth_and_get_info, get_agent_aliases, get_agents, get_clients
+from ...services.import_agent.utils.agent_info import auth_and_get_info, get_agent_aliases, get_agents, get_clients
 from ..common import console
 
 app = typer.Typer(help="Import Agent")
@@ -44,7 +44,7 @@ def _verify_aws_credentials() -> bool:
         return False
 
 
-def _run_agent(output_path):
+def _run_agent(output_dir, output_path):
     """Run the generated agent."""
     try:
         console.print(
@@ -56,6 +56,8 @@ def _run_agent(output_path):
         )
 
         # Run the agent file with subprocess under the current CLI
+        subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])  # Ensure pip is available # nosec
+        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "-r", f"{output_dir}/requirements.txt"])  # nosec
         process = subprocess.Popen([sys.executable, output_path, "--cli"])  # nosec
 
         while True:
@@ -99,11 +101,25 @@ def _agentcore_invoke_cli():
 
 
 @app.command()
-def import_agent():
+def import_agent(
+    agent_id: str = typer.Option(None, "--agent-id", help="ID of the Bedrock Agent to import"),
+    agent_alias_id: str = typer.Option(None, "--agent-alias-id", help="ID of the Agent Alias to use"),
+    target_platform: str = typer.Option(None, "--target-platform", help="Target platform (langchain or strands)"),
+    debug: bool = typer.Option(False, "--debug", help="Enable debug mode"),
+    verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode"),
+    disable_memory: bool = typer.Option(False, "--disable-memory", help="Disable AgentCore Memory primitive"),
+    disable_code_interpreter: bool = typer.Option(
+        False, "--disable-code-interpreter", help="Disable AgentCore Code Interpreter primitive"
+    ),
+    disable_observability: bool = typer.Option(
+        False, "--disable-observability", help="Disable AgentCore Observability primitive"
+    ),
+    deploy_runtime: bool = typer.Option(False, "--deploy-runtime", help="Deploy to AgentCore Runtime"),
+    run_option: str = typer.Option(None, "--run-option", help="How to run the agent (locally, runtime, none)"),
+    output_dir: str = typer.Option("./output/", "--output-dir", help="Output directory for generated code"),
+):
     """Migrate a Bedrock Agent to LangChain or Strands."""
     try:
-        output_dir = "./output/"  # Default output directory for generated code
-
         os.makedirs(output_dir, exist_ok=True)
 
         # Display welcome banner
@@ -116,7 +132,7 @@ def import_agent():
         )
 
         # Verify AWS credentials
-        console.print("[bold]Verifying AWS credentials...[/bold]")
+        console.print("\n[bold]Verifying AWS credentials...[/bold]")
         if not _verify_aws_credentials():
             return
 
@@ -127,7 +143,7 @@ def import_agent():
         bedrock_client, bedrock_agent_client = get_clients(credentials)
 
         # Get all agents in the user's account
-        console.print("[bold]Fetching available agents...[/bold]")
+        console.print("\n[bold]Fetching available agents...[/bold]")
         agents = get_agents(bedrock_agent_client)
 
         if not agents:
@@ -147,19 +163,32 @@ def import_agent():
 
         console.print(agents_table, "\n")
 
-        # Let user select an agent
-        agent_choices = [f"{agent['name']} ({agent['id']})" for agent in agents]
-        selected_agent = questionary.select(
-            "Select an agent:",
-            choices=agent_choices,
-        ).ask()
+        # Let user select an agent if not provided
+        if agent_id is None:
+            agent_choices = [f"{agent['name']} ({agent['id']})" for agent in agents]
+            selected_agent = questionary.select(
+                "Select an agent:",
+                choices=agent_choices,
+            ).ask()
 
-        if selected_agent is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Agent selection cancelled by user.[/yellow]")
-            return
+            if selected_agent is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]Agent selection cancelled by user.[/yellow]")
+                return
 
-        # Extract agent ID from selection
-        agent_id = selected_agent.split("(")[-1].strip(")")
+            # Extract agent ID from selection
+            agent_id = selected_agent.split("(")[-1].strip(")")
+        else:
+            # Verify the provided agent ID exists
+            agent_exists = any(agent["id"] == agent_id for agent in agents)
+            if not agent_exists:
+                console.print(
+                    Panel(
+                        f"[bold red]Agent with ID '{agent_id}' not found![/bold red]",
+                        title="Error",
+                        border_style="red",
+                    )
+                )
+                return
 
         # Get all aliases for the selected agent
         console.print(f"[bold]Fetching aliases for agent {agent_id}...[/bold]")
@@ -186,35 +215,86 @@ def import_agent():
 
         console.print(aliases_table, "\n")
 
-        # Let user select an alias
-        alias_choices = [f"{alias['name']} ({alias['id']})" for alias in aliases]
-        selected_alias = questionary.select(
-            "Select an alias:",
-            choices=alias_choices,
-        ).ask()
+        # Let user select an alias if not provided
+        if agent_alias_id is None:
+            alias_choices = [f"{alias['name']} ({alias['id']})" for alias in aliases]
+            selected_alias = questionary.select(
+                "Select an alias:",
+                choices=alias_choices,
+            ).ask()
 
-        if selected_alias is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Alias selection cancelled by user.[/yellow]")
-            return
+            if selected_alias is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]Alias selection cancelled by user.[/yellow]")
+                return
 
-        # Extract alias ID from selection
-        agent_alias_id = selected_alias.split("(")[-1].strip(")")
+            # Extract alias ID from selection
+            agent_alias_id = selected_alias.split("(")[-1].strip(")")
+        else:
+            # Verify the provided alias ID exists
+            alias_exists = any(alias["id"] == agent_alias_id for alias in aliases)
+            if not alias_exists:
+                console.print(
+                    Panel(
+                        f"[bold red]Alias with ID '{agent_alias_id}' not found for agent '{agent_id}'![/bold red]",
+                        title="Error",
+                        border_style="red",
+                    )
+                )
+                return
 
-        # Select target platform
-        target_platform = questionary.select(
-            "Select your target platform:",
-            choices=["langchain", "strands"],
-        ).ask()
+        # Select target platform if not provided
+        if target_platform is None:
+            target_platform = questionary.select(
+                "Select your target platform:",
+                choices=["langchain", "strands"],
+            ).ask()
 
-        if target_platform is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Platform selection cancelled by user.[/yellow]")
-            return
+            if target_platform is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]Platform selection cancelled by user.[/yellow]")
+                return
+        else:
+            # Validate target platform
+            if target_platform not in ["langchain", "strands"]:
+                console.print(
+                    Panel(
+                        f"[bold red]Invalid target platform '{target_platform}'![/bold red]\n"
+                        f"Valid options are: langchain, strands",
+                        title="Error",
+                        border_style="red",
+                    )
+                )
+                return
+
+        # Set verbose mode based on flags or ask user
+        verbose_mode = verbose or debug
+
+        # Ask about verbose mode if not provided via flags
+        if not verbose_mode:  # Only ask if neither verbose nor debug is True
+            verbose_choice = questionary.confirm("Enable verbose output for the generated agent?", default=False).ask()
+
+            if verbose_choice is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]Verbose mode selection cancelled by user.[/yellow]")
+                return
+
+            verbose_mode = verbose_choice
+
+        # Set primitives based on flags, default to True unless explicitly disabled
+        primitives_opt_in = {
+            # "gateway": False,
+            "memory": not disable_memory,
+            "code_interpreter": not disable_code_interpreter,
+            "observability": not disable_observability,
+        }
+
+        console.print(
+            f"[bold green]✓[/bold green] Selected AgentCore primitives: {[k for k, v in primitives_opt_in.items() if v]}\n"
+        )
 
         # Show progress
         with console.status("[bold green]Fetching agent configuration...[/bold green]"):
             try:
                 agent_config = auth_and_get_info(agent_id, agent_alias_id, output_dir)
-                console.print("[bold green]✓[/bold green] Agent configuration retrieved!")
+                console.print("[bold green]✓[/bold green] Agent configuration retrieved!\n")
             except Exception as e:
                 console.print(
                     Panel(
@@ -225,61 +305,24 @@ def import_agent():
                 )
                 return
 
-        debug = questionary.confirm("Would you like to enable verbose mode?", default=False).ask()
-
-        if debug is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Debug selection cancelled by user.[/yellow]")
-            return
-
-        # Ask about primitives to opt into
-        primitive_options = [
-            # {"name": "AgentCore Gateway (Tools for your agent)", "value": "gateway"},
-            {"name": "AgentCore Memory (Maintain conversation context)", "value": "memory"},
-            {"name": "AgentCore Code Interpreter (Run code in your agent)", "value": "code_interpreter"},
-            {"name": "AgentCore Observability (Logging and monitoring)", "value": "observability"},
-        ]
-
-        # Default to all AgentCore primitives enabled
-        primitives_opt_in = {
-            # "gateway": False,
-            "memory": False,
-            "code_interpreter": False,
-            "observability": False,
-        }
-
-        selected_primitives = questionary.checkbox(
-            "Select AgentCore primitives to include:", choices=[option["name"] for option in primitive_options]
-        ).ask()
-        for option in primitive_options:
-            if option["name"] in selected_primitives:
-                primitives_opt_in[option["value"]] = True
-
-        console.print(
-            f"[bold green]✓[/bold green] Selected primitives: {[k for k, v in primitives_opt_in.items() if v]}"
-        )
-
-        if selected_primitives is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Primitives selection cancelled by user.[/yellow]")
-            return
-
         # Translate the agent
         with console.status(f"[bold green]Translating agent to {target_platform}...[/bold green]"):
             try:
                 if target_platform == "langchain":
                     output_path = os.path.join(output_dir, "langchain_agent.py")
                     translator = BedrockLangchainTranslation(
-                        agent_config, debug=debug, output_dir=output_dir, enabled_primitives=primitives_opt_in
+                        agent_config, debug=verbose_mode, output_dir=output_dir, enabled_primitives=primitives_opt_in
                     )
                     translator.translate_bedrock_to_langchain(output_path)
                 else:  # strands
                     output_path = os.path.join(output_dir, "strands_agent.py")
                     translator = BedrockStrandsTranslation(
-                        agent_config, debug=debug, output_dir=output_dir, enabled_primitives=primitives_opt_in
+                        agent_config, debug=verbose_mode, output_dir=output_dir, enabled_primitives=primitives_opt_in
                     )
                     translator.translate_bedrock_to_strands(output_path)
 
-                console.print(f"[bold green]✓[/bold green] Agent translated to {target_platform}!")
-                console.print(f"[bold]  Output file:[/bold] {output_path}")
+                console.print(f"\n[bold green]✓[/bold green] Agent translated to {target_platform}!")
+                console.print(f"[bold]  Output file:[/bold] {output_path}\n")
             except Exception as e:
                 console.print(
                     Panel(
@@ -291,17 +334,22 @@ def import_agent():
                 return
 
         # AgentCore Runtime deployment options
-        deploy_agentcore_runtime = questionary.confirm(
-            "Would you like to deploy the agent to AgentCore Runtime? (This will take a few minutes)", default=False
-        ).ask()
-
         output_path = os.path.abspath(output_path)
         output_dir = os.path.abspath(output_dir)
 
-        if deploy_agentcore_runtime is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]AgentCore Runtime deployment selection cancelled by user.[/yellow]")
+        # Ask about deployment if not provided via flag
+        if not deploy_runtime:  # Only ask if deploy_runtime is False (default)
+            deploy_runtime_choice = questionary.confirm(
+                "Would you like to deploy the agent to AgentCore Runtime? (This will take a few minutes)", default=False
+            ).ask()
 
-        if deploy_agentcore_runtime:
+            if deploy_runtime_choice is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]AgentCore Runtime deployment selection cancelled by user.[/yellow]")
+                deploy_runtime = False
+            else:
+                deploy_runtime = deploy_runtime_choice
+
+        if deploy_runtime:
             try:
                 agent_name = f"agent_{uuid.uuid4().hex[:8].lower()}"
                 console.print("[bold]  \nDeploying agent to AgentCore Runtime...\n[/bold]")
@@ -319,18 +367,48 @@ def import_agent():
                 )
                 return
 
-        run_options = ["Run locally", "Don't run now"]
+        # Determine how to run the agent
+        if run_option is None:
+            run_options = ["Install dependencies and run locally", "Don't run now"]
 
-        if deploy_agentcore_runtime:
-            run_options.insert(1, "Run on AgentCore Runtime")
+            if deploy_runtime:
+                run_options.insert(1, "Run on AgentCore Runtime")
 
-        run_agent_choice = questionary.select(
-            "How would you like to run the agent?",
-            choices=run_options,
-        ).ask()
-        if run_agent_choice is None:  # Handle case where user presses Esc
-            console.print("\n[yellow]Run selection cancelled by user.[/yellow]")
-            return
+            run_agent_choice = questionary.select(
+                "How would you like to run the agent?",
+                choices=run_options,
+            ).ask()
+            if run_agent_choice is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]Run selection cancelled by user.[/yellow]")
+                return
+        else:
+            # Map run_option to the expected values
+            if run_option.lower() == "locally":
+                run_agent_choice = "Install dependencies and run locally"
+            elif run_option.lower() == "runtime":
+                if not deploy_runtime:
+                    console.print(
+                        Panel(
+                            "[bold red]Cannot run on AgentCore Runtime because it was not deployed![/bold red]",
+                            title="Error",
+                            border_style="red",
+                        )
+                    )
+                    run_agent_choice = "Don't run now"
+                else:
+                    run_agent_choice = "Run on AgentCore Runtime"
+            elif run_option.lower() == "none":
+                run_agent_choice = "Don't run now"
+            else:
+                console.print(
+                    Panel(
+                        f"[bold red]Invalid run option '{run_option}'![/bold red]\n"
+                        f"Valid options are: locally, runtime, none",
+                        title="Error",
+                        border_style="red",
+                    )
+                )
+                run_agent_choice = "Don't run now"
 
     except KeyboardInterrupt:
         console.print("\n[yellow]Migration process cancelled by user.[/yellow]")
@@ -345,9 +423,9 @@ def import_agent():
             )
         )
 
-    if run_agent_choice == "Run locally":
-        _run_agent(output_path)
-    elif run_agent_choice == "Run on AgentCore Runtime" and deploy_agentcore_runtime:
+    if run_agent_choice == "Install dependencies and run locally":
+        _run_agent(output_dir, output_path)
+    elif run_agent_choice == "Run on AgentCore Runtime" and deploy_runtime:
         console.print(
             Panel(
                 "[bold green]Starting AgentCore Runtime interactive CLI...[/bold green]",
@@ -360,8 +438,8 @@ def import_agent():
         console.print(
             Panel(
                 f"[bold green]Migration completed successfully![/bold green]\n"
-                f"You can run your agent later with:\n"
-                f"[bold]python {output_path}[/bold]",
+                f"Install the required dependencies and then run your agent with:\n"
+                f"[bold]python {output_path} --cli[/bold]",
                 title="Migration Complete",
                 border_style="green",
             )

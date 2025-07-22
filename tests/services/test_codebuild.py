@@ -337,15 +337,83 @@ node_modules
         # Should ignore regular log files
         assert codebuild_service._should_ignore("debug.log", patterns, False)
 
-        # NOTE: Current implementation has a limitation - it processes patterns
-        # sequentially and returns early, so negation patterns don't properly
-        # override earlier ignore patterns when the ignore pattern comes first
-        # This should be fixed to match proper dockerignore behavior
-        assert codebuild_service._should_ignore("important.log", patterns, False)
+        # Should NOT ignore important.log due to negation pattern (FIXED!)
+        assert not codebuild_service._should_ignore("important.log", patterns, False)
 
-        # Test negation pattern when it comes first (works correctly)
+        # Both pattern orders should work correctly
         patterns_negation_first = ["!important.log", "*.log"]
-        assert not codebuild_service._should_ignore("important.log", patterns_negation_first, False)
+        assert codebuild_service._should_ignore("important.log", patterns_negation_first, False)
+
+    def test_negation_patterns_multiple(self, codebuild_service):
+        """Test multiple negation patterns."""
+        patterns = ["*.log", "!important.log", "!critical.log", "temp.log"]
+
+        assert codebuild_service._should_ignore("debug.log", patterns, False)
+        assert not codebuild_service._should_ignore("important.log", patterns, False)
+        assert not codebuild_service._should_ignore("critical.log", patterns, False)
+        assert codebuild_service._should_ignore("temp.log", patterns, False)  # Re-ignored
+
+    def test_negation_patterns_directories(self, codebuild_service):
+        """Test negation patterns with directories."""
+        patterns = ["node_modules/", "!node_modules/important/"]
+
+        assert codebuild_service._should_ignore("node_modules", patterns, True)
+        assert not codebuild_service._should_ignore("node_modules/important", patterns, True)
+
+    def test_negation_patterns_complex_precedence(self, codebuild_service):
+        """Test complex pattern precedence."""
+        patterns = ["*", "!*.py", "test.*", "!test.py"]
+
+        # Everything ignored, except .py files
+        assert codebuild_service._should_ignore("file.txt", patterns, False)
+        assert not codebuild_service._should_ignore("script.py", patterns, False)
+
+        # test.* re-ignored, but test.py negated again
+        assert codebuild_service._should_ignore("test.txt", patterns, False)
+        assert not codebuild_service._should_ignore("test.py", patterns, False)
+
+    def test_source_upload_with_negation_patterns(self, codebuild_service, mock_clients):
+        """Test source upload with negation patterns in .dockerignore."""
+        with (
+            patch("os.walk") as mock_walk,
+            patch("zipfile.ZipFile") as mock_zipfile,
+            patch("tempfile.NamedTemporaryFile") as mock_tempfile,
+            patch("os.unlink") as mock_unlink,
+            patch.object(codebuild_service, "_parse_dockerignore") as mock_parse,
+        ):
+            # Mock file system with files to test negation patterns
+            mock_walk.return_value = [(".", [], ["debug.log", "important.log", "temp.tmp", "keep.tmp", "code.py"])]
+
+            # Mock dockerignore with negation patterns
+            mock_parse.return_value = ["*.log", "!important.log", "*.tmp", "!keep.tmp"]
+
+            # Mock temp file and zipfile
+            mock_temp = Mock()
+            mock_temp.name = "/tmp/test.zip"
+            mock_tempfile.return_value.__enter__.return_value = mock_temp
+
+            mock_zip = Mock()
+            mock_zipfile.return_value.__enter__.return_value = mock_zip
+
+            # Mock datetime
+            with patch("bedrock_agentcore_starter_toolkit.services.codebuild.datetime") as mock_dt:
+                mock_dt.now.return_value.strftime.return_value = "20250718-083000"
+                mock_dt.timezone = timezone
+
+                codebuild_service.upload_source("test-agent")
+
+            # Verify correct files were included/excluded
+            zip_calls = mock_zip.write.call_args_list
+            written_files = [call[0][1] for call in zip_calls]
+
+            assert "important.log" in written_files  # Negated, should be included
+            assert "keep.tmp" in written_files  # Negated, should be included
+            assert "code.py" in written_files  # Not matched, should be included
+            assert "debug.log" not in written_files  # Ignored
+            assert "temp.tmp" not in written_files  # Ignored
+
+            # Verify cleanup was called
+            mock_unlink.assert_called_once_with("/tmp/test.zip")
 
     def test_matches_pattern_exact_match(self, codebuild_service):
         """Test exact pattern matching."""

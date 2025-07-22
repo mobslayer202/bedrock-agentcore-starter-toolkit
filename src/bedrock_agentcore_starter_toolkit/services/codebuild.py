@@ -291,18 +291,19 @@ phases:
         if path.startswith("./"):
             path = path[2:]
 
+        should_ignore = False  # Default state: don't ignore
+
         for pattern in patterns:
             # Handle negation patterns
             if pattern.startswith("!"):
                 if self._matches_pattern(path, pattern[1:], is_dir):
-                    return False
-                continue
+                    should_ignore = False  # Negation pattern: don't ignore
+            else:
+                # Regular ignore patterns
+                if self._matches_pattern(path, pattern, is_dir):
+                    should_ignore = True  # Regular pattern: ignore
 
-            # Regular ignore patterns
-            if self._matches_pattern(path, pattern, is_dir):
-                return True
-
-        return False
+        return should_ignore
 
     def _matches_pattern(self, path: str, pattern: str, is_dir: bool) -> bool:
         """Check if path matches a dockerignore pattern."""

@@ -1,18 +1,16 @@
-# pylint: disable=line-too-long
 """Bedrock Agent Translation Tool."""
 
-import os
-import uuid
 import json
+import os
 import subprocess  # nosec # needed to run the agent file
 import sys
 import traceback
+import uuid
 
 import boto3
-import typer
 import questionary
+import typer
 from rich.panel import Panel
-from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
@@ -286,9 +284,8 @@ def import_agent(
             "observability": not disable_observability,
         }
 
-        console.print(
-            f"[bold green]✓[/bold green] Selected AgentCore primitives: {[k for k, v in primitives_opt_in.items() if v]}\n"
-        )
+        selected_primitives = [k for k, v in primitives_opt_in.items() if v]
+        console.print(f"[bold green]✓[/bold green] Selected AgentCore primitives: {selected_primitives}\n")
 
         # Show progress
         with console.status("[bold green]Fetching agent configuration...[/bold green]"):
@@ -298,7 +295,7 @@ def import_agent(
             except Exception as e:
                 console.print(
                     Panel(
-                        f"[bold red]Failed to retrieve agent configuration![/bold red]\nError: {str(e)} {traceback.print_exc()}",
+                        f"[bold red]Failed to retrieve agent configuration![/bold red]\nError: {str(e)}",
                         title="Configuration Error",
                         border_style="red",
                     )
@@ -354,8 +351,8 @@ def import_agent(
                 agent_name = f"agent_{uuid.uuid4().hex[:8].lower()}"
                 console.print("[bold]  \nDeploying agent to AgentCore Runtime...\n[/bold]")
                 os.system(
-                    f"cd {output_dir} && agentcore configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && agentcore configure set-default '{agent_name}' && agentcore launch"  # nosec
-                )  # nosec
+                    f"cd {output_dir} && agentcore configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && agentcore configure set-default '{agent_name}' && agentcore launch"  # nosec # noqa: E501
+                )
 
             except Exception as e:
                 console.print(
@@ -444,6 +441,3 @@ def import_agent(
                 border_style="green",
             )
         )
-
-
-# ruff: noqa

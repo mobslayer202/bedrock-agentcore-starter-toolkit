@@ -1,21 +1,22 @@
 # pylint: disable=consider-using-f-string, line-too-long
-
+# ruff: noqa: E501
 """Bedrock Agent to LangChain Translator.
 
 This script translates AWS Bedrock Agent configurations into equivalent LangChain code.
 """
 
-import textwrap
 import os
+import textwrap
 
-from .base_bedrock_translate import BaseBedrockTranslator
 from ..utils import clean_variable_name, generate_pydantic_models, prune_tool_name
+from .base_bedrock_translate import BaseBedrockTranslator
 
 
 class BedrockLangchainTranslation(BaseBedrockTranslator):
     """Class to translate Bedrock Agent configurations to LangChain code."""
 
     def __init__(self, agent_config, debug: bool, output_dir: str, enabled_primitives: dict):
+        """Initialize the BedrockLangchainTranslation class."""
         super().__init__(agent_config, debug, output_dir, enabled_primitives)
 
         self.imports_code += self.generate_imports()
@@ -236,7 +237,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         return tool_code
 
     def generate_structured_action_groups_code(self, ag):
-        """Generate tool code for functionSchema action groups"""
+        """Generate tool code for functionSchema action groups."""
         executor_is_lambda = bool(ag["actionGroupExecutor"].get("lambda", False))
         action_group_name = ag.get("actionGroupName", "")
         action_group_desc = ag.get("description", "").replace('"', '\\"')
@@ -375,7 +376,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         return tool_instances, tool_code
 
     def generate_openapi_action_groups_code(self, ag) -> str:
-        """Generate tool code for openAPI schema action groups"""
+        """Generate tool code for openAPI schema action groups."""
         executor_is_lambda = bool(ag["actionGroupExecutor"].get("lambda", False))
         action_group_name = ag.get("actionGroupName", "")
         action_group_desc = ag.get("description", "").replace('"', '\\"')
@@ -437,9 +438,11 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     """.format(
                         input_model_name,
                         f"{param_model_name} |" if params else "",
-                        f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
-                        if content_models
-                        else "",
+                        (
+                            f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
+                            if content_models
+                            else ""
+                        ),
                     )
                 elif params:
                     input_model_name = param_model_name
@@ -603,13 +606,17 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             self.debug,
             self.debug,
             'last_agent = ""' if self.multi_agent_enabled and self.supervision_type == "SUPERVISOR_ROUTER" else "",
-            "if _agent is None or memory_manager.has_memory_changed():"
-            if self.memory_enabled and not self.agentcore_memory_enabled
-            else "if _agent is None:",
+            (
+                "if _agent is None or memory_manager.has_memory_changed():"
+                if self.memory_enabled and not self.agentcore_memory_enabled
+                else "if _agent is None:"
+            ),
             memory_retrieve_code,
-            "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
-            if self.memory_enabled
-            else "",
+            (
+                "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
+                if self.memory_enabled
+                else ""
+            ),
             self.debug,
         )
 
@@ -770,7 +777,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         return agent_code
 
     def generate_routing_code(self):
-        """Generate routing code for supervisor router"""
+        """Generate routing code for supervisor router."""
         if not self.multi_agent_enabled or self.supervision_type != "SUPERVISOR_ROUTER":
             return ""
 
@@ -816,6 +823,3 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     def translate_bedrock_to_langchain(self, output_path: str):
         """Translate Bedrock agent config to LangChain code."""
         self.translate(output_path, self.code_sections)
-
-
-# ruff: noqa

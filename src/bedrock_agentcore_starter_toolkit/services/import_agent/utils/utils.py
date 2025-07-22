@@ -365,6 +365,7 @@ def prune_tool_name(tool_name: str) -> str:
 
 def get_template_fixtures(field: str = "orchestrationBasePrompts", group: str = "REACT_MULTI_ACTION") -> dict:
     """Extract all templateFixtures from a specified field in template_fixtures_merged.json.
+
     For orchestrationBasePrompts, uses the specified group (defaults to REACT_MULTI_ACTION).
 
     Args:

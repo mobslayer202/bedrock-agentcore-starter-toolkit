@@ -1,7 +1,8 @@
 # pylint: disable=line-too-long
 """Long Term Memory Manager for generated agents.
 
-This module provides a custom memory manager that mimics the functionality of Bedrock Agents Long Term Memory and Sessions.
+This module provides a custom memory manager that mimics the functionality of Bedrock Agents
+Long Term Memory and Sessions.
 """
 
 import json
@@ -104,7 +105,8 @@ class LongTermMemoryManager:
             import traceback
 
             traceback.print_exc()
-            return f"Session summary generation failed. Last message: {self.current_session_messages[-1]['content'] if self.current_session_messages else 'No messages'}"
+            message = self.current_session_messages[-1]["content"] if self.current_session_messages else "No messages"
+            return f"Session summary generation failed. Last message: {message}"
 
     @classmethod
     def _cleanup_instance(cls):
@@ -128,6 +130,7 @@ class LongTermMemoryManager:
     @classmethod
     def end_all_sessions(cls):
         """End sessions for all active memory manager instances.
+
         This is a convenience method that can be called from anywhere to end all sessions.
         """
         instances = cls.get_active_instances()
@@ -136,6 +139,7 @@ class LongTermMemoryManager:
 
     def end_session(self):
         """End the current session and trigger end_session for all other instances.
+
         This ensures that when one agent ends its session, all other agents do the same.
         """
         # Prevent recursive calls
@@ -179,9 +183,11 @@ class LongTermMemoryManager:
         self._session_ended = False
 
     def get_memory_synopsis(self) -> str:
+        """Get a synopsis of the memory, including all session summaries."""
         return "\n".join([summary["summary"] for summary in self.session_summaries])
 
     def has_memory_changed(self) -> bool:
+        """Check if the memory has changed since the last update."""
         summary_file = self.storage_path
 
         if not os.path.exists(summary_file):
@@ -194,7 +200,5 @@ class LongTermMemoryManager:
         return False
 
     def clear_current_session(self):
+        """Clear the current session messages."""
         self.current_session_messages = []
-
-
-# ruff: noqa

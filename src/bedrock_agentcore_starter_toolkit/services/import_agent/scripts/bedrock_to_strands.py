@@ -1,21 +1,22 @@
 # pylint: disable=consider-using-f-string, line-too-long
-
-"""Bedrock Agent to Strands Translator
+# ruff: noqa: E501
+"""Bedrock Agent to Strands Translator.
 
 This script translates AWS Bedrock Agent configurations into equivalent Strands code.
 """
 
-import textwrap
 import os
+import textwrap
 
-from .base_bedrock_translate import BaseBedrockTranslator
 from ..utils import clean_variable_name, generate_pydantic_models, prune_tool_name
+from .base_bedrock_translate import BaseBedrockTranslator
 
 
 class BedrockStrandsTranslation(BaseBedrockTranslator):
     """Class to translate Bedrock Agent configurations to Strands code."""
 
     def __init__(self, agent_config, debug: bool, output_dir: str, enabled_primitives: dict):
+        """Initialize the BedrockStrandsTranslation class."""
         super().__init__(agent_config, debug, output_dir, enabled_primitives)
 
         self.imports_code += self.generate_imports()
@@ -208,7 +209,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         return tool_code
 
     def generate_structured_action_groups_code(self, ag):
-        """Generate tool code for functionSchema action groups"""
+        """Generate tool code for functionSchema action groups."""
         executor_is_lambda = bool(ag["actionGroupExecutor"].get("lambda", False))
         action_group_name = ag.get("actionGroupName", "")
         action_group_desc = ag.get("description", "").replace('"', '\\"')
@@ -342,7 +343,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         return tool_instances, tool_code
 
     def generate_openapi_action_groups_code(self, ag) -> str:
-        """Generate tool code for openAPI schema action groups"""
+        """Generate tool code for openAPI schema action groups."""
         executor_is_lambda = bool(ag["actionGroupExecutor"].get("lambda", False))
         action_group_name = ag.get("actionGroupName", "")
         action_group_desc = ag.get("description", "").replace('"', '\\"')
@@ -404,9 +405,11 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     """.format(
                         input_model_name,
                         f"{param_model_name} |" if params else "",
-                        f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
-                        if content_models
-                        else "",
+                        (
+                            f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
+                            if content_models
+                            else ""
+                        ),
                     )
                 elif params:
                     input_model_name = param_model_name
@@ -581,13 +584,17 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         return _agent
     """.format(
             'last_agent = ""' if self.multi_agent_enabled and self.supervision_type == "SUPERVISOR_ROUTER" else "",
-            "if _agent is None or memory_manager.has_memory_changed():"
-            if self.memory_enabled and not self.agentcore_memory_enabled
-            else "if _agent is None:",
+            (
+                "if _agent is None or memory_manager.has_memory_changed():"
+                if self.memory_enabled and not self.agentcore_memory_enabled
+                else "if _agent is None:"
+            ),
             memory_retrieve_code,
-            "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
-            if self.memory_enabled
-            else "",
+            (
+                "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
+                if self.memory_enabled
+                else ""
+            ),
         )
 
         # Generate routing code if needed
@@ -709,14 +716,21 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             print(f"Agent Result: {{agent_result}}")
 
             def format_message(msg):
-                if isinstance(msg, HumanMessage):
-                    return (msg.content, "USER")
-                elif isinstance(msg, AIMessage):
-                    return (msg.content, "ASSISTANT")
-                elif isinstance(msg, ToolMessage):
-                    return (msg.name, "TOOL")
-                else:
-                    return (str(msg), "UNKNOWN")
+                try:
+                    text = msg.content if hasattr(msg, "content") else msg.text()
+
+                    if not text or text.strip() == "":
+                        return ("No response provided.", "UNKNOWN")
+                    if isinstance(msg, HumanMessage):
+                        return (text, "USER")
+                    elif isinstance(msg, AIMessage):
+                        return (text, "ASSISTANT")
+                    elif isinstance(msg, ToolMessage):
+                        return (text, "TOOL")
+                    else:
+                        return (text, "UNKNOWN")
+                except Exception:
+                    return ("No response provided.", "UNKNOWN")
 
             formatted_messages = [format_message(msg) for msg in agent_result]
 
@@ -744,7 +758,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         return agent_code
 
     def generate_routing_code(self):
-        """Generate routing code for supervisor router"""
+        """Generate routing code for supervisor router."""
         if not self.multi_agent_enabled or self.supervision_type != "SUPERVISOR_ROUTER":
             return ""
 
@@ -781,6 +795,3 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     def translate_bedrock_to_strands(self, output_path) -> str:
         """Translate Bedrock agent configuration to Strands code."""
         self.translate(output_path, self.code_sections)
-
-
-# ruff: noqa

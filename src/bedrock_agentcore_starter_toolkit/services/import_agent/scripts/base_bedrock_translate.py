@@ -450,7 +450,8 @@ class BaseBedrockTranslator:
                 \"""
                 Execute code in the code interpreter sandbox.
                 Args:
-                    code (str): The code to execute in the sandbox. This should be a complete code snippet that can run independently. If you created a file, pass the file content as a string.
+                    code (str): The code to execute in the sandbox. This should be a complete code snippet that can run
+                     independently. If you created a file, pass the file content as a string.
                     language (str): The programming language of the code (e.g., "python", "javascript").
                 Returns:
                     dict: The response from the code interpreter service, including execution results or error messages.
@@ -499,11 +500,13 @@ class BaseBedrockTranslator:
                 \"""
                 Write files to the code interpreter sandbox.
                 Args:
-                    files_to_create (List[Dict[str, str]]): List of dictionaries with 'path' and 'text' keys, where 'path' is the file path and 'text' is the content to write.
+                    files_to_create (List[Dict[str, str]]): List of dictionaries with 'path' and 'text' keys,
+                    where 'path' is the file path and 'text' is the content to write.
                 Returns:
-                    dict: The response from the code interpreter service, including success status and any error messages.
+                    dict: The response from the code interpreter service, including success status and error messages.
                 Example:
-                    files_to_create = [{"path": "example.txt", "text": "Hello, World!"}, {"path": "script.py", "text": "print('Hello from script!')"}]
+                    files_to_create = [{"path": "example.txt", "text": "Hello, World!"},
+                    {"path": "script.py", "text": "print('Hello from script!')"}]
                 \"""
 
                 response = session.invoke(method="writeFiles", params={"content": files_to_create})
@@ -541,8 +544,10 @@ class BaseBedrockTranslator:
 
             IMPORTANT: Ensure that the code is safe to execute and does not contain malicious content.
             IMPORTANT: Do not run indefinitely or wait for user input.
-            IMPORTANT: After executing code and receiving results, you MUST provide a clear response that includes the answer to the user's question.
-            IMPORTANT: Always respond with the actual result or answer, not just "I executed the code" or "The result is displayed above".
+            IMPORTANT: After executing code and receiving results, you MUST provide a clear response that
+                       includes the answer to the user's question.
+            IMPORTANT: Always respond with the actual result or answer, not just "I executed the code" or
+                       "The result is displayed above".
             IMPORTANT: If code execution produces output, include that output in your response to the user.
             \"""
     """
@@ -586,3 +591,6 @@ class BaseBedrockTranslator:
             ):
                 dest_file.truncate(0)
                 dest_file.write(src_file.read())
+
+
+# ruff: noqa: E501

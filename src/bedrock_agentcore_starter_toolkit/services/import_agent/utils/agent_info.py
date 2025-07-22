@@ -1,4 +1,5 @@
-# pylint: disable=line-too-long
+"""This module provides utility functions to interact with AWS Bedrock Agent services."""
+
 import json
 import os
 
@@ -77,7 +78,8 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
         bedrock_agent_client: The Bedrock Agent client.
 
     Returns:
-        dict: A dictionary containing detailed information about the agent, its alias, action groups, knowledge bases, and collaborators.
+        dict: A dictionary containing detailed information about the agent, its alias, action groups,
+        knowledge bases, and collaborators.
     """
     agent_version = bedrock_agent_client.get_agent_alias(agentId=agent_id, agentAliasId=agent_alias_id)["agentAlias"][
         "routingConfiguration"
@@ -207,9 +209,11 @@ def auth_and_get_info(agent_id: str, agent_alias_id: str, output_dir: str):
     Args:
         agent_id (str): The ID of the agent.
         agent_alias_id (str): The ID of the agent alias.
+        output_dir (str): The directory where the output Bedrock Agent configuration will be saved.
 
     Returns:
-        dict: A dictionary containing detailed information about the agent, its alias, action groups, knowledge bases, and collaborators.
+        dict: A dictionary containing detailed information about the agent, its alias,
+        action groups, knowledge bases, and collaborators.
     """
     credentials = boto3.Session().get_credentials()
     bedrock_client, bedrock_agent_client = get_clients(credentials)

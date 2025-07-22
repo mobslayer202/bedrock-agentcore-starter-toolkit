@@ -1,1 +1,1 @@
-"""Import Agent Utility for Bedrock Agents -> Bedrock AgentCore"""
+"""Import Agent Utility for Bedrock Agents -> Bedrock AgentCore."""

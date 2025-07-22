@@ -79,14 +79,8 @@ strands-agents" > requirements.txt
 # Configure your agent
 agentcore configure -e my_agent.py -er <AGENT_IAM_EXECUTION_ROLE>
 
-# Test locally with the toolkit
-agentcore launch -l
-
-# In another terminal, test it:
-agentcore invoke '{"prompt": "Hello!"}' -l
-
 # Deploy to AWS
-agentcore launch
+agentcore launch -cb
 
 # Test your deployed agent
 agentcore invoke '{"prompt": "tell me a joke"}'
@@ -109,6 +103,9 @@ agentcore invoke '{"prompt": "tell me a joke"}'
 
 **Permission errors?**
 - Make sure your AWS credentials are configured: `aws configure`
+
+**Code build error?**
+- Check code build project with agent name as suffix for latest build and its logs
 
 ## 🚀 Next Steps
 

@@ -531,8 +531,8 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
                 "memory_synopsis = memory_manager.get_memory_synopsis()"
                 if not self.agentcore_memory_enabled
                 else """
-                memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
-                memory_synopsis = "\n".join([m.get("content", {}).get("text", "") for m in memories])
+            memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
+            memory_synopsis = "\\n".join([m.get("content", {}).get("text", "") for m in memories])
 """
             )
         )
@@ -675,12 +675,12 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
 
         agentcore_memory_code = (
             """
-                event = memory_client.create_event(
-                    memory_id=memory_id,
-                    actor_id=user_id,
-                    session_id=session_id,
-                    messages=formatted_messages
-                )
+            event = memory_client.create_event(
+                memory_id=memory_id,
+                actor_id=user_id,
+                session_id=session_id,
+                messages=formatted_messages
+            )
         """
             if self.agentcore_memory_enabled and self.memory_enabled
             else ""

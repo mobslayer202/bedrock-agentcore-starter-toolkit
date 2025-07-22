@@ -32,6 +32,7 @@ class BaseBedrockTranslator:
         self.debug = debug
         self.output_dir = output_dir
         self.user_id = uuid.uuid4().hex[:8]
+        self.cleaned_agent_name = self.agent_info["agentName"].replace(" ", "_").replace("-", "_").lower()[:30]
 
         # AgentCore
         self.enabled_primitives = enabled_primitives
@@ -262,7 +263,7 @@ class BaseBedrockTranslator:
             memory_client = MemoryClient(region_name=self.agent_region, environment="prod")
 
             memory = memory_client.create_memory_and_wait(
-                name=f"{self.agent_info['agentName']}_memory_{uuid.uuid4().hex[:8].lower()}",
+                name=f"{self.cleaned_agent_name}_memory_{uuid.uuid4().hex[:8].lower()}",
                 strategies=[
                     {
                         "summaryMemoryStrategy": {
@@ -318,6 +319,7 @@ class BaseBedrockTranslator:
             if (self.multi_agent_enabled or self.memory_enabled) and not self.agentcore_memory_enabled
             else ""
         )
+        run_code = "else: app.run()" if not self.is_collaborator else ""
         return f"""
 
     def cli():
@@ -333,7 +335,7 @@ class BaseBedrockTranslator:
 
                     result = endpoint({{"prompt": query}}, RequestContext(session_id=session_id)).get('result', {{}})
                     if not result:
-                        print("  Error:" + result)
+                        print("  Error:" + str(result.get('error', {{}})))
                         continue
 
                     print(f"\\nAgent Response: {{result.get('response', '')}}\\n")
@@ -360,7 +362,7 @@ class BaseBedrockTranslator:
     if __name__ == "__main__":
         if len(sys.argv) > 1 and sys.argv[1] == "--cli":
             cli() # Run the CLI interface
-        {"else: app.run()" if not self.is_collaborator else ""}
+        {run_code}
         """
 
     def generate_code_interpreter(self, platform: str):

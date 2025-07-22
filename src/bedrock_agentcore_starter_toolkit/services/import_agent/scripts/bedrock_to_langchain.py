@@ -563,8 +563,8 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
                 "memory_synopsis = memory_manager.get_memory_synopsis()"
                 if not self.agentcore_memory_enabled
                 else """
-                memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
-                memory_synopsis = "\n".join([m.get("content", {}).get("text", "") for m in memories])
+            memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
+            memory_synopsis = "\\n".join([m.get("content", {}).get("text", "") for m in memories])
 """
             )
         )
@@ -694,12 +694,12 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
         agentcore_memory_code = (
             """
-                event = memory_client.create_event(
-                    memory_id=memory_id,
-                    actor_id=user_id,
-                    session_id=session_id,
-                    messages=formatted_messages
-                )
+            event = memory_client.create_event(
+                memory_id=memory_id,
+                actor_id=user_id,
+                session_id=session_id,
+                messages=formatted_messages
+            )
         """
             if self.agentcore_memory_enabled and self.memory_enabled
             else ""
@@ -728,14 +728,21 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             print(f"Agent Result: {{agent_result}}")
 
             def format_message(msg):
-                if isinstance(msg, HumanMessage):
-                    return (msg.content, "USER")
-                elif isinstance(msg, AIMessage):
-                    return (msg.content, "ASSISTANT")
-                elif isinstance(msg, ToolMessage):
-                    return (msg.name, "TOOL")
-                else:
-                    return (str(msg), "UNKNOWN")
+                try:
+                    text = msg.content if hasattr(msg, "content") else msg.text()
+
+                    if not text or text.strip() == "":
+                        return ("No response provided.", "UNKNOWN")
+                    if isinstance(msg, HumanMessage):
+                        return (text, "USER")
+                    elif isinstance(msg, AIMessage):
+                        return (text, "ASSISTANT")
+                    elif isinstance(msg, ToolMessage):
+                        return (text, "TOOL")
+                    else:
+                        return (text, "UNKNOWN")
+                except Exception:
+                    return ("No response provided.", "UNKNOWN")
 
             formatted_messages = [format_message(msg) for msg in agent_result]
 

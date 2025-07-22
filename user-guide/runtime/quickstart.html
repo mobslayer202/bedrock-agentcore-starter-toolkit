@@ -648,6 +648,29 @@
   
   
     <li class="md-nav__item">
+      <a href="permissions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Permissions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="async.html" class="md-nav__link">
         
   
@@ -1744,14 +1767,8 @@ pip<span class="w"> </span>install<span class="w"> </span>bedrock-agentcore-star
 <span class="c1"># Configure your agent</span>
 agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class="w"> </span>my_agent.py<span class="w"> </span>-er<span class="w"> </span>&lt;AGENT_IAM_EXECUTION_ROLE&gt;
 
-<span class="c1"># Test locally with the toolkit</span>
-agentcore<span class="w"> </span>launch<span class="w"> </span>-l
-
-<span class="c1"># In another terminal, test it:</span>
-agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Hello!&quot;}&#39;</span><span class="w"> </span>-l
-
 <span class="c1"># Deploy to AWS</span>
-agentcore<span class="w"> </span>launch
+agentcore<span class="w"> </span>launch<span class="w"> </span>-cb
 
 <span class="c1"># Test your deployed agent</span>
 agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;tell me a joke&quot;}&#39;</span>
@@ -1770,6 +1787,8 @@ agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">
 - Install Docker Desktop for deployment</p>
 <p><strong>Permission errors?</strong>
 - Make sure your AWS credentials are configured: <code>aws configure</code></p>
+<p><strong>Code build error?</strong>
+- Check code build project with agent name as suffix for latest build and its logs</p>
 <h2 id="next-steps">🚀 Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>Ready to build something amazing? Check out:</p>
 <ul>

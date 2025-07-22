@@ -20,6 +20,12 @@
   - Informative error messages for common IAM scenarios
   - Eliminates need for manual IAM role creation before deployment
 
+- **Auto-update on conflict for agent deployments** (#3)
+  - New `--auto-update-on-conflict` flag for `agentcore launch` command
+  - Automatically updates existing agents instead of failing with conflict errors
+  - Available in both CLI and notebook interfaces
+  - Streamlines iterative development and deployment workflows
+
 ### Changed
 - Enhanced `agentcore launch` command to support both local Docker and CodeBuild workflows
 - Improved error handling patterns throughout the codebase

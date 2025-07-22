@@ -331,7 +331,7 @@ class BaseBedrockTranslator:
                     if query.lower() == "exit":
                         break
 
-                    result = endpoint({{"message": query}}, RequestContext(session_id=session_id)).get('result', {{}})
+                    result = endpoint({{"prompt": query}}, RequestContext(session_id=session_id)).get('result', {{}})
                     if not result:
                         print("  Error:" + result)
                         continue

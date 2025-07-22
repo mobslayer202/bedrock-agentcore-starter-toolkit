@@ -101,7 +101,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             """
 
             # Add guardrails if available
-            if self.guardrail_config:
+            if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
                 model_config += """,
         guardrails={}""".format(self.guardrail_config)
 
@@ -720,9 +720,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             session_id = context.session_id or payload.get("sessionId", uuid.uuid4().hex[:8])
 
             tools_used.clear()
-            agent_query = payload.get("message", "")
+            agent_query = payload.get("prompt", "")
             if not agent_query:
-                return {'error': "No query provided, please provide a 'message' field in the payload."}
+                return {'error': "No query provided, please provide a 'prompt' field in the payload."}
 
             agent_result = invoke_agent(agent_query)
             print(f"Agent Result: {{agent_result}}")
@@ -755,8 +755,6 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
             return {'result': {'response': response_content, 'sources': sources, 'tools_used': list(tools_used), 'sessionId': session_id, 'messages': formatted_messages}}
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             return {'error': str(e)}
         """
             % agentcore_memory_code

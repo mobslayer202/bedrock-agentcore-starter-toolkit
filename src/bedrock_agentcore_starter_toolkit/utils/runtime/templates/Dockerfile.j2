@@ -1,12 +1,13 @@
 FROM public.ecr.aws/docker/library/python:{{ python_version }}-slim
 WORKDIR /app
 
-# Install system dependencies if needed
-{% if system_packages %}
+# Install system dependencies including build tools for Python packages
 RUN apt-get update && apt-get install -y \
-    {% for package in system_packages %}{{ package }} {% endfor %}\
+    gcc \
+    g++ \
+    python3-dev \
+    {% if system_packages %}{% for package in system_packages %}{{ package }} {% endfor %}{% endif %}\
     && rm -rf /var/lib/apt/lists/*
-{% endif %}
 
 # Copy entire project (respecting .dockerignore)
 COPY . .

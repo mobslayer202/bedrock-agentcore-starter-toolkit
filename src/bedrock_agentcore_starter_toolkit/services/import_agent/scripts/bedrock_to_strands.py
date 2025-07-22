@@ -7,7 +7,6 @@ This script translates AWS Bedrock Agent configurations into equivalent Strands 
 
 import textwrap
 import os
-import uuid
 
 from .base_bedrock_translate import BaseBedrockTranslator
 from ..utils import clean_variable_name, generate_pydantic_models, prune_tool_name
@@ -54,12 +53,12 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     def generate_imports(self) -> str:
         """Generate import statements for Strands components."""
         return """
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
     from strands import Agent, tool
     from strands.agent.conversation_manager import SlidingWindowConversationManager
     from strands.models import BedrockModel
     from strands.types.content import Message
-
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     """
 
     def generate_model_configurations(self) -> str:
@@ -73,25 +72,15 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             inference_config = config.get("inferenceConfiguration", {})
 
             # Build model config string using string formatting
-            model_config = """
-    # {0} LLM configuration
-    llm_{0} = BedrockModel(
-        model_id="{1}",
-        region_name="{2}",
-        temperature={3},
-        max_tokens={4},
-        stop_sequences={5},
-        top_p={6},
-        top_k={7}""".format(
-                prompt_type,
-                self.model_id,
-                self.agent_region,
-                inference_config.get("temperature", 0),
-                inference_config.get("maximumLength", 2048),
-                repr(inference_config.get("stopSequences", [])),
-                inference_config.get("topP", 1.0),
-                inference_config.get("topK", 250),
-            )
+            model_config = f"""
+    llm_{prompt_type} = BedrockModel(
+        model_id="{self.model_id}",
+        region_name="{self.agent_region}",
+        temperature={inference_config.get("temperature", 0)},
+        max_tokens={inference_config.get("maximumLength", 2048)},
+        stop_sequences={repr(inference_config.get("stopSequences", []))},
+        top_p={inference_config.get("topP", 1.0)},
+        top_k={inference_config.get("topK", 250)}"""
 
             # Add guardrails if available
             if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
@@ -189,6 +178,8 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             tool_code += code_to_add
             tool_instances.extend(tool_instances_to_add)
 
+        # Apply most up to date single KB optimization logic
+        # Need there to be no AG tools and only one KB for this to apply
         self.single_kb_optimization_enabled = (
             self.single_kb and self.kb_generation_prompt_enabled and not tool_instances
         )
@@ -524,7 +515,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         """Generate agent setup code."""
         agent_code = f"tools = [{','.join(self.tools)}]\ntools_used = set()"
 
-        if self.debug:
+        if self.debug or self.observability_enabled:
             self.imports_code += "\nfrom strands.telemetry.tracer import get_tracer"
             agent_code += '\nos.environ["STRANDS_OTEL_ENABLE_CONSOLE_EXPORT"] = "true"'
         else:
@@ -532,6 +523,19 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
 
         if self.action_groups and self.tools_code:
             agent_code += """\ntools += action_group_tools"""
+
+        memory_retrieve_code = (
+            ""
+            if not self.memory_enabled
+            else (
+                "memory_synopsis = memory_manager.get_memory_synopsis()"
+                if not self.agentcore_memory_enabled
+                else """
+                memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
+                memory_synopsis = "\n".join([m.get("content", {}).get("text", "") for m in memories])
+"""
+            )
+        )
 
         # Create agent based on available components
         agent_code += """
@@ -557,15 +561,16 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     _agent = None
     first_turn = True
     last_input = ""
-    {0}
+    user_id = ""
+    {}
 
     # agent update loop
     def get_agent():
         global _agent
-        {1}
-            {2}
+        {}
+            {}
             system_prompt = ORCHESTRATION_TEMPLATE
-            {3}
+            {}
             _agent = Agent(
                 model=llm_ORCHESTRATION,
                 system_prompt=system_prompt,
@@ -577,9 +582,9 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     """.format(
             'last_agent = ""' if self.multi_agent_enabled and self.supervision_type == "SUPERVISOR_ROUTER" else "",
             "if _agent is None or memory_manager.has_memory_changed():"
-            if self.memory_enabled
+            if self.memory_enabled and not self.agentcore_memory_enabled
             else "if _agent is None:",
-            "memory_synopsis = memory_manager.get_memory_synopsis()" if self.memory_enabled else "",
+            memory_retrieve_code,
             "system_prompt = system_prompt.replace('$memory_synopsis$', memory_synopsis)"
             if self.memory_enabled
             else "",
@@ -613,14 +618,14 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         memory_add_user = (
             """
         memory_manager.add_message({'role': 'user', 'content': question})"""
-            if self.memory_enabled
+            if self.memory_enabled and not self.agentcore_memory_enabled
             else ""
         )
 
         memory_add_assistant = (
             """
         memory_manager.add_message({'role': 'assistant', 'content': str(response)})"""
-            if self.memory_enabled
+            if self.memory_enabled and not self.agentcore_memory_enabled
             else ""
         )
 
@@ -651,7 +656,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     def invoke_agent(question: str{relay_param_def}):
         {"global last_agent" if self.supervision_type == "SUPERVISOR_ROUTER" else ""}
         {"global first_turn" if self.single_kb_optimization_enabled else ""}
-        global last_input
+        global last_input, memory_id
         last_input = question
         agent = get_agent()
         {relay_code}
@@ -668,24 +673,58 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         {post_process_code}
         """
 
+        agentcore_memory_code = (
+            """
+                event = memory_client.create_event(
+                    memory_id=memory_id,
+                    actor_id=user_id,
+                    session_id=session_id,
+                    messages=formatted_messages
+                )
+        """
+            if self.agentcore_memory_enabled and self.memory_enabled
+            else ""
+        )
+
         if not self.is_collaborator:
             agent_code += """
     @app.entrypoint
     """
 
-        agent_code += """
+        agent_code += (
+            """
     def endpoint(payload):
         try:
+            global user_id, tools_used
+
+            user_id = payload.get("userId", uuid.uuid4().hex[:8])
+            session_id = context.session_id or payload.get("sessionId", uuid.uuid4().hex[:8])
+
             tools_used.clear()
-            agent_query = payload.get("message", "")
+            agent_query = payload.get("prompt", "")
             if not agent_query:
-                return {"error": "No query provided, please provide in the format {'message': 'your question'}"}
+                return {'error': "No query provided, please provide a 'prompt' field in the payload."}
 
             agent_result = invoke_agent(agent_query)
+            print(f"Agent Result: {{agent_result}}")
+
+            def format_message(msg):
+                if isinstance(msg, HumanMessage):
+                    return (msg.content, "USER")
+                elif isinstance(msg, AIMessage):
+                    return (msg.content, "ASSISTANT")
+                elif isinstance(msg, ToolMessage):
+                    return (msg.name, "TOOL")
+                else:
+                    return (str(msg), "UNKNOWN")
+
+            formatted_messages = [format_message(msg) for msg in agent_result]
+
             tools_used.update(list(agent_result.metrics.tool_metrics.keys()))
             sources = []
             response_content = str(agent_result)
-            urls = re.findall(r"(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}(?:/[^/\s]*)*", response_content)
+
+            urls = re.findall(r'(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}(?:/[^/\s]*)*', response_content)
             source_tags = re.findall(r"<source>(.*?)</source>", response_content)
 
             if urls: sources.extend(urls)
@@ -693,10 +732,14 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
 
             sources = list(set(sources))
 
+            %s
+
             return {"result": {"response": response_content, "sources": sources, "tools_used": tools_used}}
         except Exception as e:
             return {"error": str(e)}
         """
+            % agentcore_memory_code
+        )
 
         return agent_code
 

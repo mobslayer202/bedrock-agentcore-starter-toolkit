@@ -82,7 +82,7 @@ agentcore invoke '{"prompt": "Hello from Bedrock AgentCore!"}'
 
 ## ➡️ Importing from Bedrock Agents
 
-Import from Bedrock Agents to AgentCore easily using the `import-agent` utility.
+Import from Bedrock Agents to AgentCore using the `import-agent` utility.
 
 ```bash
 # Launch the import-agent workflow

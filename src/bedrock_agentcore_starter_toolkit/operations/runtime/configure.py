@@ -28,6 +28,7 @@ def configure_bedrock_agentcore(
     ecr_repository: Optional[str] = None,
     container_runtime: Optional[str] = None,
     auto_create_ecr: bool = True,
+    auto_create_execution_role: bool = True,
     enable_observability: bool = True,
     requirements_file: Optional[str] = None,
     authorizer_configuration: Optional[Dict[str, Any]] = None,
@@ -40,10 +41,11 @@ def configure_bedrock_agentcore(
     Args:
         agent_name: name of the agent,
         entrypoint_path: Path to the entrypoint file
-        execution_role: AWS execution role ARN or name
+        execution_role: AWS execution role ARN or name (auto-created if not provided)
         ecr_repository: ECR repository URI
         container_runtime: Container runtime to use
         auto_create_ecr: Whether to auto-create ECR repository
+        auto_create_execution_role: Whether to auto-create execution role if not provided
         enable_observability: Whether to enable observability
         requirements_file: Path to requirements file
         authorizer_configuration: JWT authorizer configuration dictionary
@@ -84,15 +86,26 @@ def configure_bedrock_agentcore(
         log.debug("Initializing container runtime with: %s", container_runtime or "default")
     runtime = ContainerRuntime(container_runtime)
 
-    # Handle execution role ARN
-    if execution_role and not execution_role.startswith("arn:aws:iam::"):
-        execution_role_arn = f"arn:aws:iam::{account_id}:role/{execution_role}"
+    # Handle execution role - convert to ARN if provided, otherwise use auto-create setting
+    execution_role_arn = None
+    execution_role_auto_create = auto_create_execution_role
+
+    if execution_role:
+        # User provided a role - convert to ARN format if needed
+        if execution_role.startswith("arn:aws:iam::"):
+            execution_role_arn = execution_role
+        else:
+            execution_role_arn = f"arn:aws:iam::{account_id}:role/{execution_role}"
+
         if verbose:
-            log.debug("Converting role name to ARN: %s → %s", execution_role, execution_role_arn)
+            log.debug("Using execution role: %s", execution_role_arn)
     else:
-        execution_role_arn = execution_role
+        # No role provided - use auto_create_execution_role parameter
         if verbose:
-            log.debug("Using execution role as provided: %s", execution_role_arn)
+            if execution_role_auto_create:
+                log.debug("Execution role will be auto-created during launch")
+            else:
+                log.debug("No execution role provided and auto-create disabled")
 
     # Generate Dockerfile and .dockerignore
     bedrock_agentcore_name = None
@@ -166,6 +179,7 @@ def configure_bedrock_agentcore(
         container_runtime=runtime.runtime,
         aws=AWSConfig(
             execution_role=execution_role_arn,
+            execution_role_auto_create=execution_role_auto_create,
             account=account_id,
             region=region,
             ecr_repository=ecr_repository,

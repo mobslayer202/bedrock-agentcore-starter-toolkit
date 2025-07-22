@@ -74,6 +74,7 @@ nav:
     - Runtime:
       - Quickstart: user-guide/runtime/quickstart.md
       - Overview: user-guide/runtime/overview.md
+      - Permissions: user-guide/runtime/permissions.md
       - Async Processing: user-guide/runtime/async.md
       - Notebook: user-guide/runtime/notebook.md
     - Gateway:

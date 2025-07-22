@@ -185,7 +185,13 @@ agents:
                 assert result.exit_code == 0 or result.exit_code == 2
                 # Verify the core function was called correctly
                 mock_launch.assert_called_once_with(
-                    config_path=config_file, agent_name=None, local=True, push_ecr_only=False, env_vars=None
+                    config_path=config_file,
+                    agent_name=None,
+                    local=False,
+                    push_ecr_only=False,
+                    use_codebuild=False,
+                    env_vars=None,
+                    auto_update_on_conflict=False,
                 )
             finally:
                 os.chdir(original_cwd)
@@ -452,7 +458,13 @@ agents:
                 assert result.exit_code == 0 or result.exit_code == 2
                 # Verify the core function was called correctly
                 mock_launch.assert_called_once_with(
-                    config_path=config_file, agent_name=None, local=False, push_ecr_only=False, env_vars=None
+                    config_path=config_file,
+                    agent_name=None,
+                    local=False,
+                    push_ecr_only=False,
+                    use_codebuild=False,
+                    env_vars=None,
+                    auto_update_on_conflict=False,
                 )
             finally:
                 os.chdir(original_cwd)
@@ -1651,7 +1663,13 @@ agents:
                 assert "ECR Push Successful!" in result.stdout
                 assert "123456789012.dkr.ecr.us-west-2.amazonaws.com/test:latest" in result.stdout
                 mock_launch.assert_called_once_with(
-                    config_path=config_file, agent_name=None, local=False, push_ecr_only=True, env_vars=None
+                    config_path=config_file,
+                    agent_name=None,
+                    local=False,
+                    push_ecr_only=True,
+                    use_codebuild=False,
+                    env_vars=None,
+                    auto_update_on_conflict=False,
                 )
             finally:
                 os.chdir(original_cwd)
@@ -1751,7 +1769,13 @@ agents:
                 assert "agentcore status" in result.stdout
                 assert "agentcore invoke" in result.stdout
                 mock_launch.assert_called_once_with(
-                    config_path=config_file, agent_name=None, local=False, push_ecr_only=False, env_vars=None
+                    config_path=config_file,
+                    agent_name=None,
+                    local=False,
+                    push_ecr_only=False,
+                    use_codebuild=False,
+                    env_vars=None,
+                    auto_update_on_conflict=False,
                 )
             finally:
                 os.chdir(original_cwd)

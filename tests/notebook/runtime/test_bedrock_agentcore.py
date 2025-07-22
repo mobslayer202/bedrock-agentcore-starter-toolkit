@@ -125,7 +125,14 @@ aws:
 
             result = bedrock_agentcore.launch(local=True)
 
-            mock_launch.assert_called_once_with(config_path, local=True, push_ecr_only=False, env_vars=None)
+            mock_launch.assert_called_once_with(
+                config_path,
+                local=True,
+                push_ecr_only=False,
+                use_codebuild=False,
+                auto_update_on_conflict=False,
+                env_vars=None,
+            )
             assert result.mode == "local"
 
     def test_launch_cloud(self, tmp_path):
@@ -159,7 +166,14 @@ aws:
 
             result = bedrock_agentcore.launch()
 
-            mock_launch.assert_called_once_with(config_path, local=False, push_ecr_only=False, env_vars=None)
+            mock_launch.assert_called_once_with(
+                config_path,
+                local=False,
+                push_ecr_only=False,
+                use_codebuild=False,
+                auto_update_on_conflict=False,
+                env_vars=None,
+            )
             assert result.mode == "cloud"
 
     def test_launch_push_ecr(self, tmp_path):
@@ -193,8 +207,57 @@ aws:
 
             result = bedrock_agentcore.launch(push_ecr=True)
 
-            mock_launch.assert_called_once_with(config_path, local=False, push_ecr_only=True, env_vars=None)
+            mock_launch.assert_called_once_with(
+                config_path,
+                local=False,
+                push_ecr_only=True,
+                use_codebuild=False,
+                auto_update_on_conflict=False,
+                env_vars=None,
+            )
             assert result.mode == "push-ecr"
+
+    def test_launch_with_auto_update_on_conflict(self, tmp_path):
+        """Test launch with auto_update_on_conflict parameter."""
+        bedrock_agentcore = Runtime()
+        config_path = tmp_path / ".bedrock_agentcore.yaml"
+        bedrock_agentcore._config_path = config_path
+
+        # Create a config file with required AWS fields
+        config_text = """
+name: test-agent
+platform: linux/amd64
+entrypoint: test_agent.py
+container_runtime: docker
+aws:
+  execution_role: arn:aws:iam::123456789012:role/TestRole
+  region: us-west-2
+  account: '123456789012'
+"""
+        config_path.write_text(config_text)
+
+        with (
+            patch(
+                "bedrock_agentcore_starter_toolkit.notebook.runtime.bedrock_agentcore.launch_bedrock_agentcore"
+            ) as mock_launch,
+        ):
+            mock_result = Mock()
+            mock_result.mode = "cloud"
+            mock_result.agent_arn = "arn:aws:bedrock_agentcore:us-west-2:123456789012:agent-runtime/test-id"
+            mock_launch.return_value = mock_result
+
+            result = bedrock_agentcore.launch(auto_update_on_conflict=True)
+
+            # Verify launch was called with auto_update_on_conflict=True
+            mock_launch.assert_called_once_with(
+                config_path,
+                local=False,
+                push_ecr_only=False,
+                use_codebuild=False,
+                auto_update_on_conflict=True,
+                env_vars=None,
+            )
+            assert result.mode == "cloud"
 
     def test_invoke_without_config(self):
         """Test invoke fails when not configured."""

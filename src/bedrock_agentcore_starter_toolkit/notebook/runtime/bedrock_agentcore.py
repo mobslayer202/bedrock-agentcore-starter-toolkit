@@ -12,15 +12,15 @@ from ...operations.runtime import (
     validate_agent_name,
 )
 from ...operations.runtime.models import ConfigureResult, LaunchResult, StatusResult
+
+# Setup centralized logging for SDK usage (notebooks, scripts, imports)
+from ...utils.logging_config import setup_toolkit_logging
 from ...utils.runtime.entrypoint import parse_entrypoint
 
-# Configure logger for notebook use
+setup_toolkit_logging(mode="sdk")
+
+# Configure logger for this module
 log = logging.getLogger(__name__)
-if not log.handlers:
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    log.addHandler(handler)
-    log.setLevel(logging.INFO)
 
 
 class Runtime:
@@ -34,13 +34,14 @@ class Runtime:
     def configure(
         self,
         entrypoint: str,
-        execution_role: str,
+        execution_role: Optional[str] = None,
         agent_name: Optional[str] = None,
         requirements: Optional[List[str]] = None,
         requirements_file: Optional[str] = None,
         ecr_repository: Optional[str] = None,
         container_runtime: Optional[str] = None,
         auto_create_ecr: bool = True,
+        auto_create_execution_role: bool = False,
         authorizer_configuration: Optional[Dict[str, Any]] = None,
         region: Optional[str] = None,
         protocol: Optional[Literal["HTTP", "MCP"]] = None,
@@ -50,13 +51,14 @@ class Runtime:
         Args:
             entrypoint: Path to Python file with optional Bedrock AgentCore name
                 (e.g., "handler.py" or "handler.py:bedrock_agentcore")
-            execution_role: AWS IAM execution role ARN or name
+            execution_role: AWS IAM execution role ARN or name (optional if auto_create_execution_role=True)
             agent_name: name of the agent
             requirements: Optional list of requirements to generate requirements.txt
             requirements_file: Optional path to existing requirements file
             ecr_repository: Optional ECR repository URI
             container_runtime: Optional container runtime (docker/podman)
             auto_create_ecr: Whether to auto-create ECR repository
+            auto_create_execution_role: Whether to auto-create execution role (makes execution_role optional)
             authorizer_configuration: JWT authorizer configuration dictionary
             region: AWS region for deployment
             protocol: agent server protocol, must be either HTTP or MCP
@@ -74,6 +76,10 @@ class Runtime:
         valid, error = validate_agent_name(agent_name)
         if not valid:
             raise ValueError(error)
+
+        # Validate execution role configuration
+        if not execution_role and not auto_create_execution_role:
+            raise ValueError("Must provide either 'execution_role' or set 'auto_create_execution_role=True'")
 
         # Update our name if not already set
         if not self.name:
@@ -99,6 +105,7 @@ class Runtime:
         result = configure_bedrock_agentcore(
             agent_name=agent_name,
             entrypoint_path=Path(file_path),
+            auto_create_execution_role=auto_create_execution_role,
             execution_role=execution_role,
             ecr_repository=ecr_repository,
             container_runtime=container_runtime,
@@ -113,12 +120,21 @@ class Runtime:
         log.info("Bedrock AgentCore configured: %s", self._config_path)
         return result
 
-    def launch(self, local: bool = False, push_ecr: bool = False, env_vars: Optional[Dict] = None) -> LaunchResult:
+    def launch(
+        self,
+        local: bool = False,
+        push_ecr: bool = False,
+        use_codebuild: bool = False,
+        auto_update_on_conflict: bool = False,
+        env_vars: Optional[Dict] = None,
+    ) -> LaunchResult:
         """Launch Bedrock AgentCore from notebook.
 
         Args:
             local: Whether to build for local execution only
             push_ecr: Whether to push to ECR only (no deployment)
+            use_codebuild: Whether to use CodeBuild for ARM64 builds (cloud deployment only)
+            auto_update_on_conflict: Whether to automatically update resources on conflict (default: False)
             env_vars: environment variables for agent container
 
         Returns:
@@ -127,11 +143,38 @@ class Runtime:
         if not self._config_path:
             raise ValueError("Must configure before launching. Call .configure() first.")
 
-        result = launch_bedrock_agentcore(self._config_path, local=local, push_ecr_only=push_ecr, env_vars=env_vars)
+        # Validate mutually exclusive options
+        exclusive_options = [local, push_ecr, use_codebuild]
+        if sum(exclusive_options) > 1:
+            raise ValueError("Only one of 'local', 'push_ecr', or 'use_codebuild' can be True")
+
+        result = launch_bedrock_agentcore(
+            self._config_path,
+            local=local,
+            push_ecr_only=push_ecr,
+            use_codebuild=use_codebuild,
+            auto_update_on_conflict=auto_update_on_conflict,
+            env_vars=env_vars,
+        )
 
         if result.mode == "cloud":
             log.info("Deployed to cloud: %s", result.agent_arn)
             # Show log information for cloud deployments
+            if result.agent_id:
+                from ...utils.runtime.logs import get_agent_log_paths, get_aws_tail_commands
+
+                runtime_logs, otel_logs = get_agent_log_paths(result.agent_id)
+                follow_cmd, since_cmd = get_aws_tail_commands(runtime_logs)
+                log.info("🔍 Agent logs available at:")
+                log.info("   %s", runtime_logs)
+                log.info("   %s", otel_logs)
+                log.info("💡 Tail logs with: %s", follow_cmd)
+                log.info("💡 Or view recent logs: %s", since_cmd)
+        elif result.mode == "codebuild":
+            log.info("Built with CodeBuild: %s", result.codebuild_id)
+            log.info("Deployed to cloud: %s", result.agent_arn)
+            log.info("ECR image: %s", result.ecr_uri)
+            # Show log information for CodeBuild deployments
             if result.agent_id:
                 from ...utils.runtime.logs import get_agent_log_paths, get_aws_tail_commands
 

@@ -28,6 +28,35 @@ def create_ecr_repository(repo_name: str, region: str) -> str:
         return response["repositories"][0]["repositoryUri"]
 
 
+def get_or_create_ecr_repository(agent_name: str, region: str) -> str:
+    """Get existing ECR repository or create a new one (idempotent).
+
+    Args:
+        agent_name: Name of the agent
+        region: AWS region
+
+    Returns:
+        ECR repository URI
+    """
+    # Generate deterministic repository name based on agent name
+    repo_name = f"bedrock-agentcore-{agent_name}"
+
+    ecr = boto3.client("ecr", region_name=region)
+
+    try:
+        # Step 1: Check if repository already exists
+        response = ecr.describe_repositories(repositoryNames=[repo_name])
+        existing_repo_uri = response["repositories"][0]["repositoryUri"]
+
+        print(f"✅ Reusing existing ECR repository: {existing_repo_uri}")
+        return existing_repo_uri
+
+    except ecr.exceptions.RepositoryNotFoundException:
+        # Step 2: Repository doesn't exist, create it
+        print(f"Repository doesn't exist, creating new ECR repository: {repo_name}")
+        return create_ecr_repository(repo_name, region)
+
+
 def deploy_to_ecr(local_tag: str, repo_name: str, region: str, container_runtime: ContainerRuntime) -> str:
     """Build and push image to ECR."""
     ecr = boto3.client("ecr", region_name=region)

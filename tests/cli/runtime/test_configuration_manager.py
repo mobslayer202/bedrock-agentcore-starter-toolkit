@@ -26,9 +26,9 @@ class TestConfigurationManager:
             result = config_manager.prompt_execution_role()
 
             assert result == "arn:aws:iam::123456789012:role/TestExecutionRole"
-            mock_prompt.assert_called_once_with("Enter execution role ARN or name", "")
+            mock_prompt.assert_called_once_with("Execution role ARN/name (or press Enter to auto-create)", "")
             mock_success.assert_called_once_with(
-                "Using execution role: [dim]arn:aws:iam::123456789012:role/TestExecutionRole[/dim]"
+                "Using existing execution role: [dim]arn:aws:iam::123456789012:role/TestExecutionRole[/dim]"
             )
 
     def test_prompt_execution_role_with_existing_config(self, tmp_path):
@@ -58,12 +58,10 @@ class TestConfigurationManager:
             result = config_manager.prompt_execution_role()
 
             assert result == "arn:aws:iam::123456789012:role/ExistingRole"
-            # Should use existing role as default
-            mock_prompt.assert_called_once_with(
-                "Enter execution role ARN or name", "arn:aws:iam::123456789012:role/ExistingRole"
-            )
+            # Should use empty default since we're showing the existing config separately
+            mock_prompt.assert_called_once_with("Execution role ARN/name (or press Enter to auto-create)", "")
             mock_success.assert_called_once_with(
-                "Using execution role: [dim]arn:aws:iam::123456789012:role/ExistingRole[/dim]"
+                "Using existing execution role: [dim]arn:aws:iam::123456789012:role/ExistingRole[/dim]"
             )
 
     def test_prompt_execution_role_existing_config_overridden(self, tmp_path):
@@ -93,10 +91,8 @@ class TestConfigurationManager:
             result = config_manager.prompt_execution_role()
 
             assert result == "arn:aws:iam::123456789012:role/NewRole"
-            # Should use existing role as default but return new role
-            mock_prompt.assert_called_once_with(
-                "Enter execution role ARN or name", "arn:aws:iam::123456789012:role/OldRole"
-            )
+            # Should use empty default since we're showing the existing config separately
+            mock_prompt.assert_called_once_with("Execution role ARN/name (or press Enter to auto-create)", "")
             mock_success.assert_called_once_with(
-                "Using execution role: [dim]arn:aws:iam::123456789012:role/NewRole[/dim]"
+                "Using existing execution role: [dim]arn:aws:iam::123456789012:role/NewRole[/dim]"
             )

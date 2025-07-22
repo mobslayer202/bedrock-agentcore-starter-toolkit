@@ -181,11 +181,11 @@ def validate_requirements_file(build_dir: Path, requirements_file: str) -> Depen
             f"Please specify a requirements file (requirements.txt, pyproject.toml, etc.)"
         )
 
-    # Validate that it's a recognized dependency file type (strict validation)
-    if file_path.name not in ["requirements.txt", "pyproject.toml"]:
+    # Validate that it's a recognized dependency file type (flexible validation)
+    if not (file_path.suffix in [".txt", ".in"] or file_path.name == "pyproject.toml"):
         raise ValueError(
             f"'{file_path.name}' is not a supported dependency file. "
-            f"Only 'requirements.txt' and 'pyproject.toml' are supported."
+            f"Supported formats: *.txt, *.in (pip requirements), or pyproject.toml"
         )
 
     # Use the existing detect_dependencies function to process the file

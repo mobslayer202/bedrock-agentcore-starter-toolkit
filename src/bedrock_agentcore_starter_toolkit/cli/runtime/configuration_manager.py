@@ -21,19 +21,25 @@ class ConfigurationManager:
         project_config = load_config_if_exists(config_path)
         self.existing_config = project_config.get_agent_config() if project_config else None
 
-    def prompt_execution_role(self) -> str:
-        """Prompt for execution role with existing config as default."""
+    def prompt_execution_role(self) -> Optional[str]:
+        """Prompt for execution role. Returns role name/ARN or None for auto-creation."""
         console.print("\n🔐 [cyan]Execution Role[/cyan]")
-        console.print("[dim]Execution role is required for deployment[/dim]")
+        console.print(
+            "[dim]Press Enter to auto-create execution role, or provide execution role ARN/name to use existing[/dim]"
+        )
 
-        default = self.existing_config.aws.execution_role if self.existing_config else ""
-        role = _prompt_with_default("Enter execution role ARN or name", default)
+        # Show existing config info but don't use as default
+        if self.existing_config and self.existing_config.aws.execution_role:
+            console.print(f"[dim]Previously configured: {self.existing_config.aws.execution_role}[/dim]")
 
-        if not role:
-            _handle_error("Execution role is required")
+        role = _prompt_with_default("Execution role ARN/name (or press Enter to auto-create)", "")
 
-        _print_success(f"Using execution role: [dim]{role}[/dim]")
-        return role
+        if role:
+            _print_success(f"Using existing execution role: [dim]{role}[/dim]")
+            return role
+        else:
+            _print_success("Will auto-create execution role")
+            return None
 
     def prompt_ecr_repository(self) -> tuple[Optional[str], bool]:
         """Prompt for ECR repository. Returns (repository, auto_create_flag)."""
@@ -42,8 +48,11 @@ class ConfigurationManager:
             "[dim]Press Enter to auto-create ECR repository, or provide ECR Repository URI to use existing[/dim]"
         )
 
-        default = self.existing_config.aws.ecr_repository if self.existing_config else ""
-        response = _prompt_with_default("ECR Repository URI (or skip to auto-create)", default)
+        # Show existing config info but don't use as default
+        if self.existing_config and self.existing_config.aws.ecr_repository:
+            console.print(f"[dim]Previously configured: {self.existing_config.aws.ecr_repository}[/dim]")
+
+        response = _prompt_with_default("ECR Repository URI (or press Enter to auto-create)", "")
 
         if response:
             _print_success(f"Using existing ECR repository: [dim]{response}[/dim]")

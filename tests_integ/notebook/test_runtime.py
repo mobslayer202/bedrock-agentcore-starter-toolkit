@@ -3,11 +3,7 @@ if __name__ == "__main__":
 
     runtime = Runtime()
 
-    runtime.configure(
-        entrypoint="tests_integ/strands_agent/agent_example.py",
-        execution_role="arn:aws:iam::381492293490:role/Admin",  # replace with your own role
-        agent_name="agent_example_notebook_runtime",
-    )
+    runtime.configure(entrypoint="agent_example.py", agent_name="test14", auto_create_execution_role=True)
 
-    resp = runtime.launch(local=True)
+    resp = runtime.launch(use_codebuild=True, auto_update_on_conflict=True)
     print(resp)

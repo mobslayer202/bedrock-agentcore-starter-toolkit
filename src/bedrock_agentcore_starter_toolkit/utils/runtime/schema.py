@@ -35,6 +35,7 @@ class AWSConfig(BaseModel):
     """AWS-specific configuration."""
 
     execution_role: Optional[str] = Field(default=None, description="AWS IAM execution role ARN")
+    execution_role_auto_create: bool = Field(default=False, description="Whether to auto-create execution role")
     account: Optional[str] = Field(default=None, description="AWS account ID")
     region: Optional[str] = Field(default=None, description="AWS region")
     ecr_repository: Optional[str] = Field(default=None, description="ECR repository URI")
@@ -51,6 +52,14 @@ class AWSConfig(BaseModel):
             if not v.isdigit() or len(v) != 12:
                 raise ValueError("Invalid AWS account ID")
         return v
+
+
+class CodeBuildConfig(BaseModel):
+    """CodeBuild deployment information."""
+
+    project_name: Optional[str] = Field(default=None, description="CodeBuild project name")
+    execution_role: Optional[str] = Field(default=None, description="CodeBuild execution role ARN")
+    source_bucket: Optional[str] = Field(default=None, description="S3 source bucket name")
 
 
 class BedrockAgentCoreDeploymentInfo(BaseModel):
@@ -70,6 +79,7 @@ class BedrockAgentCoreAgentSchema(BaseModel):
     container_runtime: str = Field(default="docker", description="Container runtime to use")
     aws: AWSConfig = Field(default_factory=AWSConfig)
     bedrock_agentcore: BedrockAgentCoreDeploymentInfo = Field(default_factory=BedrockAgentCoreDeploymentInfo)
+    codebuild: CodeBuildConfig = Field(default_factory=CodeBuildConfig)
     authorizer_configuration: Optional[dict] = Field(default=None, description="JWT authorizer configuration")
     oauth_configuration: Optional[dict] = Field(default=None, description="Oauth configuration")
 
@@ -96,8 +106,8 @@ class BedrockAgentCoreAgentSchema(BaseModel):
 
         # AWS fields required for cloud deployment
         if not for_local:
-            if not self.aws.execution_role:
-                errors.append("Missing 'aws.execution_role' for cloud deployment")
+            if not self.aws.execution_role and not self.aws.execution_role_auto_create:
+                errors.append("Missing 'aws.execution_role' for cloud deployment (or enable auto-creation)")
             if not self.aws.region:
                 errors.append("Missing 'aws.region' for cloud deployment")
             if not self.aws.account:

@@ -1,23 +1,16 @@
 """BedrockAgentCore CLI main module."""
 
-import logging
-
 import typer
-from rich.logging import RichHandler
 
 from ..cli.gateway.commands import create_mcp_gateway, create_mcp_gateway_target, gateway_app
-from .common import console
+from ..utils.logging_config import setup_toolkit_logging
 from .import_agent.commands import import_agent
 from .runtime.commands import configure_app, invoke, launch, status
 
 app = typer.Typer(name="agentcore", help="BedrockAgentCore CLI", add_completion=False)
 
-FORMAT = "%(message)s"
-logging.basicConfig(
-    level="INFO",
-    format=FORMAT,
-    handlers=[RichHandler(show_time=False, show_path=False, show_level=False, console=console)],
-)
+# Setup centralized logging for CLI
+setup_toolkit_logging(mode="cli")
 
 # runtime
 app.command("invoke")(invoke)

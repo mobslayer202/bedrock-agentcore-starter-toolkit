@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 import boto3
 import requests
+from botocore.exceptions import ClientError
 
 from ..utils.endpoints import get_control_plane_endpoint, get_data_plane_endpoint
 
@@ -93,6 +94,7 @@ class BedrockAgentCoreClient:
         authorizer_config: Optional[Dict] = None,
         protocol_config: Optional[Dict] = None,
         env_vars: Optional[Dict] = None,
+        auto_update_on_conflict: bool = False,
     ) -> Dict[str, str]:
         """Create new agent."""
         self.logger.info("Creating agent '%s' with image URI: %s", agent_name, image_uri)
@@ -121,6 +123,46 @@ class BedrockAgentCoreClient:
             agent_arn = resp["agentRuntimeArn"]
             self.logger.info("Successfully created agent '%s' with ID: %s, ARN: %s", agent_name, agent_id, agent_arn)
             return {"id": agent_id, "arn": agent_arn}
+        except ClientError as e:
+            error_code = e.response.get("Error", {}).get("Code")
+            if error_code == "ConflictException":
+                if not auto_update_on_conflict:
+                    self.logger.error("Agent '%s' already exists and auto_update_on_conflict is disabled", agent_name)
+                    raise
+
+                self.logger.info("Agent '%s' already exists, searching for existing agent...", agent_name)
+
+                # Find existing agent by name
+                existing_agent = self.find_agent_by_name(agent_name)
+
+                if not existing_agent:
+                    raise RuntimeError(
+                        f"ConflictException occurred but couldn't find existing agent '{agent_name}'. "
+                        f"This might be a permissions issue or the agent name might be different."
+                    ) from e
+
+                # Extract existing agent details
+                existing_agent_id = existing_agent["agentRuntimeId"]
+                existing_agent_arn = existing_agent["agentRuntimeArn"]
+
+                self.logger.info("Found existing agent ID: %s, updating instead...", existing_agent_id)
+
+                # Update the existing agent
+                self.update_agent(
+                    existing_agent_id,
+                    image_uri,
+                    execution_role_arn,
+                    network_config,
+                    authorizer_config,
+                    protocol_config,
+                    env_vars,
+                )
+
+                # Return the existing agent info (keeping the original ID and ARN)
+                return {"id": existing_agent_id, "arn": existing_agent_arn}
+            else:
+                # Re-raise other ClientErrors
+                raise
         except Exception as e:
             self.logger.error("Failed to create agent '%s': %s", agent_name, str(e))
             raise
@@ -165,6 +207,46 @@ class BedrockAgentCoreClient:
             self.logger.error("Failed to update agent ID '%s': %s", agent_id, str(e))
             raise
 
+    def list_agents(self, max_results: int = 100) -> list:
+        """List all agent runtimes, handling pagination."""
+        all_agents = []
+        next_token = None
+
+        try:
+            while True:
+                params = {"maxResults": max_results}
+                if next_token:
+                    params["nextToken"] = next_token
+
+                response = self.client.list_agent_runtimes(**params)
+                agents = response.get("agentRuntimes", [])
+                all_agents.extend(agents)
+
+                next_token = response.get("nextToken")
+                if not next_token:
+                    break
+
+            return all_agents
+        except Exception as e:
+            self.logger.error("Failed to list agents: %s", str(e))
+            raise
+
+    def find_agent_by_name(self, agent_name: str) -> Optional[Dict]:
+        """Find an agent by name, reusing list_agents method."""
+        try:
+            # Get all agents using the existing method
+            all_agents = self.list_agents()
+
+            # Search for the specific agent by name
+            for agent in all_agents:
+                if agent.get("agentRuntimeName") == agent_name:
+                    return agent
+
+            return None  # Agent not found
+        except Exception as e:
+            self.logger.error("Failed to search for agent '%s': %s", agent_name, str(e))
+            raise
+
     def create_or_update_agent(
         self,
         agent_id: Optional[str],
@@ -175,6 +257,7 @@ class BedrockAgentCoreClient:
         authorizer_config: Optional[Dict] = None,
         protocol_config: Optional[Dict] = None,
         env_vars: Optional[Dict] = None,
+        auto_update_on_conflict: bool = False,
     ) -> Dict[str, str]:
         """Create or update agent."""
         if agent_id:
@@ -182,7 +265,14 @@ class BedrockAgentCoreClient:
                 agent_id, image_uri, execution_role_arn, network_config, authorizer_config, protocol_config, env_vars
             )
         return self.create_agent(
-            agent_name, image_uri, execution_role_arn, network_config, authorizer_config, protocol_config, env_vars
+            agent_name,
+            image_uri,
+            execution_role_arn,
+            network_config,
+            authorizer_config,
+            protocol_config,
+            env_vars,
+            auto_update_on_conflict,
         )
 
     def wait_for_agent_endpoint_ready(self, agent_id: str, endpoint_name: str = "DEFAULT", max_wait: int = 120) -> str:

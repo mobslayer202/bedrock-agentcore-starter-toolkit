@@ -860,3 +860,79 @@ class TestEnsureExecutionRole:
                     region="us-west-2",
                     account_id="123456789012",
                 )
+
+    def test_validate_execution_role_url_encoded_policy(self):
+        """Test _validate_execution_role with URL-encoded trust policy."""
+        import json
+        import urllib.parse
+
+        from bedrock_agentcore_starter_toolkit.operations.runtime.launch import _validate_execution_role
+
+        # Create URL-encoded trust policy
+        trust_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"Service": "bedrock-agentcore.amazonaws.com"},
+                    "Action": "sts:AssumeRole",
+                }
+            ],
+        }
+        url_encoded_policy = urllib.parse.quote(json.dumps(trust_policy))
+
+        mock_iam_client = MagicMock()
+        mock_iam_client.get_role.return_value = {
+            "Role": {
+                "AssumeRolePolicyDocument": url_encoded_policy  # URL-encoded string
+            }
+        }
+
+        mock_session = MagicMock()
+        mock_session.client.return_value = mock_iam_client
+
+        result = _validate_execution_role("arn:aws:iam::123456789012:role/test-role", mock_session)
+
+        assert result is True
+
+    def test_validate_execution_role_invalid_trust_policy(self):
+        """Test _validate_execution_role with invalid trust policy."""
+        from bedrock_agentcore_starter_toolkit.operations.runtime.launch import _validate_execution_role
+
+        mock_iam_client = MagicMock()
+        mock_iam_client.get_role.return_value = {
+            "Role": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {"Service": "lambda.amazonaws.com"},  # Wrong service
+                            "Action": "sts:AssumeRole",
+                        }
+                    ]
+                }
+            }
+        }
+
+        mock_session = MagicMock()
+        mock_session.client.return_value = mock_iam_client
+
+        result = _validate_execution_role("arn:aws:iam::123456789012:role/test-role", mock_session)
+
+        assert result is False
+
+    def test_validate_execution_role_role_not_found(self):
+        """Test _validate_execution_role when role doesn't exist."""
+        from botocore.exceptions import ClientError
+
+        from bedrock_agentcore_starter_toolkit.operations.runtime.launch import _validate_execution_role
+
+        mock_iam_client = MagicMock()
+        mock_iam_client.get_role.side_effect = ClientError({"Error": {"Code": "NoSuchEntity"}}, "GetRole")
+
+        mock_session = MagicMock()
+        mock_session.client.return_value = mock_iam_client
+
+        result = _validate_execution_role("arn:aws:iam::123456789012:role/nonexistent-role", mock_session)
+
+        assert result is False

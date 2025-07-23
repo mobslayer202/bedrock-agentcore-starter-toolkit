@@ -318,6 +318,11 @@ agentcore launch
 - Pushes to ECR and deploys to AgentCore
 - Ideal for environments without Docker
 
+```bash
+# CodeBuild deployment (no Docker required)
+agentcore launch --codebuild
+```
+
 #### ECR Push Only
 ```bash
 agentcore launch --push-ecr

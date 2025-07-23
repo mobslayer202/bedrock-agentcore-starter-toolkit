@@ -293,9 +293,6 @@ For local development and testing:
 ```bash
 # Local development (runs locally)
 agentcore launch --local
-
-# Alternative: Use CodeBuild even locally
-agentcore launch --codebuild
 ```
 
 **Benefits:**

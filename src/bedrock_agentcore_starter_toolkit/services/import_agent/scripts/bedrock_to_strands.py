@@ -578,8 +578,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
                 model=llm_ORCHESTRATION,
                 system_prompt=system_prompt,
                 tools=tools,
-                conversation_manager=checkpointer_STM,
-                max_parallel_tools=1
+                conversation_manager=checkpointer_STM
             )
         return _agent
     """.format(
@@ -700,7 +699,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
 
         agent_code += (
             """
-    def endpoint(payload):
+    def endpoint(payload, context):
         try:
             global user_id, tools_used
 
@@ -715,24 +714,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
             agent_result = invoke_agent(agent_query)
             print(f"Agent Result: {{agent_result}}")
 
-            def format_message(msg):
-                try:
-                    text = msg.content if hasattr(msg, "content") else msg.text()
-
-                    if not text or text.strip() == "":
-                        return ("No response provided.", "UNKNOWN")
-                    if isinstance(msg, HumanMessage):
-                        return (text, "USER")
-                    elif isinstance(msg, AIMessage):
-                        return (text, "ASSISTANT")
-                    elif isinstance(msg, ToolMessage):
-                        return (text, "TOOL")
-                    else:
-                        return (text, "UNKNOWN")
-                except Exception:
-                    return ("No response provided.", "UNKNOWN")
-
-            formatted_messages = [format_message(msg) for msg in agent_result]
+            formatted_messages = [(agent_query, "USER"), (str(agent_result), "ASSISTANT")]
 
             tools_used.update(list(agent_result.metrics.tool_metrics.keys()))
             sources = []
@@ -748,7 +730,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
 
             %s
 
-            return {"result": {"response": response_content, "sources": sources, "tools_used": tools_used}}
+            return {"result": {"response": response_content, "sources": sources, "tools_used": tools_used, "messages": formatted_messages}}
         except Exception as e:
             return {"error": str(e)}
         """

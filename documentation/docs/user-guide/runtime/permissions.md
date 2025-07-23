@@ -39,11 +39,6 @@ When you run `agentcore configure` without specifying the `--execution-role` par
 agentcore configure -e my_agent.py
 ```
 
-**📱 Perfect for Cloud Development**
-- Ideal for SageMaker notebooks where manual IAM setup is cumbersome
-- Works seamlessly with CodeBuild for ARM64 builds
-- No local Docker requirements
-
 ### Usage Examples
 
 **Basic Auto-Creation:**

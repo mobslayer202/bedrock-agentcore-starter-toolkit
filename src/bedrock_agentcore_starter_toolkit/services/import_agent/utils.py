@@ -1,4 +1,4 @@
-"""Utilities for Agent Info and Pydantic Model Generation."""
+"""Utility functions for Bedrock Agent import service."""
 
 import json
 import os
@@ -375,7 +375,7 @@ def get_template_fixtures(field: str = "orchestrationBasePrompts", group: str = 
     Returns:
         Dict mapping fixture names to their template strings
     """
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(project_root, "assets", "template_fixtures_merged.json")
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)

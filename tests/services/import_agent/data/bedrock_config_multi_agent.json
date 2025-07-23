@@ -1,14 +1,14 @@
 {
     "agent": {
-        "agentArn": "arn:aws:bedrock:us-west-2:649941507881:agent/YETLPL5CQO",
+        "agentArn": "arn:aws:bedrock:us-west-2:123456789012:agent/YETLPL5CQO",
         "agentCollaboration": "SUPERVISOR_ROUTER",
         "agentId": "YETLPL5CQO",
         "agentName": "MyMultiAgentSupervisor",
-        "agentResourceRoleArn": "arn:aws:iam::649941507881:role/service-role/AmazonBedrockExecutionRoleForAgents_TJYZPXC2ML",
+        "agentResourceRoleArn": "arn:aws:iam::123456789012:role/service-role/AmazonBedrockExecutionRoleForAgents_TJYZPXC2ML",
         "agentStatus": "PREPARED",
         "clientToken": "1412b80d-1ac1-47ef-910e-242948028d57",
         "createdAt": "2025-05-29 19:38:35.338209+00:00",
-        "customerEncryptionKeyArn": "arn:aws:kms:us-west-2:649941507881:key/fdfcf49a-1f95-409d-98db-820f8999bc9d",
+        "customerEncryptionKeyArn": "arn:aws:kms:us-west-2:123456789012:key/fdfcf49a-1f95-409d-98db-820f8999bc9d",
         "description": "An agent that can help with anything Amazon related",
         "foundationModel": "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "idleSessionTTLInSeconds": 600,
@@ -121,7 +121,7 @@
         "collaborators": [
             {
                 "agentDescriptor": {
-                    "aliasArn": "arn:aws:bedrock:us-west-2:649941507881:agent-alias/4PEPHTCAHB/E0EOTIUXIZ"
+                    "aliasArn": "arn:aws:bedrock:us-west-2:123456789012:agent-alias/4PEPHTCAHB/E0EOTIUXIZ"
                 },
                 "agentId": "YETLPL5CQO",
                 "agentVersion": "8",
@@ -139,11 +139,11 @@
     "collaborators": [
         {
             "agent": {
-                "agentArn": "arn:aws:bedrock:us-west-2:649941507881:agent/4PEPHTCAHB",
+                "agentArn": "arn:aws:bedrock:us-west-2:123456789012:agent/4PEPHTCAHB",
                 "agentCollaboration": "DISABLED",
                 "agentId": "4PEPHTCAHB",
                 "agentName": "AWSExpertAgent",
-                "agentResourceRoleArn": "arn:aws:iam::649941507881:role/service-role/AmazonBedrockExecutionRoleForAgents_JDT5EXU7V5",
+                "agentResourceRoleArn": "arn:aws:iam::123456789012:role/service-role/AmazonBedrockExecutionRoleForAgents_JDT5EXU7V5",
                 "agentStatus": "PREPARED",
                 "clientToken": "0aa15922-a389-4ddb-8c61-35cc8f089d36",
                 "createdAt": "2025-05-14 22:59:37.056959+00:00",
@@ -152,7 +152,7 @@
                 "guardrailConfiguration": {
                     "name": "BedrockGenesisMigrationGuardrail",
                     "guardrailId": "1osayeole3j5",
-                    "guardrailArn": "arn:aws:bedrock:us-west-2:649941507881:guardrail/1osayeole3j5",
+                    "guardrailArn": "arn:aws:bedrock:us-west-2:123456789012:guardrail/1osayeole3j5",
                     "version": "DRAFT",
                     "status": "READY",
                     "contentPolicy": {
@@ -313,7 +313,7 @@
                     "description": "InsuranceClaimsAPI - to help the agent query any claims AWS may have against it.",
                     "updatedAt": "2025-06-19 01:08:10.066604+00:00",
                     "actionGroupExecutor": {
-                        "lambda": "arn:aws:lambda:us-west-2:649941507881:function:InsuranceClaimsAPI-0h89z"
+                        "lambda": "arn:aws:lambda:us-west-2:123456789012:function:InsuranceClaimsAPI-0h89z"
                     },
                     "agentId": "4PEPHTCAHB",
                     "agentVersion": "15",
@@ -466,7 +466,7 @@
                     "description": "Action group to read, create, delete, and update S3 Buckets.",
                     "updatedAt": "2025-06-19 01:08:10.066604+00:00",
                     "actionGroupExecutor": {
-                        "lambda": "arn:aws:lambda:us-west-2:649941507881:function:action_group_quick_start_zd3h0-1bg2h"
+                        "lambda": "arn:aws:lambda:us-west-2:123456789012:function:action_group_quick_start_zd3h0-1bg2h"
                     },
                     "agentId": "4PEPHTCAHB",
                     "agentVersion": "15",
@@ -522,7 +522,7 @@
                     "knowledgeBaseState": "ENABLED",
                     "updatedAt": "2025-06-19 01:08:10.349247+00:00",
                     "createdAt": "2025-06-18 23:10:59.691593+00:00",
-                    "knowledgeBaseArn": "arn:aws:bedrock:us-west-2:649941507881:knowledge-base/Q408UM4PLS",
+                    "knowledgeBaseArn": "arn:aws:bedrock:us-west-2:123456789012:knowledge-base/Q408UM4PLS",
                     "knowledgeBaseConfiguration": {
                         "type": "VECTOR",
                         "vectorKnowledgeBaseConfiguration": {
@@ -535,11 +535,11 @@
                         }
                     },
                     "name": "awscodesamples",
-                    "roleArn": "arn:aws:iam::649941507881:role/service-role/AmazonBedrockExecutionRoleForKnowledgeBase_n12om",
+                    "roleArn": "arn:aws:iam::123456789012:role/service-role/AmazonBedrockExecutionRoleForKnowledgeBase_n12om",
                     "status": "ACTIVE",
                     "storageConfiguration": {
                         "opensearchServerlessConfiguration": {
-                            "collectionArn": "arn:aws:aoss:us-west-2:649941507881:collection/7346yydtf339696gcong",
+                            "collectionArn": "arn:aws:aoss:us-west-2:123456789012:collection/7346yydtf339696gcong",
                             "fieldMapping": {
                                 "metadataField": "AMAZON_BEDROCK_METADATA",
                                 "textField": "AMAZON_BEDROCK_TEXT",
@@ -556,15 +556,15 @@
                     "knowledgeBaseState": "ENABLED",
                     "updatedAt": "2025-06-19 01:08:10.349247+00:00",
                     "createdAt": "2025-05-14 19:31:43.662526+00:00",
-                    "knowledgeBaseArn": "arn:aws:bedrock:us-west-2:649941507881:knowledge-base/ECSUKRXKVJ",
+                    "knowledgeBaseArn": "arn:aws:bedrock:us-west-2:123456789012:knowledge-base/ECSUKRXKVJ",
                     "knowledgeBaseConfiguration": {
                         "kendraKnowledgeBaseConfiguration": {
-                            "kendraIndexArn": "arn:aws:kendra:us-west-2:649941507881:index/bd79f9e1-0f98-4367-a71b-1fbc11ee729d"
+                            "kendraIndexArn": "arn:aws:kendra:us-west-2:123456789012:index/bd79f9e1-0f98-4367-a71b-1fbc11ee729d"
                         },
                         "type": "KENDRA"
                     },
                     "name": "awsdeveloperdocumentation",
-                    "roleArn": "arn:aws:iam::649941507881:role/BedrockGenesisMigration-D-KnowledgeBaseRoleA2B317B9-22jaBGDsinap",
+                    "roleArn": "arn:aws:iam::123456789012:role/BedrockGenesisMigration-D-KnowledgeBaseRoleA2B317B9-22jaBGDsinap",
                     "status": "ACTIVE"
                 }
             ],

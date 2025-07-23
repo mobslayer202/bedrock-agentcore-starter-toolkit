@@ -1,10 +1,8 @@
-# Programmatic Usage of Import Agent CLI
+# Usage of Import Agent CLI
 
-This document explains how to use the `import_agent` command programmatically without requiring user input via questionary.
+This document explains how to use the `import_agent` command.
 
-## Overview
-
-The `import_agent` command has been enhanced to accept command-line flags for all choices that were previously made via interactive prompts. This allows you to run the command programmatically in scripts or automation workflows.
+The workflow can be started with `agentcore import-agent`. Additionally, the following flags can be provided.
 
 ## Available Flags
 
@@ -22,43 +20,6 @@ The `import_agent` command has been enhanced to accept command-line flags for al
 | `--run-option` | How to run the agent (locally, runtime, none) | string | None |
 | `--output-dir` | Output directory for generated code | string | "./output/" |
 
-## Example Usage
-
-### Basic Usage
-
-```bash
-python -m src.bedrock_agentcore_starter_toolkit.cli.cli import-agent \
-  --agent-id "YOUR_AGENT_ID" \
-  --agent-alias-id "YOUR_AGENT_ALIAS_ID" \
-  --target-platform "langchain" \
-  --run-option "none"
-```
-
-### With All Options
-
-```bash
-python -m src.bedrock_agentcore_starter_toolkit.cli.cli import-agent \
-  --agent-id "YOUR_AGENT_ID" \
-  --agent-alias-id "YOUR_AGENT_ALIAS_ID" \
-  --target-platform "langchain" \
-  --verbose \
-  --output-dir "./custom_output/" \
-  --run-option "none"
-```
-
-Note: Memory, Code Interpreter, and Observability primitives are enabled by default.
-
-### Deploy to AgentCore Runtime
-
-```bash
-python -m src.bedrock_agentcore_starter_toolkit.cli.cli import-agent \
-  --agent-id "YOUR_AGENT_ID" \
-  --agent-alias-id "YOUR_AGENT_ALIAS_ID" \
-  --target-platform "strands" \
-  --deploy-runtime \
-  --run-option "runtime"
-```
-
 ## Behavior
 
 - If required flags like `--agent-id`, `--agent-alias-id`, or `--target-platform` are not provided, the command will fall back to interactive prompts.
@@ -72,13 +33,3 @@ python -m src.bedrock_agentcore_starter_toolkit.cli.cli import-agent \
   - `locally`: Run the agent locally
   - `runtime`: Run on AgentCore Runtime (requires `--deploy-runtime`)
   - `none`: Don't run the agent
-
-## Test Script
-
-A test script `test_import_agent_cli.py` is provided to demonstrate how to use the command programmatically:
-
-```bash
-python test_import_agent_cli.py
-```
-
-This script shows example commands but doesn't actually run them. To run the commands, uncomment the `subprocess.run(command)` line in the script and replace the placeholder agent IDs with your actual IDs.

@@ -16,8 +16,8 @@ from rich.text import Text
 
 from ...services.import_agent.scripts.bedrock_to_langchain import BedrockLangchainTranslation
 from ...services.import_agent.scripts.bedrock_to_strands import BedrockStrandsTranslation
-from ...services.import_agent.utils.agent_info import auth_and_get_info, get_agent_aliases, get_agents, get_clients
 from ..common import console
+from .agent_info import auth_and_get_info, get_agent_aliases, get_agents, get_clients
 
 app = typer.Typer(help="Import Agent")
 

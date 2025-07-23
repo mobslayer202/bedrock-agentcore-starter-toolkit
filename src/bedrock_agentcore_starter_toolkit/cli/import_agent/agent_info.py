@@ -7,7 +7,7 @@ import boto3
 from prance import ResolvingParser
 from ruamel.yaml import YAML  # pylint: disable=import-error # type: ignore
 
-from .utils import clean_variable_name, fix_field
+from ...services.import_agent.utils import clean_variable_name, fix_field
 
 
 def get_clients(credentials):

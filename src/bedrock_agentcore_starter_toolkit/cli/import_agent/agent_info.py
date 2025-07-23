@@ -10,22 +10,30 @@ from ruamel.yaml import YAML  # pylint: disable=import-error # type: ignore
 from ...services.import_agent.utils import clean_variable_name, fix_field
 
 
-def get_clients(credentials):
-    """Get Bedrock and Bedrock Agent clients using the provided credentials."""
+def get_clients(credentials, region_name="us-west-2"):
+    """Get Bedrock and Bedrock Agent clients using the provided credentials and region.
+
+    Args:
+        credentials: AWS credentials
+        region_name: AWS region name (default: us-west-2)
+
+    Returns:
+        tuple: (bedrock_client, bedrock_agent_client)
+    """
     boto3_session = boto3.Session(
         aws_access_key_id=credentials.access_key,
         aws_secret_access_key=credentials.secret_key,
         aws_session_token=credentials.token,
-        region_name="us-west-2",
+        region_name=region_name,
     )
 
-    bedrock_agent_client = boto3_session.client("bedrock-agent", region_name="us-west-2")
-    bedrock_client = boto3_session.client("bedrock", region_name="us-west-2")
+    bedrock_agent_client = boto3_session.client("bedrock-agent", region_name=region_name)
+    bedrock_client = boto3_session.client("bedrock", region_name=region_name)
 
     return bedrock_client, bedrock_agent_client
 
 
-def get_agents(bedrock_agent_client):
+def get_agents(bedrock_agent_client) -> list[dict[str, str]]:
     """Retrieve a list of agents in the AWS account.
 
     Args:
@@ -172,51 +180,46 @@ def get_agent_info(agent_id: str, agent_alias_id: str, bedrock_client, bedrock_a
 
     # get agent collaborators and recursively fetch their information
     targets["collaborators"] = []
-    collaborators = bedrock_agent_client.list_agent_collaborators(agentId=agent_id, agentVersion=agent_version)[
-        "agentCollaboratorSummaries"
-    ]
+    if agentinfo.get("agentCollaboration", "DISABLED") != "DISABLED":
+        collaborators = bedrock_agent_client.list_agent_collaborators(agentId=agent_id, agentVersion=agent_version)[
+            "agentCollaboratorSummaries"
+        ]
 
-    for collaborator in collaborators:
-        arn = collaborator["agentDescriptor"]["aliasArn"].split("/")
-        collab_id = arn[1]
-        collab_alias_id = arn[2]
-        if collab_alias_id == agent_alias_id:
-            continue
-        collaborator_info = get_agent_info(collab_id, collab_alias_id, bedrock_client, bedrock_agent_client)
-        collaborator_info["collaboratorName"] = (
-            collaborator["collaboratorName"]
-            .replace(" ", "_")
-            .replace("-", "_")
-            .replace(".", "_")
-            .replace(":", "_")
-            .replace("/", "_")
-        )
-        collaborator_info["collaborationInstruction"] = collaborator.get("collaborationInstruction", "")
-        collaborator_info["relayConversationHistory"] = collaborator.get("relayConversationHistory", "DISABLED")
+        for collaborator in collaborators:
+            arn = collaborator["agentDescriptor"]["aliasArn"].split("/")
+            collab_id = arn[1]
+            collab_alias_id = arn[2]
+            if collab_alias_id == agent_alias_id:
+                continue
+            collaborator_info = get_agent_info(collab_id, collab_alias_id, bedrock_client, bedrock_agent_client)
+            collaborator_info["collaboratorName"] = clean_variable_name(collaborator["collaboratorName"])
+            collaborator_info["collaborationInstruction"] = collaborator.get("collaborationInstruction", "")
+            collaborator_info["relayConversationHistory"] = collaborator.get("relayConversationHistory", "DISABLED")
 
-        targets["collaborators"].append(collaborator_info)
+            targets["collaborators"].append(collaborator_info)
 
-    if identifier == agent_id and version == agent_version and collaborators:
-        agentinfo["isPrimaryAgent"] = True
-        agentinfo["collaborators"] = collaborators
+        if identifier == agent_id and version == agent_version and collaborators:
+            agentinfo["isPrimaryAgent"] = True
+            agentinfo["collaborators"] = collaborators
 
     return targets
 
 
-def auth_and_get_info(agent_id: str, agent_alias_id: str, output_dir: str):
+def auth_and_get_info(agent_id: str, agent_alias_id: str, output_dir: str, region_name: str = "us-west-2"):
     """Authenticate with AWS and retrieve agent information.
 
     Args:
         agent_id (str): The ID of the agent.
         agent_alias_id (str): The ID of the agent alias.
         output_dir (str): The directory where the output Bedrock Agent configuration will be saved.
+        region_name (str): AWS region name (default: us-west-2).
 
     Returns:
         dict: A dictionary containing detailed information about the agent, its alias,
         action groups, knowledge bases, and collaborators.
     """
     credentials = boto3.Session().get_credentials()
-    bedrock_client, bedrock_agent_client = get_clients(credentials)
+    bedrock_client, bedrock_agent_client = get_clients(credentials, region_name)
     output = get_agent_info(agent_id, agent_alias_id, bedrock_client, bedrock_agent_client)
 
     # Save the output Bedrock Agent configuration to a file for debugging and reference

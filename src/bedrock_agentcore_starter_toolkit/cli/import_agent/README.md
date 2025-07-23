@@ -8,9 +8,10 @@ The workflow can be started with `agentcore import-agent`. Additionally, the fol
 
 | Flag | Description | Type | Default |
 |------|-------------|------|---------|
+| `--region` | AWS Region to use when fetching Bedrock Agents | string | None |
 | `--agent-id` | ID of the Bedrock Agent to import | string | None |
 | `--agent-alias-id` | ID of the Agent Alias to use | string | None |
-| `--target-platform` | Target platform (langchain or strands) | string | None |
+| `--target-platform` | Target platform (langchain + langgraph or strands) | string | None |
 | `--debug` | Enable debug mode | boolean | False |
 | `--verbose` | Enable verbose mode | boolean | False |
 | `--disable-memory` | Disable AgentCore Memory primitive | boolean | False |

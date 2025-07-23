@@ -3,7 +3,6 @@
 import json
 import os
 import subprocess  # nosec # needed to run the agent file
-import sys
 import traceback
 import uuid
 
@@ -47,16 +46,18 @@ def _run_agent(output_dir, output_path):
     try:
         console.print(
             Panel(
-                "[bold green]Launching the agent...[/bold green]\nYou can start using your translated agent below:",
+                "[bold green]Installing dependencies and launching the agent...[/bold green]\nYou can start using your translated agent below:",  # noqa: E501
                 title="Agent Launch",
                 border_style="green",
             )
         )
 
-        # Run the agent file with subprocess under the current CLI
-        subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])  # Ensure pip is available # nosec
-        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "-r", f"{output_dir}/requirements.txt"])  # nosec
-        process = subprocess.Popen(["opentelemetry-instrument", sys.executable, output_path, "--cli"])  # nosec
+        # Create a virutal environment for the translated agent, install dependencies, and run CLI
+        subprocess.check_call(["python3.10", "-m", "venv", ".venv"], cwd=output_dir)  # nosec
+        subprocess.check_call(
+            [".venv/bin/python3.10", "-m", "pip", "-q", "install", "-r", "requirements.txt"], cwd=output_dir
+        )  # nosec
+        process = subprocess.Popen([".venv/bin/python3.10", output_path, "--cli"], cwd=output_dir)  # nosec
 
         while True:
             try:
@@ -103,6 +104,7 @@ def import_agent(
     agent_id: str = typer.Option(None, "--agent-id", help="ID of the Bedrock Agent to import"),
     agent_alias_id: str = typer.Option(None, "--agent-alias-id", help="ID of the Agent Alias to use"),
     target_platform: str = typer.Option(None, "--target-platform", help="Target platform (langchain or strands)"),
+    region: str = typer.Option(None, "--region", help="AWS region for Bedrock (e.g., us-west-2)"),
     debug: bool = typer.Option(False, "--debug", help="Enable debug mode"),
     verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode"),
     disable_memory: bool = typer.Option(False, "--disable-memory", help="Disable AgentCore Memory primitive"),
@@ -136,9 +138,63 @@ def import_agent(
 
         console.print("[bold green]✓[/bold green] AWS credentials verified!")
 
+        # Available AWS regions for Bedrock Agents
+        aws_regions = [
+            {"name": "US East (N. Virginia)", "code": "us-east-1"},
+            {"name": "US West (Oregon)", "code": "us-west-2"},
+            {"name": "AWS GovCloud (US-West)", "code": "us-gov-west-1"},
+            {"name": "Asia Pacific (Tokyo)", "code": "ap-northeast-1"},
+            {"name": "Asia Pacific (Mumbai)", "code": "ap-south-1"},
+            {"name": "Asia Pacific (Singapore)", "code": "ap-southeast-1"},
+            {"name": "Asia Pacific (Sydney)", "code": "ap-southeast-2"},
+            {"name": "Canada (Central)", "code": "ca-central-1"},
+            {"name": "Europe (Frankfurt)", "code": "eu-central-1"},
+            {"name": "Europe (Zurich)", "code": "eu-central-2"},
+            {"name": "Europe (Ireland)", "code": "eu-west-1"},
+            {"name": "Europe (London)", "code": "eu-west-2"},
+            {"name": "Europe (Paris)", "code": "eu-west-3"},
+            {"name": "South America (São Paulo)", "code": "sa-east-1"},
+        ]
+
+        # Set region from command line or prompt user to select
+        selected_region_code = None
+        if region:
+            # Validate the provided region
+            valid_region_codes = [r["code"] for r in aws_regions]
+            if region in valid_region_codes:
+                selected_region_code = region
+                region_name = next((r["name"] for r in aws_regions if r["code"] == region), "Unknown")
+                console.print(f"[bold green]✓[/bold green] Using region: {region_name} ({region})")
+            else:
+                console.print(
+                    Panel(
+                        f"[bold yellow]Warning: '{region}' is not a recognized Bedrock region.[/bold yellow]\n"
+                        f"Proceeding with region selection.",
+                        title="Region Warning",
+                        border_style="yellow",
+                    )
+                )
+
+        # If region wasn't provided or was invalid, prompt for selection
+        if not selected_region_code:
+            console.print("\n[bold]Select an AWS region for Bedrock Agents:[/bold]")
+            region_choices = [f"{region['name']} ({region['code']})" for region in aws_regions]
+            selected_region = questionary.select(
+                "Select a region:",
+                choices=region_choices,
+            ).ask()
+
+            if selected_region is None:  # Handle case where user presses Esc
+                console.print("\n[yellow]Region selection cancelled by user.[/yellow]")
+                return
+
+            # Extract region code from selection
+            selected_region_code = selected_region.split("(")[-1].strip(")")
+            console.print(f"[bold green]✓[/bold green] Selected region: {selected_region}")
+
         # Get AWS credentials and clients
         credentials = boto3.Session().get_credentials()
-        bedrock_client, bedrock_agent_client = get_clients(credentials)
+        bedrock_client, bedrock_agent_client = get_clients(credentials, selected_region_code)
 
         # Get all agents in the user's account
         console.print("\n[bold]Fetching available agents...[/bold]")
@@ -244,12 +300,14 @@ def import_agent(
         if target_platform is None:
             target_platform = questionary.select(
                 "Select your target platform:",
-                choices=["langchain", "strands"],
+                choices=["langchain (0.3.x) + langgraph (0.5.x)", "strands (1.0.x)"],
             ).ask()
 
             if target_platform is None:  # Handle case where user presses Esc
                 console.print("\n[yellow]Platform selection cancelled by user.[/yellow]")
                 return
+
+            target_platform = "langchain" if target_platform.startswith("langchain") else "strands"
         else:
             # Validate target platform
             if target_platform not in ["langchain", "strands"]:
@@ -290,7 +348,7 @@ def import_agent(
         # Show progress
         with console.status("[bold green]Fetching agent configuration...[/bold green]"):
             try:
-                agent_config = auth_and_get_info(agent_id, agent_alias_id, output_dir)
+                agent_config = auth_and_get_info(agent_id, agent_alias_id, output_dir, selected_region_code)
                 console.print("[bold green]✓[/bold green] Agent configuration retrieved!\n")
             except Exception as e:
                 console.print(

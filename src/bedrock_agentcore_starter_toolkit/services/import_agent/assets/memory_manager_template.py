@@ -58,7 +58,7 @@ class LongTermMemoryManager:
 
     def _save_session_summaries(self):
         summary_file = self.storage_path
-        with open(summary_file, "a+") as f:
+        with open(summary_file, "a+", encoding="utf-8") as f:
             f.truncate(0)
             json.dump(self.session_summaries, f)
         self._last_memory_update_time = datetime.now().timestamp()
@@ -85,26 +85,14 @@ class LongTermMemoryManager:
                 response = self.llm_summarizer.converse(
                     messages=[{"role": "user", "content": [{"text": summarization_prompt}]}]
                 )
-                # Handle async generator
-                import asyncio
 
-                async def collect_response():
-                    summary_text = ""
-                    async for chunk in response:
-                        if "contentBlockDelta" not in chunk:
-                            continue
-                        summary_text += chunk["contentBlockDelta"]["delta"].get("text", "")
-                    return summary_text
-
-                # Run the async function in the event loop
-                summary_response = asyncio.run(collect_response())
+                summary_response = ""
+                for chunk in response:
+                    summary_response += chunk.get("contentBlockDelta", {}).get("delta", {}).get("text", "")
 
             return summary_response
         except Exception as e:
             print(f"Error generating summary: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
             message = self.current_session_messages[-1]["content"] if self.current_session_messages else "No messages"
             return f"Session summary generation failed. Last message: {message}"
 

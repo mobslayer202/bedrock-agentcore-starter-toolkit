@@ -1,6 +1,17 @@
 # Changelog
 
-## [0.1.1] - 2025-01-22
+## [0.1.2] - 2025-07-23
+
+### Fixed
+- **S3 bucket creation in us-east-1 region** - Fixed CodeBuild S3 bucket creation failure
+  - Removed unsupported `LocationConstraint` parameter for us-east-1 region
+  - us-east-1 is the default S3 region and does not accept LocationConstraint
+  - CodeBuild feature now works correctly in all AWS regions including IAD
+
+### Dependencies
+- Updated to use bedrock-agentcore SDK v0.1.1
+
+## [0.1.1] - 2025-07-22
 
 ### Added
 - **Multi-platform Docker build support via AWS CodeBuild** (#1)
@@ -41,7 +52,7 @@
 - Improved build reliability and monitoring capabilities
 - Better user experience with one-command ARM64 deployment
 
-## [0.1.0] - 2025-01-16
+## [0.1.0] - 2025-07-16
 
 ### Added
 - Initial release of Bedrock AgentCore Starter Toolkit

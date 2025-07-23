@@ -60,7 +60,7 @@ wheels = [
 
 [[package]]
 name = "bedrock-agentcore"
-version = "0.1.0"
+version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -71,14 +71,14 @@ dependencies = [
     { name = "urllib3" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/07/67/f07523e943d2e68be3dc2f256b0adb1027da521ad31d5a2caba6f158bd2b/bedrock_agentcore-0.1.0.tar.gz", hash = "sha256:05eea20588e8794cb51b1c76c064fa70d01d0a4bfb404b50e680ddccf10c85d0", size = 269981, upload-time = "2025-07-16T18:32:10.763Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/68/78ff9be5b18260f657291772e1aaa3856ef78da5a5465b9f0356c818f415/bedrock_agentcore-0.1.1.tar.gz", hash = "sha256:cade2a39ae1bbad5f37842f0bb60758d4ff25fc56e9271404972f0ed71c8b074", size = 170185, upload-time = "2025-07-23T22:48:33.949Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/ce/30a61ad1e18b5ee7aeaa997cfcd6cb5cbe449cb90d3669e40d458c94b007/bedrock_agentcore-0.1.0-py3-none-any.whl", hash = "sha256:2356661f0ce5012871ac0f22ad3741654e2accb1acdf21b7f78ff19ef278643a", size = 48710, upload-time = "2025-07-16T18:32:09.363Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/3c/81ed595a5077fe190361c1409955ee0837c402a3f0355e41ab006588d749/bedrock_agentcore-0.1.1-py3-none-any.whl", hash = "sha256:cec53a9c15bcf922f943540d9b14b75e6c69bae5483b9c32c8cd0babbc541804", size = 48910, upload-time = "2025-07-23T22:48:32.901Z" },
 ]
 
 [[package]]
 name = "bedrock-agentcore-starter-toolkit"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "bedrock-agentcore" },
@@ -119,7 +119,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bedrock-agentcore", specifier = ">=0.1.0" },
+    { name = "bedrock-agentcore", specifier = ">=0.1.1" },
     { name = "boto3", specifier = ">=1.39.7" },
     { name = "botocore", specifier = ">=1.39.7" },
     { name = "docstring-parser", specifier = ">=0.15,<1.0" },

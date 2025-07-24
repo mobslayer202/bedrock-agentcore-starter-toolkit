@@ -8,7 +8,6 @@ This script translates AWS Bedrock Agent configurations into equivalent LangChai
 import os
 import textwrap
 
-from ..utils import clean_variable_name, generate_pydantic_models, prune_tool_name
 from .base_bedrock_translate import BaseBedrockTranslator
 
 
@@ -20,7 +19,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         super().__init__(agent_config, debug, output_dir, enabled_primitives)
 
         self.imports_code += self.generate_imports()
-        self.tools_code = self.generate_action_groups_code()
+        self.tools_code = self.generate_action_groups_code(platform="langchain")
         self.memory_code = self.generate_memory_configuration(memory_saver="InMemorySaver")
         self.collaboration_code = self.generate_collaboration_code()
         self.kb_code = self.generate_knowledge_base_code()
@@ -35,13 +34,6 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
     app = BedrockAgentCoreApp()
     """
-
-        if self.observability_enabled:
-            self.imports_code += """
-    from opentelemetry.instrumentation.langchain import LangchainInstrumentor
-
-    LangchainInstrumentor().instrument()
-"""
 
         # Format prompts code
         self.prompts_code = textwrap.fill(
@@ -134,6 +126,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     )
 
     retriever_tool_{kb_name} = retriever_{kb_name}.as_tool(name="kb_{kb_name}", description="{kb_description}")
+
     """
             self.tools.append(f"retriever_tool_{kb_name}")
 
@@ -184,373 +177,6 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             self.tools.append(f"invoke_{collaborator_name}")
 
         return collaborator_code
-
-    def generate_action_groups_code(self) -> str:
-        """Generate structured tools for action groups."""
-        if not self.action_groups:
-            return ""
-
-        self.imports_code += """
-    from langchain.tools import StructuredTool
-    from pydantic import BaseModel, Field
-    """
-
-        tool_code = ""
-        tool_instances = []
-
-        for ag in self.action_groups:
-            tool_instances_to_add = []
-            code_to_add = ""
-
-            # Route to the correct function for AG tool generation
-            if ag.get("apiSchema", False):
-                tool_instances_to_add, code_to_add = self.generate_openapi_action_groups_code(ag)
-            if ag.get("functionSchema", False):
-                tool_instances_to_add, code_to_add = self.generate_structured_action_groups_code(ag)
-
-            tool_code += code_to_add
-            tool_instances.extend(tool_instances_to_add)
-
-        # Apply most up to date single KB optimization logic
-        # Need there to be no AG tools and only one KB for this to apply
-        self.single_kb_optimization_enabled = (
-            self.single_kb and self.kb_generation_prompt_enabled and not tool_instances
-        )
-
-        if self.user_input_enabled:
-            self.imports_code += """
-    from langchain_community.tools import HumanInputRun"""
-            tool_code += """
-    user_input_tool = HumanInputRun(input_func=input)
-    user_input_tool.description += \". If you do not have the parameters to invoke a function, then use this tool to ask the user for them.\""""
-            tool_instances.append("user_input_tool")
-
-        if self.code_interpreter_enabled:
-            tool_code += self.generate_code_interpreter(platform="langchain")
-            tool_instances.append("code_tool")
-
-        tool_code += f"""
-    action_group_tools = [{", ".join(tool_instances)}]
-"""
-        self.action_group_tools = tool_instances
-
-        return tool_code
-
-    def generate_structured_action_groups_code(self, ag):
-        """Generate tool code for functionSchema action groups."""
-        executor_is_lambda = bool(ag["actionGroupExecutor"].get("lambda", False))
-        action_group_name = ag.get("actionGroupName", "")
-        action_group_desc = ag.get("description", "").replace('"', '\\"')
-
-        tool_code = ""
-        tool_instances = []
-
-        if executor_is_lambda:
-            lambda_arn = ag.get("actionGroupExecutor", {}).get("lambda", "")
-            lambda_region = lambda_arn.split(":")[3] if lambda_arn else "us-west-2"
-
-        function_schema = ag.get("functionSchema", {}).get("functions", [])
-
-        for func in function_schema:
-            func_name = func.get("name", "")
-            clean_func_name = clean_variable_name(func_name)
-            func_desc = func.get("description", "").replace('"', '\\"')
-            func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}" + (
-                f" (description: {action_group_desc})" if action_group_desc else ""
-            )
-            params = func.get("parameters", {})
-            param_list = []
-            tool_name = f"{action_group_name}_{clean_func_name}"
-
-            tool_name = prune_tool_name(tool_name)
-
-            # Create a Pydantic model for the function inputs
-            model_name = f"{action_group_name}_{clean_func_name}_Input"
-
-            tool_code += f"""
-    class {model_name}(BaseModel):"""
-
-            params_input = ", ".join(
-                [
-                    f"{{'name': '{param_name}', 'type': '{param_info.get('type', 'string')}', 'value': {param_name}}}"
-                    for param_name, param_info in params.items()
-                ]
-            )
-
-            if params:
-                for param_name, param_info in params.items():
-                    param_type = param_info.get("type", "string")
-                    param_desc = param_info.get("description", "").replace('"', '\\"')
-                    required = param_info.get("required", False)
-
-                    # Map JSON Schema types to Python types
-                    type_mapping = {
-                        "string": "str",
-                        "number": "float",
-                        "integer": "int",
-                        "boolean": "bool",
-                        "array": "list",
-                        "object": "dict",
-                    }
-                    py_type = type_mapping.get(param_type, "str")
-                    param_list.append(f"{param_name}: {py_type} = None")
-
-                    if required:
-                        tool_code += f"""
-        {param_name}: {py_type} = Field(..., description="{param_desc}")"""
-                    else:
-                        tool_code += f"""
-        {param_name}: {py_type} = Field(None, description="{param_desc}")"""
-            else:
-                tool_code += """
-        pass"""
-
-            param_sig = ", ".join(param_list)
-
-            # Create function implementation
-            if executor_is_lambda:
-                tool_code += f"""
-
-    def {tool_name}({param_sig}) -> str:
-        \"\"\"{func_desc}\"\"\"
-        lambda_client = boto3.client('lambda', region_name="{lambda_region}")
-
-        # Prepare parameters
-        parameters = [{params_input}]"""
-
-                # Lambda invocation code
-                tool_code += f"""
-
-        # Invoke Lambda function
-        try:
-            payload = {{
-                "actionGroup": "{action_group_name}",
-                "function": "{func_name}",
-                "inputText": last_input,
-                "parameters": parameters,
-                "agent": {{
-                    "name": "{self.agent_info.get("agentName", "")}",
-                    "id": "{self.agent_info.get("agentId", "")}",
-                    "alias": "{self.agent_info.get("alias", "")}",
-                    "version": "{self.agent_info.get("version", "")}"
-                }},
-                "sessionId": "",
-                "sessionAttributes": {{}},
-                "promptSessionAttributes": {{}},
-                "messageVersion": "1.0"
-            }}
-
-            response = lambda_client.invoke(
-                FunctionName="{lambda_arn}",
-                InvocationType='RequestResponse',
-                Payload=json.dumps(payload)
-            )
-
-            response_payload = json.loads(response['Payload'].read().decode('utf-8'))
-
-            return str(response_payload)
-
-        except Exception as e:
-            return f"Error executing {func_name}: {{str(e)}}"
-    """
-
-            else:
-                tool_code += f"""
-
-    def {tool_name}({param_sig}) -> str:
-        \"\"\"{func_desc}\"\"\"
-        return input(f"Return of control: {action_group_name}_{func_name} was called with the input {{{", ".join(params.keys())}}}, enter desired output:")
-        """
-
-            # Create StructuredTool
-            tool_code += f"""
-    {tool_name}_tool = StructuredTool.from_function(
-        func={tool_name},
-        name="{tool_name}",
-        description="{func_desc}",
-        args_schema={model_name}
-    )
-    """
-            tool_instances.append(f"{tool_name}_tool")
-
-        return tool_instances, tool_code
-
-    def generate_openapi_action_groups_code(self, ag) -> str:
-        """Generate tool code for openAPI schema action groups."""
-        executor_is_lambda = bool(ag["actionGroupExecutor"].get("lambda", False))
-        action_group_name = ag.get("actionGroupName", "")
-        action_group_desc = ag.get("description", "").replace('"', '\\"')
-
-        tool_code = """
-    """
-        tool_instances = []
-
-        if executor_is_lambda:
-            lambda_arn = ag.get("actionGroupExecutor", {}).get("lambda", "")
-            lambda_region = lambda_arn.split(":")[3] if lambda_arn else "us-west-2"
-
-        openapi_schema = ag.get("apiSchema", {}).get("payload", {})
-
-        for func_name, func_spec in openapi_schema["paths"].items():
-            clean_func_name = clean_variable_name(func_name)
-            for method, method_spec in func_spec.items():
-                tool_name = f"{action_group_name}_{clean_func_name}_{method}"
-
-                tool_name = prune_tool_name(tool_name)
-
-                params = method_spec.get("parameters", [])
-                request_body = method_spec.get("requestBody", {})
-                content = request_body.get("content", {})
-
-                param_model_name = f"{tool_name}_Params"
-                input_model_name = f"{tool_name}_Input"
-                request_model_name = ""
-                content_models = []
-
-                if params:
-                    nested_schema, param_model_name = generate_pydantic_models(params, f"{tool_name}_Params")
-                    tool_code += nested_schema
-
-                if request_body:
-                    for content_type, content_schema in content.items():
-                        content_type_safe = clean_variable_name(content_type)
-                        model_name = f"{tool_name}_{content_type_safe}"
-
-                        nested_schema, model_name = generate_pydantic_models(content_schema, model_name, content_type)
-                        tool_code += nested_schema
-                        content_models.append(model_name)
-
-                # Create a union model if there are multiple content models
-                if len(content_models) > 1:
-                    request_model_name = f"{tool_name}_Request_Body"
-                    tool_code += f"""
-
-    {request_model_name} = Union[{", ".join(content_models)}]"""
-                elif len(content_models) == 1:
-                    request_model_name = next(iter(content_models))
-
-                # un-nest if only one type of input is provided
-                if params and content_models:
-                    tool_code += """
-    class {0}(BaseModel):
-        parameters: {1} None = Field(None, description = \"Parameters (ie. for a GET method) for this API Call\")
-        {2}
-    """.format(
-                        input_model_name,
-                        f"{param_model_name} |" if params else "",
-                        (
-                            f'request_body: {request_model_name} | None = Field(None, description = "Request body (ie. for a POST method) for this API Call")'
-                            if content_models
-                            else ""
-                        ),
-                    )
-                elif params:
-                    input_model_name = param_model_name
-                elif content_models:
-                    input_model_name = request_model_name
-                else:
-                    input_model_name = "None"
-
-                func_desc = method_spec.get("description", method_spec.get("summary", "No Description Provided."))
-                func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}{f' (description: {action_group_desc})' if action_group_desc else ''}."
-
-                if executor_is_lambda:
-                    tool_code += f"""
-
-    def {tool_name}({f"input_data: {input_model_name}" if input_model_name != "None" else ""}) -> str:
-        \"\"\"{func_desc}\"\"\"
-        lambda_client = boto3.client('lambda', region_name="{lambda_region}")
-    """
-                    nested_code = """
-        request_body_dump = model_dump.get("request_body", model_dump)
-        content_type = request_body_dump.get("content_type_annotation", "*") if request_body_dump else None
-
-        request_body = {"content": {content_type: {"properties": []}}}
-        for param_name, param_value in request_body_dump.items():
-            if param_name != "content_type_annotation":
-                request_body["content"][content_type]["properties"].append({
-                    "name": param_name,
-                    "value": param_value
-                })
-        """
-
-                    param_code = (
-                        f"""model_dump = input_data.model_dump(exclude_unset = True)
-        model_dump = model_dump.get("parameters", model_dump)
-
-        for param_name, param_value in model_dump.items():
-            parameters.append({{
-                "name": param_name,
-                "value": param_value
-            }})
-        {nested_code if content_models else ""}"""
-                        if input_model_name != "None"
-                        else ""
-                    )
-
-                    content_model_code = """
-            if request_body:
-                payload["requestBody"] = request_body
-                if content_type:
-                    payload["contentType"] = content_type"""
-
-                    tool_code += f"""
-
-        parameters = []
-
-        {param_code}
-
-        try:
-            payload = {{
-                "messageVersion": "1.0",
-                "agent": {{
-                    "name": "{self.agent_info.get("agentName", "")}",
-                    "id": "{self.agent_info.get("agentId", "")}",
-                    "alias": "{self.agent_info.get("alias", "")}",
-                    "version": "{self.agent_info.get("version", "")}"
-                }},
-                "sessionId": "",
-                "sessionAttributes": {{}},
-                "promptSessionAttributes": {{}},
-                "actionGroup": "{action_group_name}",
-                "apiPath": "{func_name}",
-                "inputText": last_input,
-                "httpMethod": "{method.upper()}",
-                "parameters": {"parameters" if param_model_name else "{}"}
-            }}
-
-            {content_model_code if content_models else ""}
-
-            response = lambda_client.invoke(
-                FunctionName="{lambda_arn}",
-                InvocationType='RequestResponse',
-                Payload=json.dumps(payload)
-            )
-
-            response_payload = json.loads(response['Payload'].read().decode('utf-8'))
-
-            return str(response_payload)
-
-        except Exception as e:
-            return f"Error executing {clean_func_name}/{method}: {{str(e)}}"
-"""
-                else:
-                    tool_code += f"""
-    def {tool_name}(input_data) -> str:
-        \"\"\"{func_desc}\"\"\"
-        return input(f"Return of control: {tool_name} was called with the input {{input_data}}, enter desired output:")
-        """
-
-                tool_code += f"""
-    {tool_name}_tool = StructuredTool.from_function(
-        func={tool_name},
-        name="{tool_name}",
-        description="{func_desc}"
-    )
-    """
-                tool_instances.append(f"{tool_name}_tool")
-
-        return tool_instances, tool_code
 
     def generate_agent_setup(self) -> str:
         """Generate agent setup code."""
@@ -732,7 +358,6 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
                 return {'error': "No query provided, please provide a 'prompt' field in the payload."}
 
             agent_result = invoke_agent(agent_query)
-            print(f"Agent Result: {{agent_result}}")
 
             def format_message(msg):
                 try:

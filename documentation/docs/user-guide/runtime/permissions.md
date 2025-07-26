@@ -2,8 +2,7 @@
 
 This guide covers the IAM permissions required to run agents with Amazon Bedrock AgentCore Runtime. The toolkit supports two types of execution roles with distinct permission sets.
 
-!!! info "AWS Documentation Reference"
-    This guide is based on the official [AWS Bedrock AgentCore Runtime Permissions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) documentation, with additional details specific to the toolkit's implementation.
+Refer to [AWS Bedrock AgentCore Runtime Permissions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) documentation for more details.
 
 ## Overview
 
@@ -484,48 +483,3 @@ The toolkit uses deterministic naming for auto-created roles:
 - **CodeBuild Role**: `AmazonBedrockAgentCoreSDKCodeBuild-{region}-{hash}`
 
 Where `{hash}` is a deterministic 10-character hash based on your agent name, ensuring consistent role names across deployments.
-
-### Auto-Creation vs Manual Roles
-
-#### Auto-Created Roles
-- Use the exact policies shown above
-- Created with appropriate resource scoping
-- Include all required permissions for toolkit functionality
-
-#### Manual Roles
-- Must include minimum required permissions from the policies above
-- Trust policies must allow the appropriate AWS services
-- Resource ARNs must be updated to match your specific resources
-
-## Configuration Examples
-
-### Using Auto-Created Roles
-```yaml
-# .bedrock_agentcore.yaml
-agents:
-  my-agent:
-    aws:
-      execution_role_auto_create: true
-      region: us-west-2
-      account: "123456789012"
-```
-
-### Using Existing Roles
-```yaml
-# .bedrock_agentcore.yaml
-agents:
-  my-agent:
-    aws:
-      execution_role: "arn:aws:iam::123456789012:role/MyCustomRole"
-      region: us-west-2
-      account: "123456789012"
-```
-
-### CLI Configuration
-```bash
-# Auto-create roles (recommended)
-agentcore configure --entrypoint agent.py
-
-# Use existing role
-agentcore configure --entrypoint agent.py --execution-role MyCustomRole
-```

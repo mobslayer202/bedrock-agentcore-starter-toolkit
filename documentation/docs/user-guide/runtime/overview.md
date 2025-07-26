@@ -282,7 +282,7 @@ agentcore launch --codebuild
 
 **Benefits:**
 - No Docker installation required
-- ARM64 architecture builds (optimal for AgentCore)
+- ARM64 architecture builds
 - Integrated with AWS services
 - Consistent build environment
 - Perfect for notebook-based development workflows
@@ -317,11 +317,6 @@ agentcore launch
 - Automatically handles Docker build process
 - Pushes to ECR and deploys to AgentCore
 - Ideal for environments without Docker
-
-```bash
-# CodeBuild deployment (no Docker required)
-agentcore launch --codebuild
-```
 
 #### ECR Push Only
 ```bash

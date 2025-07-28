@@ -18,6 +18,8 @@ import autopep8
 import boto3
 from bedrock_agentcore.memory import MemoryClient
 
+from openapi_schema_to_json_schema import to_json_schema
+
 from ....operations.gateway import GatewayClient
 from ..utils import (
     clean_variable_name,
@@ -1089,6 +1091,107 @@ class BaseBedrockTranslator:
                         )
                         func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}{f' (description: {action_group_desc})' if action_group_desc else ''}."
 
+                        # Convert AG OpenAPI Schema to JSON Schema
+
+                        # Gateway does not support oneOf yet, so we need to flatten the schema
+                        GATEWAY_ONEOF_NOT_SUPPORTED = True
+                        parameters = method_spec.get("parameters", [])
+
+                        request_body_required = method_spec.get("requestBody", {}).get("required", False)
+                        request_body = method_spec.get("requestBody", {}).get("content", {})
+
+                        requirements = []
+                        if parameters:
+                            requirements.append("parameters")
+                        if request_body_required:
+                            requirements.append("requestBody")
+
+                        content_schemas = []
+                        for content_type, content_schema in request_body.items():
+                            content_schema = content_schema.get("schema", {})
+                            converted = to_json_schema(content_schema)
+                            converted.get("properties", {}).update(
+                                {
+                                    "contentType": {"description": f"MUST BE SET TO {content_type}", "type": "string"}
+                                }  # NOTE: GATEWAY DOES NOT SUPPORT ENUM OR CONST YET
+                            )
+                            del converted["$schema"]
+                            content_schemas.append(converted)
+
+                        param_properties = {}
+                        required_params = []
+                        for parameter in parameters:
+                            param_name = parameter.get("name", "")
+                            param_desc = parameter.get("description", "").replace('"', '\\"')
+                            param_required = parameter.get("required", False)
+                            if "schema" in parameter:
+                                param_type = parameter.get("schema", {}).get("type", "string")
+
+                                param_properties[param_name] = {
+                                    "type": param_type,
+                                    "description": param_desc,
+                                }
+                            else:
+                                param_content = parameter.get("content", {})
+                                content_schemas = []
+                                for content_type, content_schema in param_content.items():
+                                    content_schema = content_schema.get("schema", {})
+                                    converted = to_json_schema(content_schema)
+                                    converted.get("properties", {}).update(
+                                        {
+                                            "contentType": {
+                                                "description": f"MUST BE SET TO {content_type}",
+                                                "type": "string",
+                                            }
+                                        }  # NOTE: GATEWAY DOES NOT SUPPORT ENUM OR CONST YET
+                                    )
+                                    del converted["$schema"]
+                                    content_schemas.append(converted)
+
+                                param_properties[param_name] = (
+                                    content_schemas[0]
+                                    if len(content_schemas) == 1
+                                    or (GATEWAY_ONEOF_NOT_SUPPORTED and len(content_schemas) > 1)
+                                    else {
+                                        "type": "object",
+                                        "description": param_desc,
+                                        "oneOf": content_schemas,  # NOTE: GATEWAY DOES NOT SUPPORT ONEOF YET
+                                    }
+                                )
+
+                            if param_required:
+                                required_params.append(param_name)
+
+                        input_schema = {
+                            "type": "object",
+                            "properties": {},
+                            "required": requirements,
+                        }
+
+                        if parameters:
+                            input_schema["properties"]["parameters"] = {
+                                "type": "object",
+                                "properties": param_properties,
+                                "required": required_params,
+                            }
+                        if content_schemas:
+                            input_schema["properties"]["requestBody"] = (
+                                content_schemas[0]
+                                if len(content_schemas) == 1
+                                or (GATEWAY_ONEOF_NOT_SUPPORTED and len(content_schemas) > 1)
+                                else {
+                                    "type": "object",
+                                    "oneOf": content_schemas,
+                                }  # NOTE: GATEWAY DOES NOT SUPPORT ONEOF YET
+                            )
+
+                        # write the input schema to a file
+                        input_schema_path = os.path.join(self.output_dir, f"{tool_name}_input_schema.json")
+                        with open(input_schema_path, "a+", encoding="utf-8") as f:
+                            json.dump(input_schema, f, indent=2)
+
+                        tools.append({"name": tool_name, "description": func_desc, "inputSchema": input_schema})
+
             elif ag.get("functionSchema", False):
                 function_schema = ag.get("functionSchema", {}).get("functions", [])
 
@@ -1110,6 +1213,7 @@ class BaseBedrockTranslator:
 
                     func_parameters = func.get("parameters", {})
 
+                    # Convert AG Function Schema to JSON Schema
                     new_properties = {}
                     required_params = []
                     for param_name, param_info in func_parameters.items():
@@ -1213,7 +1317,7 @@ def lambda_handler(event, context):
             "httpMethod": tool_info.get('httpMethod', 'GET'),
             "parameters": transform_object(event.get('parameters', {{}})),
             "requestBody": transform_object(event.get('requestBody', {{}})),
-            "contentType": event.get('contentType', '*')
+            "contentType": event.get('requestBody', {{}}).get('contentType', 'application/json')
         }})
     elif tool_info.get('type') == 'structured':
         payload.update({{

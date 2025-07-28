@@ -11,8 +11,10 @@ import uuid
 from typing import Dict, Tuple
 
 import autopep8
+import boto3
 from bedrock_agentcore.memory import MemoryClient
 
+from ....operations.gateway import GatewayClient
 from ..utils import (
     clean_variable_name,
     generate_pydantic_models,
@@ -41,14 +43,6 @@ class BaseBedrockTranslator:
         self.output_dir = output_dir
         self.user_id = uuid.uuid4().hex[:8]
         self.cleaned_agent_name = self.agent_info["agentName"].replace(" ", "_").replace("-", "_").lower()[:30]
-
-        # AgentCore
-        self.enabled_primitives = enabled_primitives
-        # gateway currently not supported
-        # self.gateway_enabled = enabled_primitives.get("gateway", False)
-        self.agentcore_memory_enabled = enabled_primitives.get("memory", False)
-        self.observability_enabled = enabled_primitives.get("observability", False)
-        self.code1p = enabled_primitives.get("code_interpreter", False)
 
         # agent metadata
         self.model_id = self.agent_info.get("foundationModel", "")
@@ -116,6 +110,15 @@ class BaseBedrockTranslator:
             guardrail_version = self.agent_info["guardrailConfiguration"].get("version", "")
             if guardrail_id:
                 self.guardrail_config = {"guardrailIdentifier": guardrail_id, "guardrailVersion": guardrail_version}
+
+        # AgentCore
+        self.enabled_primitives = enabled_primitives
+        self.gateway_enabled = enabled_primitives.get("gateway", False)
+        self.created_gateway = self.create_gateway() if self.gateway_enabled else {}
+        self.gateway_proxy_tool_name_mappings = {}  # used in the proxy to map pruned tool names to get more information about the tool (action group, method/function, type)
+        self.agentcore_memory_enabled = enabled_primitives.get("memory", False) and self.memory_enabled
+        self.observability_enabled = enabled_primitives.get("observability", False)
+        self.code1p = enabled_primitives.get("code_interpreter", False) and self.code_interpreter_enabled
 
         # Initialize imports
         self.imports_code = """
@@ -265,28 +268,28 @@ class BaseBedrockTranslator:
     checkpointer_STM = {memory_saver}()
     """
 
-        if self.memory_enabled and self.agentcore_memory_enabled:
+        if self.agentcore_memory_enabled:
             self.imports_code += "\nfrom bedrock_agentcore.memory import MemoryClient\n"
 
-            memory_client = MemoryClient(region_name=self.agent_region, environment="prod")
+            memory_client = MemoryClient(region_name=self.agent_region)
 
+            print("  Creating AgentCore Memory (This will take a few minutes)...")
             memory = memory_client.create_memory_and_wait(
-                name=f"{self.cleaned_agent_name}_memory_{uuid.uuid4().hex[:8].lower()}",
+                name=f"{self.cleaned_agent_name}_memory_{uuid.uuid4().hex[:3].lower()}",
                 strategies=[
                     {
                         "summaryMemoryStrategy": {
-                            "name": "ConversationSummary",
-                            "namespaces": ["summaries/{actorId}/{sessionId}"],
+                            "name": "SessionSummarizer",
+                            "namespaces": ["/summaries/{actorId}/{sessionId}"],
                         }
                     }
-                ],  # Use actorId for multi-agent
-                event_expiry_days=self.agent_info["memoryConfiguration"].get("storageDays", 30),
+                ],
             )
 
             memory_id = memory["id"]
 
             output += f"""
-    memory_client = MemoryClient(region_name='{self.agent_region}', environment="prod")
+    memory_client = MemoryClient(region_name='{self.agent_region}')
     memory_id = "{memory_id}"
         """
 
@@ -325,22 +328,29 @@ class BaseBedrockTranslator:
         if not self.action_groups:
             return ""
 
+        custom_ags = [ag for ag in self.action_groups if "parentActionSignature" not in ag]
         tool_code = ""
         tool_instances = []
 
         # OpenAPI and Function Action Groups
-        for action_group in self.action_groups:
-            additional_tool_instances = []
-            additional_code = ""
 
-            if action_group.get("apiSchema", False):
-                additional_tool_instances, additional_code = self.generate_openapi_ag_code(action_group, platform)
+        if self.gateway_enabled:
+            self.create_gateway_proxy_and_targets(custom_ags)
+        else:
+            for action_group in custom_ags:
+                additional_tool_instances = []
+                additional_code = ""
 
-            elif action_group.get("functionSchema", False):
-                additional_tool_instances, additional_code = self.generate_structured_ag_code(action_group, platform)
+                if action_group.get("apiSchema", False):
+                    additional_tool_instances, additional_code = self.generate_openapi_ag_code(action_group, platform)
 
-            tool_code += additional_code
-            tool_instances.extend(additional_tool_instances)
+                elif action_group.get("functionSchema", False):
+                    additional_tool_instances, additional_code = self.generate_structured_ag_code(
+                        action_group, platform
+                    )
+
+                tool_code += additional_code
+                tool_instances.extend(additional_tool_instances)
 
         # User Input Action Group
         if self.user_input_enabled:
@@ -685,6 +695,7 @@ class BaseBedrockTranslator:
         return f"""
 
     def cli():
+        global user_id
         user_id = "{uuid.uuid4().hex[:8].lower()}" # change user_id if necessary
         session_id = uuid.uuid4().hex[:8].lower()
         try:
@@ -700,7 +711,8 @@ class BaseBedrockTranslator:
                         print("  Error:" + str(result.get('error', {{}})))
                         continue
 
-                    print(f"\\nAgent Response: {{result.get('response', '')}}\\n")
+                    print(f"\\nResponse: {{result.get('response', 'No response provided')}}")
+
                     if result["sources"]:
                         print(f"  Sources: {{', '.join(set(result.get('sources', [])))}}")
 
@@ -932,6 +944,266 @@ class BaseBedrockTranslator:
             """
 
             return code_1p
+
+    def generate_entrypoint_code(self, platform: str) -> str:
+        """Generate entrypoint code for the agent."""
+        entrypoint_code = ""
+
+        if not self.is_collaborator:
+            entrypoint_code += """
+    @app.entrypoint
+    """
+
+        agentcore_memory_entrypoint_code = (
+            """
+            event = memory_client.create_event(
+                memory_id=memory_id,
+                actor_id=user_id,
+                session_id=session_id,
+                messages=formatted_messages
+            )
+        """
+            if self.agentcore_memory_enabled
+            else ""
+        )
+
+        tools_used_update_code = (
+            "tools_used.update(list(agent_result.metrics.tool_metrics.keys()))"
+            if platform == "strands"
+            else "tools_used.update([msg.name for msg in agent_result if isinstance(msg, ToolMessage)])"
+        )
+        response_content_code = "str(agent_result)" if platform == "strands" else "agent_result[-1].content"
+
+        entrypoint_code += f"""
+    def endpoint(payload, context):
+        try:
+            {"global user_id" if self.agentcore_memory_enabled else ""}
+            {'user_id = user_id or payload.get("userId", uuid.uuid4().hex[:8])' if self.agentcore_memory_enabled else ""}
+            session_id = context.session_id or payload.get("sessionId", uuid.uuid4().hex[:8])
+
+            tools_used.clear()
+            agent_query = payload.get("prompt", "")
+            if not agent_query:
+                return {{'error': "No query provided, please provide a 'prompt' field in the payload."}}
+
+            agent_result = invoke_agent(agent_query)
+
+            {tools_used_update_code}
+            response_content = {response_content_code}
+
+            # Gathering sources from the response
+            sources = []
+            urls = re.findall(r'(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{{2,}}(?:/[^/\s]*)*', response_content)
+            source_tags = re.findall(r"<source>(.*?)</source>", response_content)
+            sources.extend(urls)
+            sources.extend(source_tags)
+            sources = list(set(sources))
+
+            formatted_messages = [(agent_query, "USER"), (response_content if response_content else "No Response.", "ASSISTANT")]
+
+            {agentcore_memory_entrypoint_code}
+
+            return {{'result': {{'response': response_content, 'sources': sources, 'tools_used': list(tools_used), 'sessionId': session_id, 'messages': formatted_messages}}}}
+        except Exception as e:
+            return {{'error': str(e)}}
+    """
+        return entrypoint_code
+
+    def create_gateway(self):
+        """Create the gateway and proxy for the agent."""
+        print("  Creating Gateway for Agent...")
+        gateway_client = GatewayClient(region_name=self.agent_region)
+        gateway = gateway_client.create_mcp_gateway(
+            name=f"{self.cleaned_agent_name}_gateway", enable_semantic_search=True
+        )
+        return gateway
+
+    def create_gateway_proxy_and_targets(self, action_groups):
+        """Create gateway proxy for the agent."""
+        function_name = f"gateway_proxy_{uuid.uuid4().hex[:8].lower()}"
+        account_id = boto3.client("sts").get_caller_identity().get("Account")
+        lambda_arn = f"arn:aws:lambda:{self.agent_region}:{account_id}:function:{function_name}"
+
+        # Aggregate info from the action_groups
+        tool_mappings = {}
+
+        for ag in action_groups:
+            if "lambda" not in ag.get("actionGroupExecutor", {}):
+                continue
+
+            action_group_name = ag.get("actionGroupName", "AG")
+            action_group_desc = ag.get("description", "").replace('"', '\\"')
+            end_lambda_arn = ag.get("actionGroupExecutor", {}).get("lambda", "")
+            tools = []
+
+            if ag.get("apiSchema", False):
+                openapi_schema = ag.get("apiSchema", {}).get("payload", {})
+
+                for func_name, func_spec in openapi_schema.get("paths", {}).items():
+                    clean_func_name = clean_variable_name(func_name)
+                    for method, method_spec in func_spec.items():
+                        tool_name = prune_tool_name(f"{action_group_name}_{clean_func_name}_{method}")
+
+                        tool_mappings[tool_name] = {
+                            "actionGroup": action_group_name,
+                            "apiPath": func_name,
+                            "httpMethod": method.upper(),
+                            "type": "openapi",
+                            "lambdaArn": end_lambda_arn,
+                            "lambdaRegion": end_lambda_arn.split(":")[3] if end_lambda_arn else "us-west-2",
+                        }
+
+                        func_desc = method_spec.get(
+                            "description", method_spec.get("summary", "No Description Provided.")
+                        )
+                        func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}{f' (description: {action_group_desc})' if action_group_desc else ''}."
+
+            elif ag.get("functionSchema", False):
+                function_schema = ag.get("functionSchema", {}).get("functions", [])
+
+                for func in function_schema:
+                    func_name = func.get("name", "")
+                    clean_func_name = clean_variable_name(func_name)
+                    tool_name = prune_tool_name(f"{action_group_name}_{clean_func_name}")
+
+                    tool_mappings[tool_name] = {
+                        "actionGroup": action_group_name,
+                        "function": func_name,
+                        "type": "structured",
+                        "lambdaArn": end_lambda_arn,
+                        "lambdaRegion": end_lambda_arn.split(":")[3] if end_lambda_arn else "us-west-2",
+                    }
+
+                    func_desc = func_spec.get("description", "No Description Provided.")
+                    func_desc += f"\\nThis tool is part of the group of tools called {action_group_name}{f' (description: {action_group_desc})' if action_group_desc else ''}."
+
+                    func_parameters = func.get("parameters", {})
+
+                    new_properties = {}
+                    required_params = []
+                    for param_name, param_info in func_parameters.items():
+                        param_type = param_info.get("type", "string")
+                        param_desc = param_info.get("description", "").replace('"', '\\"')
+                        param_required = param_info.get("required", False)
+
+                        new_properties[param_name] = {
+                            "type": param_type,
+                            "description": param_desc,
+                        }
+
+                        if param_required:
+                            required_params.append(param_name)
+
+                    tools.append(
+                        {
+                            "name": tool_name,
+                            "description": func_desc,
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": new_properties,
+                                "required": required_params,
+                            },
+                        }
+                    )
+
+            if tools:
+                self.create_gateway_lambda_target(tools, lambda_arn, action_group_name)
+
+        agent_metadata = {
+            "name": self.agent_info.get("agentName", ""),
+            "id": self.agent_info.get("agentId", ""),
+            "alias": self.agent_info.get("alias", ""),
+            "version": self.agent_info.get("version", ""),
+        }
+
+        lambda_code = f"""
+import boto3
+import json
+
+agent_metadata = {agent_metadata}
+tool_mappings = {tool_mappings}
+
+def lambda_handler(event, context):
+    tool_name = context.client_context.custom['bedrockAgentCoreToolName']
+    session_id = context.client_context.custom['bedrockAgentCoreSessionId']
+
+    tool_info = tool_mappings.get(tool_name, {{}})
+    if not tool_info:
+        return {{'statusCode': 400, 'body': 'Tool not found'}}
+
+    action_group = tool_info.get('actionGroup', '')
+    end_lambda_arn = tool_info.get('lambdaArn', '')
+    lambda_region = tool_info.get('lambdaRegion', 'us-west-2')
+
+    lambda_client = boto3.client("lambda", region_name=lambda_region)
+
+    payload = {{
+        "messageVersion": "1.0",
+        "agent": agent_metadata,
+        "actionGroup": action_group,
+        "sessionId": session_id,
+        "sessionAttributes": {{}},
+        "promptSessionAttributes": {{}},
+        "inputText": ''
+    }}
+
+    if tool_info.get('type') == 'openapi':
+        payload.update({{
+            "apiPath": tool_info.get('apiPath', ''),
+            "httpMethod": tool_info.get('httpMethod', 'GET'),
+            "parameters": event.get('parameters', {{}}),
+            "requestBody": event.get('requestBody', {{}}),
+            "contentType": event.get('contentType', '*')
+        }})
+    elif tool_info.get('type') == 'structured':
+        payload.update({{
+            "function": tool_info.get('function', ''),
+            "parameters": event
+        }})
+
+    try:
+        response = lambda_client.invoke(
+            FunctionName=end_lambda_arn,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(payload)
+        )
+
+        response_payload = json.loads(response['Payload'].read().decode('utf-8'))
+
+        return {{'statusCode': 200, 'body': json.dumps(response_payload)}}
+
+    except Exception as e:
+        return {{'statusCode': 500, 'body': f'Error invoking Lambda: {{str(e)}}'}}
+    """
+
+        lambda_client = boto3.client("lambda", region_name=self.agent_region)
+        lambda_client.create_function(
+            FunctionName=function_name,
+            Runtime="python3.10",
+            Role=f"arn:aws:iam::{account_id}:role/Admin",
+            Handler="lambda_function.lambda_handler",
+            Code={"ZipFile": self.create_lambda_zip(lambda_code)},
+            Description="Proxy Lambda for AgentCore Gateway",
+        )
+
+    def create_lambda_zip(self, code):
+        import io
+        import zipfile
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("lambda_function.py", code)
+        zip_buffer.seek(0)
+        return zip_buffer.read()
+
+    def create_gateway_lambda_target(self, tools, lambda_arn, target_name):
+        target = GatewayClient(region_name=self.agent_region).create_mcp_gateway_target(
+            gateway=self.create_gateway,
+            target_type="lambda",
+            target_payload={"arn": lambda_arn, "tools": tools},
+            name=target_name,
+        )
+        return target
 
     def translate(self, output_path: str, code_sections: list):
         """Translate Bedrock agent config to LangChain code."""

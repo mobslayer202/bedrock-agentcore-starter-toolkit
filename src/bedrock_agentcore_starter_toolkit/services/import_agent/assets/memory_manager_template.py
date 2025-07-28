@@ -5,6 +5,7 @@ This module provides a custom memory manager that mimics the functionality of Be
 Long Term Memory and Sessions.
 """
 
+import asyncio
 import json
 import os
 import weakref
@@ -82,13 +83,27 @@ class LongTermMemoryManager:
             if self.platform == "langchain":
                 summary_response = self.llm_summarizer.invoke(summarization_prompt).content
             else:
-                response = self.llm_summarizer.converse(
-                    messages=[{"role": "user", "content": [{"text": summarization_prompt}]}]
-                )
 
-                summary_response = ""
-                for chunk in response:
-                    summary_response += chunk.get("contentBlockDelta", {}).get("delta", {}).get("text", "")
+                def inference(model, messages, system_prompt=""):
+                    async def run_inference():
+                        results = []
+                        async for event in model.stream(messages=messages, system_prompt=system_prompt):
+                            results.append(event)
+                        return results
+
+                    response = asyncio.run(run_inference())
+
+                    text = ""
+                    for chunk in response:
+                        if "contentBlockDelta" not in chunk:
+                            continue
+                        text += chunk["contentBlockDelta"].get("delta", {}).get("text", "")
+
+                    return text
+
+                summary_response = inference(
+                    self.llm_summarizer, messages=[{"role": "user", "content": [{"text": summarization_prompt}]}]
+                )
 
             return summary_response
         except Exception as e:

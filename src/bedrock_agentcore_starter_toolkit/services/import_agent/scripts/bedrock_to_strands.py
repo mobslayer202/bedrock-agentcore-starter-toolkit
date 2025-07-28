@@ -59,6 +59,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     from strands.agent.conversation_manager import SlidingWindowConversationManager
     from strands.models import BedrockModel
     from strands.types.content import Message
+    import asyncio
     """
 
     def generate_model_configurations(self) -> str:
@@ -181,7 +182,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
                 "memory_synopsis = memory_manager.get_memory_synopsis()"
                 if not self.agentcore_memory_enabled
                 else """
-            memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
+            memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query="Retrieve the most recent session sumamries.", top_k=20)
             memory_synopsis = "\\n".join([m.get("content", {}).get("text", "") for m in memories])
 """
             )
@@ -197,8 +198,13 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         }}
 
     def inference(model, messages, system_prompt=""):
-        if system_prompt: response = model.converse(messages=messages, system_prompt=system_prompt)
-        else: response = model.converse(messages=messages)
+        async def run_inference():
+            results = []
+            async for event in model.stream(messages=messages, system_prompt=system_prompt):
+                results.append(event)
+            return results
+
+        response = asyncio.run(run_inference())
 
         text = ""
         for chunk in response:
@@ -309,7 +315,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     def invoke_agent(question: str{relay_param_def}):
         {"global last_agent" if self.supervision_type == "SUPERVISOR_ROUTER" else ""}
         {"global first_turn" if self.single_kb_optimization_enabled else ""}
-        global last_input, memory_id
+        global last_input
         last_input = question
         agent = get_agent()
         {relay_code}
@@ -326,63 +332,7 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         {post_process_code}
         """
 
-        agentcore_memory_code = (
-            """
-            event = memory_client.create_event(
-                memory_id=memory_id,
-                actor_id=user_id,
-                session_id=session_id,
-                messages=formatted_messages
-            )
-        """
-            if self.agentcore_memory_enabled and self.memory_enabled
-            else ""
-        )
-
-        if not self.is_collaborator:
-            agent_code += """
-    @app.entrypoint
-    """
-
-        agent_code += (
-            """
-    def endpoint(payload, context):
-        try:
-            global user_id, tools_used
-
-            user_id = payload.get("userId", uuid.uuid4().hex[:8])
-            session_id = context.session_id or payload.get("sessionId", uuid.uuid4().hex[:8])
-
-            tools_used.clear()
-            agent_query = payload.get("prompt", "")
-            if not agent_query:
-                return {'error': "No query provided, please provide a 'prompt' field in the payload."}
-
-            agent_result = invoke_agent(agent_query)
-            print(f"Agent Result: {{agent_result}}")
-
-            formatted_messages = [(agent_query, "USER"), (str(agent_result), "ASSISTANT")]
-
-            tools_used.update(list(agent_result.metrics.tool_metrics.keys()))
-            sources = []
-            response_content = str(agent_result)
-
-            urls = re.findall(r'(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}(?:/[^/\s]*)*', response_content)
-            source_tags = re.findall(r"<source>(.*?)</source>", response_content)
-
-            if urls: sources.extend(urls)
-            if source_tags: sources.extend(source_tags)
-
-            sources = list(set(sources))
-
-            %s
-
-            return {"result": {"response": response_content, "sources": sources, "tools_used": tools_used, "messages": formatted_messages}}
-        except Exception as e:
-            return {"error": str(e)}
-        """
-            % agentcore_memory_code
-        )
+        agent_code += self.generate_entrypoint_code("strands")
 
         return agent_code
 

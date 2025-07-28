@@ -35,6 +35,13 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     app = BedrockAgentCoreApp()
     """
 
+        # Observability
+        if self.observability_enabled:
+            self.imports_code += """
+    from opentelemetry.instrumentation.langchain import LangChainInstrumentor
+    LangChainInstrumentor().instrument()
+    """
+
         # Format prompts code
         self.prompts_code = textwrap.fill(
             self.prompts_code, width=150, break_long_words=False, replace_whitespace=False
@@ -192,7 +199,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
                 "memory_synopsis = memory_manager.get_memory_synopsis()"
                 if not self.agentcore_memory_enabled
                 else """
-            memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query=query, actor_id=user_id, top_k=20)
+            memories = memory_client.retrieve_memories(memory_id=memory_id, namespace=f'/summaries/{user_id}', query="Retrieve the most recent session sumamries.", actor_id=user_id, top_k=20)
             memory_synopsis = "\\n".join([m.get("content", {}).get("text", "") for m in memories])
 """
             )
@@ -211,7 +218,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
     {}
 
     # agent update loop
-    def get_agent(query: str):
+    def get_agent():
 
         global _agent, user_id, memory_id
 
@@ -313,7 +320,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         {"global first_turn" if self.single_kb_optimization_enabled else ""}
         global last_input, memory_id
         last_input = question
-        agent = get_agent(question)
+        agent = get_agent()
         {relay_code}
         {routing_code}
         {preprocess_code}
@@ -325,79 +332,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         {post_process_code}
         """
 
-        agentcore_memory_code = (
-            """
-            event = memory_client.create_event(
-                memory_id=memory_id,
-                actor_id=user_id,
-                session_id=session_id,
-                messages=formatted_messages
-            )
-        """
-            if self.agentcore_memory_enabled and self.memory_enabled
-            else ""
-        )
-
-        if not self.is_collaborator:
-            agent_code += """
-    @app.entrypoint
-    """
-
-        agent_code += (
-            """
-    def endpoint(payload, context):
-        try:
-            global user_id, tools_used
-
-            user_id = payload.get("userId", uuid.uuid4().hex[:8])
-            session_id = context.session_id or payload.get("sessionId", uuid.uuid4().hex[:8])
-
-            tools_used.clear()
-            agent_query = payload.get("prompt", "")
-            if not agent_query:
-                return {'error': "No query provided, please provide a 'prompt' field in the payload."}
-
-            agent_result = invoke_agent(agent_query)
-
-            def format_message(msg):
-                try:
-                    text = msg.content if hasattr(msg, "content") else msg.text()
-
-                    if not text or text.strip() == "":
-                        return ("No response provided.", "UNKNOWN")
-                    if isinstance(msg, HumanMessage):
-                        return (text, "USER")
-                    elif isinstance(msg, AIMessage):
-                        return (text, "ASSISTANT")
-                    elif isinstance(msg, ToolMessage):
-                        return (text, "TOOL")
-                    else:
-                        return (text, "UNKNOWN")
-                except Exception:
-                    return ("No response provided.", "UNKNOWN")
-
-            formatted_messages = [format_message(msg) for msg in agent_result]
-
-            tools_used.update([msg.name for msg in agent_result if isinstance(msg, ToolMessage)])
-            sources = []
-            response_content = agent_result[-1].content
-
-            urls = re.findall(r'(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}(?:/[^/\s]*)*', response_content)
-            source_tags = re.findall(r"<source>(.*?)</source>", response_content)
-
-            if urls: sources.extend(urls)
-            if source_tags: sources.extend(source_tags)
-
-            sources = list(set(sources))
-
-            %s
-
-            return {'result': {'response': response_content, 'sources': sources, 'tools_used': list(tools_used), 'sessionId': session_id, 'messages': formatted_messages}}
-        except Exception as e:
-            return {'error': str(e)}
-        """
-            % agentcore_memory_code
-        )
+        agent_code += self.generate_entrypoint_code("langchain")
 
         return agent_code
 

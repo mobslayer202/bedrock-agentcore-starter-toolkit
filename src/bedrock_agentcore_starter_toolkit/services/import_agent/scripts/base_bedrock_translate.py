@@ -1280,6 +1280,11 @@ def transform_object(event_obj):
     result = []
     for key, value in event_obj.items():
         json_type = get_json_type(value)
+        if json_type == "array":
+            value = [transform_object(item) if isinstance(item, dict) else item for item in value]
+        elif json_type == "object":
+            value = transform_object(value)
+
         result.append({{
             "name": key,
             "value": value,
@@ -1312,12 +1317,21 @@ def lambda_handler(event, context):
     }}
 
     if tool_info.get('type') == 'openapi':
+        request_body_properties = transform_object(event.get('requestBody', {{}}))
+        parameters_properties = transform_object(event.get('parameters', {{}}))
+        content_type = event.get('requestBody', {{}}).get('contentType', 'application/json')
+
         payload.update({{
             "apiPath": tool_info.get('apiPath', ''),
             "httpMethod": tool_info.get('httpMethod', 'GET'),
-            "parameters": transform_object(event.get('parameters', {{}})),
-            "requestBody": transform_object(event.get('requestBody', {{}})),
-            "contentType": event.get('requestBody', {{}}).get('contentType', 'application/json')
+            "parameters": parameters_properties,
+            "requestBody": {{
+                "content": {{
+                    content_type: {{
+                        "properties": request_body_properties,
+                    }}
+                }}
+            }},
         }})
     elif tool_info.get('type') == 'structured':
         payload.update({{

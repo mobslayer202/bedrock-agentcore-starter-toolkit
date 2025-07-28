@@ -130,6 +130,7 @@ class GatewayClient:
             "gatewayIdentifier": gateway["gatewayId"],
             "name": name,
             "targetConfiguration": {"mcp": {target_type: target_payload}},
+            "credentialProviderConfigurations": [{"credentialProviderType": "GATEWAY_IAM_ROLE"}],
         }
         # handle cases of missing target payloads across smithy and lambda (default to something)
         if not target_payload and target_type == "lambda":
@@ -183,7 +184,6 @@ class GatewayClient:
 
         return {
             "targetConfiguration": {"mcp": {"lambda": {"lambdaArn": lambda_arn, "toolSchema": LAMBDA_CONFIG}}},
-            "credentialProviderConfigurations": [{"credentialProviderType": "GATEWAY_IAM_ROLE"}],
         }
 
     def __handle_openapi_target_credential_provider_creation(

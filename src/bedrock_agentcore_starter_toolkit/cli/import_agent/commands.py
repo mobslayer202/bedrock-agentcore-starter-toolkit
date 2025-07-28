@@ -107,6 +107,7 @@ def import_agent(
     region: str = typer.Option(None, "--region", help="AWS region for Bedrock (e.g., us-west-2)"),
     debug: bool = typer.Option(False, "--debug", help="Enable debug mode"),
     verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode"),
+    disable_gateway: bool = typer.Option(False, "--disable-gateway", help="Disable AgentCore Gateway primitive"),
     disable_memory: bool = typer.Option(False, "--disable-memory", help="Disable AgentCore Memory primitive"),
     disable_code_interpreter: bool = typer.Option(
         False, "--disable-code-interpreter", help="Disable AgentCore Code Interpreter primitive"
@@ -336,7 +337,7 @@ def import_agent(
 
         # Set primitives based on flags, default to True unless explicitly disabled
         primitives_opt_in = {
-            # "gateway": False,
+            "gateway": not disable_gateway,
             "memory": not disable_memory,
             "code_interpreter": not disable_code_interpreter,
             "observability": not disable_observability,

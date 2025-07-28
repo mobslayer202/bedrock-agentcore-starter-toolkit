@@ -9,6 +9,10 @@ Contains all the common logic between Langchain and Strands translations.
 import os
 import uuid
 from typing import Dict, Tuple
+import io
+import zipfile
+import json
+import time
 
 import autopep8
 import boto3
@@ -115,7 +119,9 @@ class BaseBedrockTranslator:
         self.enabled_primitives = enabled_primitives
         self.gateway_enabled = enabled_primitives.get("gateway", False)
         self.created_gateway = self.create_gateway() if self.gateway_enabled else {}
-        self.gateway_proxy_tool_name_mappings = {}  # used in the proxy to map pruned tool names to get more information about the tool (action group, method/function, type)
+        self.gateway_proxy_tool_name_mappings = (
+            {}
+        )  # used in the proxy to map pruned tool names to get more information about the tool (action group, method/function, type)
         self.agentcore_memory_enabled = enabled_primitives.get("memory", False) and self.memory_enabled
         self.observability_enabled = enabled_primitives.get("observability", False)
         self.code1p = enabled_primitives.get("code_interpreter", False) and self.code_interpreter_enabled
@@ -1009,12 +1015,37 @@ class BaseBedrockTranslator:
     """
         return entrypoint_code
 
+    def translate(self, output_path: str, code_sections: list):
+        """Translate Bedrock agent config to LangChain code."""
+        code = "\n".join(code_sections)
+        code = unindent_by_one(code)
+
+        code = autopep8.fix_code(code, options={"aggressive": 1, "max_line_length": 120})
+
+        with open(output_path, "a+", encoding="utf-8") as f:
+            f.truncate(0)
+            f.write(code)
+
+        # Copy over requirements.txt
+        requirements_path = os.path.join(get_base_dir(__file__), "assets", "requirements.txt")
+        if os.path.exists(requirements_path):
+            with (
+                open(requirements_path, "r", encoding="utf-8") as src_file,
+                open(os.path.join(self.output_dir, "requirements.txt"), "w", encoding="utf-8") as dest_file,
+            ):
+                dest_file.truncate(0)
+                dest_file.write(src_file.read())
+
+    # --------------------------------
+    # START: AgentCore Gateway Functions
+    # --------------------------------
+
     def create_gateway(self):
         """Create the gateway and proxy for the agent."""
         print("  Creating Gateway for Agent...")
         gateway_client = GatewayClient(region_name=self.agent_region)
         gateway = gateway_client.create_mcp_gateway(
-            name=f"{self.cleaned_agent_name}_gateway", enable_semantic_search=True
+            name=f"{self.cleaned_agent_name}-gateway-{uuid.uuid4().hex[:5].lower()}", enable_semantic_search=True
         )
         return gateway
 
@@ -1107,7 +1138,7 @@ class BaseBedrockTranslator:
                     )
 
             if tools:
-                self.create_gateway_lambda_target(tools, lambda_arn, action_group_name)
+                self.create_gateway_lambda_target(tools, lambda_arn, clean_variable_name(action_group_name))
 
         agent_metadata = {
             "name": self.agent_info.get("agentName", ""),
@@ -1122,6 +1153,35 @@ import json
 
 agent_metadata = {agent_metadata}
 tool_mappings = {tool_mappings}
+
+def get_json_type(value):
+    if isinstance(value, str):
+        return "string"
+    elif isinstance(value, bool):
+        return "boolean"
+    elif isinstance(value, int):
+        return "integer"
+    elif isinstance(value, float):
+        return "number"
+    elif isinstance(value, list):
+        return "array"
+    elif isinstance(value, dict):
+        return "object"
+    elif value is None:
+        return "null"
+    else:
+        return "unknown"
+
+def transform_object(event_obj):
+    result = []
+    for key, value in event_obj.items():
+        json_type = get_json_type(value)
+        result.append({{
+            "name": key,
+            "value": value,
+            "type": json_type
+        }})
+    return result
 
 def lambda_handler(event, context):
     tool_name = context.client_context.custom['bedrockAgentCoreToolName']
@@ -1151,14 +1211,14 @@ def lambda_handler(event, context):
         payload.update({{
             "apiPath": tool_info.get('apiPath', ''),
             "httpMethod": tool_info.get('httpMethod', 'GET'),
-            "parameters": event.get('parameters', {{}}),
-            "requestBody": event.get('requestBody', {{}}),
+            "parameters": transform_object(event.get('parameters', {{}})),
+            "requestBody": transform_object(event.get('requestBody', {{}})),
             "contentType": event.get('contentType', '*')
         }})
     elif tool_info.get('type') == 'structured':
         payload.update({{
             "function": tool_info.get('function', ''),
-            "parameters": event
+            "parameters": transform_object(event)
         }})
 
     try:
@@ -1176,55 +1236,211 @@ def lambda_handler(event, context):
         return {{'statusCode': 500, 'body': f'Error invoking Lambda: {{str(e)}}'}}
     """
 
+        # Write Lambda code to a file in output directory
+        lambda_code_path = os.path.join(self.output_dir, f"lambda_function_{function_name}.py")
+        with open(lambda_code_path, "w", encoding="utf-8") as f:
+            f.write(lambda_code)
+        print(f"  Lambda proxy code written to {lambda_code_path}")
+
+        self.create_lambda(lambda_code, function_name)
+
+    def _update_gateway_role_with_lambda_permission(self, function_name):
+        """Update the gateway role with lambda invoke permission."""
+        if not self.created_gateway or not self.created_gateway.get("roleArn"):
+            return
+
+        iam = boto3.client("iam")
+        account_id = boto3.client("sts").get_caller_identity().get("Account")
+
+        # Extract role name from ARN
+        gateway_role_arn = self.created_gateway["roleArn"]
+        gateway_role_name = gateway_role_arn.split("/")[-1]
+
+        # Create the lambda invoke policy for the gateway role
+        gateway_lambda_invoke_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "AmazonBedrockAgentCoreGatewayLambdaProd",
+                    "Effect": "Allow",
+                    "Action": ["lambda:InvokeFunction"],
+                    "Resource": [f"arn:aws:lambda:*:{account_id}:function:*:*"],
+                    "Condition": {"StringEquals": {"aws:ResourceAccount": account_id}},
+                }
+            ],
+        }
+
+        # Create and attach the policy to the gateway role
+        policy_name = f"GatewayLambdaInvokePolicy_{function_name}"
+        try:
+            policy_response = iam.create_policy(
+                PolicyName=policy_name,
+                PolicyDocument=json.dumps(gateway_lambda_invoke_policy),
+                Description=f"Policy to allow gateway role to invoke Lambda function {function_name}",
+            )
+            policy_arn = policy_response["Policy"]["Arn"]
+            print(f"  Created policy {policy_name} with ARN {policy_arn}")
+        except iam.exceptions.EntityAlreadyExistsException:
+            # Policy already exists, get its ARN
+            policy_arn = f"arn:aws:iam::{account_id}:policy/{policy_name}"
+            print(f"  Policy {policy_name} already exists")
+
+        # Attach the policy to the gateway role
+        try:
+            iam.attach_role_policy(
+                RoleName=gateway_role_name,
+                PolicyArn=policy_arn,
+            )
+            print(f"  Attached lambda invoke policy to gateway role {gateway_role_name}")
+        except iam.exceptions.EntityAlreadyExistsException:
+            print(f"  Policy already attached to gateway role {gateway_role_name}")
+        except Exception as e:
+            print(f"  Warning: Could not attach lambda invoke policy to gateway role {gateway_role_name}: {str(e)}")
+
+    def create_lambda(self, code, function_name):
+        """Create a Lambda function for the agent proxy."""
         lambda_client = boto3.client("lambda", region_name=self.agent_region)
-        lambda_client.create_function(
-            FunctionName=function_name,
-            Runtime="python3.10",
-            Role=f"arn:aws:iam::{account_id}:role/Admin",
-            Handler="lambda_function.lambda_handler",
-            Code={"ZipFile": self.create_lambda_zip(lambda_code)},
-            Description="Proxy Lambda for AgentCore Gateway",
-        )
+        iam = boto3.client("iam")
 
-    def create_lambda_zip(self, code):
-        import io
-        import zipfile
+        role_name = "AgentCoreTestLambdaRole"
 
+        lambda_trust_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"Service": "lambda.amazonaws.com"},
+                    "Action": "sts:AssumeRole",
+                }
+            ],
+        }
+
+        # Lambda invoke policy for the proxy to call other Lambda functions
+        lambda_invoke_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {"Effect": "Allow", "Action": ["lambda:InvokeFunction"], "Resource": "arn:aws:lambda:*:*:function:*"}
+            ],
+        }
+
+        # Create zip file
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("lambda_function.py", code)
         zip_buffer.seek(0)
-        return zip_buffer.read()
+
+        # Create Lambda execution role
+        try:
+            role_response = iam.create_role(
+                RoleName=role_name, AssumeRolePolicyDocument=json.dumps(lambda_trust_policy)
+            )
+
+            # Attach basic execution role for CloudWatch logs
+            iam.attach_role_policy(
+                RoleName=role_name,
+                PolicyArn="arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            )
+
+            # Create and attach custom policy for Lambda invocation
+            try:
+                policy_response = iam.create_policy(
+                    PolicyName="AgentCoreLambdaInvokePolicy",
+                    PolicyDocument=json.dumps(lambda_invoke_policy),
+                    Description="Policy to allow Lambda proxy to invoke other Lambda functions",
+                )
+                lambda_invoke_policy_arn = policy_response["Policy"]["Arn"]
+            except iam.exceptions.EntityAlreadyExistsException:
+                # Policy already exists, get its ARN
+                account_id = boto3.client("sts").get_caller_identity().get("Account")
+                lambda_invoke_policy_arn = f"arn:aws:iam::{account_id}:policy/AgentCoreLambdaInvokePolicy"
+
+            iam.attach_role_policy(
+                RoleName=role_name,
+                PolicyArn=lambda_invoke_policy_arn,
+            )
+
+            role_arn = role_response["Role"]["Arn"]
+
+            # Wait a bit for role to propagate
+            time.sleep(10)
+            print(f"  Created Lambda role {role_name} with ARN {role_arn}")
+
+        except iam.exceptions.EntityAlreadyExistsException:
+            role = iam.get_role(RoleName=role_name)
+            role_arn = role["Role"]["Arn"]
+
+            # Ensure the existing role has the Lambda invoke policy attached
+            try:
+                account_id = boto3.client("sts").get_caller_identity().get("Account")
+                lambda_invoke_policy_arn = f"arn:aws:iam::{account_id}:policy/AgentCoreLambdaInvokePolicy"
+                iam.attach_role_policy(
+                    RoleName=role_name,
+                    PolicyArn=lambda_invoke_policy_arn,
+                )
+            except iam.exceptions.EntityAlreadyExistsException:
+                # Policy is already attached, which is fine
+                pass
+            except Exception:
+                # If the policy doesn't exist, create it
+                try:
+                    policy_response = iam.create_policy(
+                        PolicyName="AgentCoreLambdaInvokePolicy",
+                        PolicyDocument=json.dumps(lambda_invoke_policy),
+                        Description="Policy to allow Lambda proxy to invoke other Lambda functions",
+                    )
+                    lambda_invoke_policy_arn = policy_response["Policy"]["Arn"]
+                    iam.attach_role_policy(
+                        RoleName=role_name,
+                        PolicyArn=lambda_invoke_policy_arn,
+                    )
+                except Exception:
+                    # If we still can't attach the policy, log a warning but continue
+                    print(f"Warning: Could not attach Lambda invoke policy to role {role_name}")
+
+        # Create Lambda function
+        try:
+            response = lambda_client.create_function(
+                FunctionName=function_name,
+                Runtime="python3.10",
+                Role=role_arn,
+                Handler="lambda_function.lambda_handler",
+                Code={"ZipFile": zip_buffer.read()},
+                Description="Proxy Lambda for AgentCore Gateway",
+            )
+
+            lambda_arn = response["FunctionArn"]
+
+            lambda_client.add_permission(
+                FunctionName=function_name,
+                StatementId="AllowAgentCoreInvoke",
+                Action="lambda:InvokeFunction",
+                Principal=self.created_gateway["roleArn"],
+            )
+
+            print(f"  Created Gateway Proxy Lambda function {function_name} with ARN {lambda_arn}")
+
+        except lambda_client.exceptions.ResourceConflictException:
+            response = lambda_client.get_function(FunctionName=function_name)
+            lambda_arn = response["Configuration"]["FunctionArn"]
+
+        # Update gateway role with lambda invoke permission
+        self._update_gateway_role_with_lambda_permission(function_name)
+
+        return lambda_arn
 
     def create_gateway_lambda_target(self, tools, lambda_arn, target_name):
+        """Create a Lambda target for the gateway."""
         target = GatewayClient(region_name=self.agent_region).create_mcp_gateway_target(
-            gateway=self.create_gateway,
+            gateway=self.created_gateway,
             target_type="lambda",
-            target_payload={"arn": lambda_arn, "tools": tools},
+            target_payload={"lambdaArn": lambda_arn, "toolSchema": {"inlinePayload": tools}},
             name=target_name,
         )
         return target
 
-    def translate(self, output_path: str, code_sections: list):
-        """Translate Bedrock agent config to LangChain code."""
-        code = "\n".join(code_sections)
-        code = unindent_by_one(code)
-
-        code = autopep8.fix_code(code, options={"aggressive": 1, "max_line_length": 120})
-
-        with open(output_path, "a+", encoding="utf-8") as f:
-            f.truncate(0)
-            f.write(code)
-
-        # Copy over requirements.txt
-        requirements_path = os.path.join(get_base_dir(__file__), "assets", "requirements.txt")
-        if os.path.exists(requirements_path):
-            with (
-                open(requirements_path, "r", encoding="utf-8") as src_file,
-                open(os.path.join(self.output_dir, "requirements.txt"), "w", encoding="utf-8") as dest_file,
-            ):
-                dest_file.truncate(0)
-                dest_file.write(src_file.read())
+    # --------------------------------
+    # END: AgentCore Gateway Functions
+    # --------------------------------
 
 
 # ruff: noqa: E501

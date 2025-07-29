@@ -1,1 +1,3 @@
 from .src.bedrock_agentcore_starter_toolkit.operations.gateway.client import GatewayClient
+
+from bedrock_agentcore_starter_toolkit.operations.gateway import GatewayClient

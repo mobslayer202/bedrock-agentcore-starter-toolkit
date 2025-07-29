@@ -130,13 +130,16 @@ class BaseBedrockTranslator:
 
         # Initialize imports
         self.imports_code = """
-    import json, sys, os, re, io, uuid
+    import json, sys, os, re, io, uuid, asyncio
     from typing import Union, Optional, Annotated, Dict, List, Any, Literal
     from inputimeout import inputimeout, TimeoutOccurred # pylint: disable=import-error # type: ignore
     from pydantic import BaseModel, Field
     import boto3
+    from dotenv import load_dotenv
 
     from bedrock_agentcore.runtime.context import RequestContext
+
+    load_dotenv()
         """
 
         # Initialize code sections
@@ -340,10 +343,63 @@ class BaseBedrockTranslator:
         tool_code = ""
         tool_instances = []
 
-        # OpenAPI and Function Action Groups
+        self.gateway_enabled = self.gateway_enabled and custom_ags
 
+        # OpenAPI and Function Action Groups
         if self.gateway_enabled:
             self.create_gateway_proxy_and_targets(custom_ags)
+
+            self.imports_code += "\nfrom bedrock_agentcore_starter_toolkit.operations.gateway import GatewayClient\n"
+            tool_code += f"""
+    gateway_client = GatewayClient(region_name="{self.agent_region}")
+    client_info = {{
+        "client_id": os.environ.get("cognito_client_id", ""),
+        "client_secret": os.environ.get("cognito_client_secret", ""),
+        "user_pool_id": os.environ.get("cognito_user_pool_id", ""),
+        "token_endpoint": os.environ.get("cognito_token_endpoint", ""),
+        "scope": os.environ.get("cognito_scope", ""),
+        "domain_prefix": os.environ.get("cognito_domain_prefix", ""),
+    }}
+
+    access_token = gateway_client.get_access_token_for_cognito(client_info)
+            """
+
+            if platform == "langchain":
+                self.imports_code += "\nfrom langchain_mcp_adapters.client import MultiServerMCPClient\n"
+                tool_code += f"""
+    mcp_url = '{self.created_gateway.get("gatewayUrl", "")}'
+    headers = {{
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {{access_token}}",
+    }}
+
+    mcp_client = MultiServerMCPClient({{
+        "agent": {{
+            "transport": "streamable_http",
+            "url": mcp_url,
+            "headers": headers,
+        }}
+    }})
+
+    mcp_tools = asyncio.run(mcp_client.get_tools())
+"""
+            else:
+                self.imports_code += """
+    from mcp.client.streamable_http import streamablehttp_client
+    from strands.tools.mcp.mcp_client import MCPClient
+"""
+                tool_code += f"""
+    mcp_url = '{self.created_gateway.get("gatewayUrl", "")}'
+    headers = {{
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {{access_token}}",
+    }}
+
+    streamable_http_mcp_client = MCPClient(lambda: streamablehttp_client(mcp_url, headers=headers))
+
+    with streamable_http_mcp_client as mcp_client:
+        mcp_tools = mcp_client.get_tools()
+"""
         else:
             for action_group in custom_ags:
                 additional_tool_instances = []
@@ -1017,7 +1073,7 @@ class BaseBedrockTranslator:
     """
         return entrypoint_code
 
-    def translate(self, output_path: str, code_sections: list):
+    def translate(self, output_path: str, code_sections: list, platform: str):
         """Translate Bedrock agent config to LangChain code."""
         code = "\n".join(code_sections)
         code = unindent_by_one(code)
@@ -1028,8 +1084,28 @@ class BaseBedrockTranslator:
             f.truncate(0)
             f.write(code)
 
+        environment_variables = {}
+        if self.gateway_cognito_result:
+            client_info = self.gateway_cognito_result.get("client_info", {})
+            environment_variables.update(
+                {
+                    "cognito_client_id": client_info.get("client_id", ""),
+                    "cognito_client_secret": client_info.get("client_secret", ""),
+                    "cognito_user_pool_id": client_info.get("user_pool_id", ""),
+                    "cognito_token_endpoint": client_info.get("token_endpoint", ""),
+                    "cognito_scope": client_info.get("scope", ""),
+                    "cognito_domain_prefix": client_info.get("domain_prefix", ""),
+                }
+            )
+
+        # Write a .env file with the environment variables
+        env_file_path = os.path.join(self.output_dir, ".env")
+        with open(env_file_path, "w", encoding="utf-8") as env_file:
+            for key, value in environment_variables.items():
+                env_file.write(f"{key}={value}\n")
+
         # Copy over requirements.txt
-        requirements_path = os.path.join(get_base_dir(__file__), "assets", "requirements.txt")
+        requirements_path = os.path.join(get_base_dir(__file__), "assets", f"requirements_{platform}.txt")
         if os.path.exists(requirements_path):
             with (
                 open(requirements_path, "r", encoding="utf-8") as src_file,
@@ -1037,6 +1113,8 @@ class BaseBedrockTranslator:
             ):
                 dest_file.truncate(0)
                 dest_file.write(src_file.read())
+
+        return environment_variables
 
     # --------------------------------
     # START: AgentCore Gateway Functions
@@ -1046,8 +1124,14 @@ class BaseBedrockTranslator:
         """Create the gateway and proxy for the agent."""
         print("  Creating Gateway for Agent...")
         gateway_client = GatewayClient(region_name=self.agent_region)
+        gateway_name = f"{self.cleaned_agent_name}-gateway-{uuid.uuid4().hex[:5].lower()}"
+
+        self.gateway_cognito_result = gateway_client.create_oauth_authorizer_with_cognito(gateway_name=gateway_name)
+
         gateway = gateway_client.create_mcp_gateway(
-            name=f"{self.cleaned_agent_name}-gateway-{uuid.uuid4().hex[:5].lower()}", enable_semantic_search=True
+            name=gateway_name,
+            enable_semantic_search=True,
+            authorizer_config=self.gateway_cognito_result["authorizer_config"],
         )
         return gateway
 
@@ -1061,6 +1145,8 @@ class BaseBedrockTranslator:
         tool_mappings = {}
 
         for ag in action_groups:
+            time.sleep(10)  # Sleep to avoid throttling issues with the Gateway API
+
             if "lambda" not in ag.get("actionGroupExecutor", {}):
                 continue
 
@@ -1184,11 +1270,6 @@ class BaseBedrockTranslator:
                                     "oneOf": content_schemas,
                                 }  # NOTE: GATEWAY DOES NOT SUPPORT ONEOF YET
                             )
-
-                        # write the input schema to a file
-                        input_schema_path = os.path.join(self.output_dir, f"{tool_name}_input_schema.json")
-                        with open(input_schema_path, "a+", encoding="utf-8") as f:
-                            json.dump(input_schema, f, indent=2)
 
                         tools.append({"name": tool_name, "description": func_desc, "inputSchema": input_schema})
 
@@ -1354,12 +1435,6 @@ def lambda_handler(event, context):
         return {{'statusCode': 500, 'body': f'Error invoking Lambda: {{str(e)}}'}}
     """
 
-        # Write Lambda code to a file in output directory
-        lambda_code_path = os.path.join(self.output_dir, f"lambda_function_{function_name}.py")
-        with open(lambda_code_path, "w", encoding="utf-8") as f:
-            f.write(lambda_code)
-        print(f"  Lambda proxy code written to {lambda_code_path}")
-
         self.create_lambda(lambda_code, function_name)
 
     def _update_gateway_role_with_lambda_permission(self, function_name):
@@ -1389,7 +1464,7 @@ def lambda_handler(event, context):
         }
 
         # Create and attach the policy to the gateway role
-        policy_name = f"GatewayLambdaInvokePolicy_{function_name}"
+        policy_name = "GatewayLambdaInvokePolicy"
         try:
             policy_response = iam.create_policy(
                 PolicyName=policy_name,

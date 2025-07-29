@@ -1,0 +1,9 @@
+open-interpreter==0.4.3
+bedrock-agentcore
+bedrock-agentcore-starter-toolkit
+langchain
+langchain-aws
+langchain-community
+langchain-mcp-adapters
+inputimeout
+opentelemetry-instrumentation-langchain

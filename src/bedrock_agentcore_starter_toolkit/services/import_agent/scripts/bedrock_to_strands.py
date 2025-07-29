@@ -59,7 +59,6 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
     from strands.agent.conversation_manager import SlidingWindowConversationManager
     from strands.models import BedrockModel
     from strands.types.content import Message
-    import asyncio
     """
 
     def generate_model_configurations(self) -> str:
@@ -371,6 +370,6 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
 
         return code
 
-    def translate_bedrock_to_strands(self, output_path) -> str:
+    def translate_bedrock_to_strands(self, output_path) -> dict:
         """Translate Bedrock agent configuration to Strands code."""
-        self.translate(output_path, self.code_sections)
+        return self.translate(output_path, self.code_sections, "strands")

@@ -55,7 +55,8 @@ def _run_agent(output_dir, output_path):
         # Create a virutal environment for the translated agent, install dependencies, and run CLI
         subprocess.check_call(["python3.10", "-m", "venv", ".venv"], cwd=output_dir)  # nosec
         subprocess.check_call(
-            [".venv/bin/python3.10", "-m", "pip", "-q", "install", "-r", "requirements.txt"], cwd=output_dir
+            [".venv/bin/python3.10", "-m", "pip", "-q", "install", "--no-cache-dir", "-r", "requirements.txt"],
+            cwd=output_dir,
         )  # nosec
         process = subprocess.Popen([".venv/bin/python3.10", output_path, "--cli"], cwd=output_dir)  # nosec
 
@@ -369,13 +370,13 @@ def import_agent(
                     translator = BedrockLangchainTranslation(
                         agent_config, debug=verbose_mode, output_dir=output_dir, enabled_primitives=primitives_opt_in
                     )
-                    translator.translate_bedrock_to_langchain(output_path)
+                    environment_variables = translator.translate_bedrock_to_langchain(output_path)
                 else:  # strands
                     output_path = os.path.join(output_dir, "strands_agent.py")
                     translator = BedrockStrandsTranslation(
                         agent_config, debug=verbose_mode, output_dir=output_dir, enabled_primitives=primitives_opt_in
                     )
-                    translator.translate_bedrock_to_strands(output_path)
+                    environment_variables = translator.translate_bedrock_to_strands(output_path)
 
                 console.print(f"\n[bold green]✓[/bold green] Agent translated to {target_platform}!")
                 console.print(f"[bold]  Output file:[/bold] {output_path}\n")
@@ -409,8 +410,14 @@ def import_agent(
             try:
                 agent_name = f"agent_{uuid.uuid4().hex[:8].lower()}"
                 console.print("[bold]  \nDeploying agent to AgentCore Runtime...\n[/bold]")
+                env_injection_code = (
+                    ""
+                    if not environment_variables
+                    else "--env " + " --env ".join(f"{k}={v}" for k, v in environment_variables.items())
+                )
+
                 os.system(
-                    f"cd {output_dir} && agentcore configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && agentcore configure set-default '{agent_name}' && agentcore launch"  # nosec # noqa: E501
+                    f"cd {output_dir} && agentcore configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && agentcore configure set-default '{agent_name}' && agentcore launch {env_injection_code}"  # nosec # noqa: E501
                 )
 
             except Exception as e:

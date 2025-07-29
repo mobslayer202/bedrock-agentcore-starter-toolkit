@@ -38,8 +38,8 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         # Observability
         if self.observability_enabled:
             self.imports_code += """
-    from opentelemetry.instrumentation.langchain import LangChainInstrumentor
-    LangChainInstrumentor().instrument()
+    from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+    LangchainInstrumentor().instrument()
     """
 
         # Format prompts code
@@ -103,7 +103,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             # Add guardrails if available
             if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
                 model_config += """,
-        guardrails={}""".format(self.guardrail_config)
+        guardrails={}""".format(
+                    self.guardrail_config
+                )
 
             model_config += "\n)"
             model_configs.append(model_config)
@@ -191,6 +193,9 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
         if self.action_groups and self.tools_code:
             agent_code += """\ntools += action_group_tools"""
+
+        if self.gateway_enabled:
+            agent_code += """\ntools += mcp_tools"""
 
         memory_retrieve_code = (
             ""
@@ -380,6 +385,6 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
         return code
 
-    def translate_bedrock_to_langchain(self, output_path: str):
+    def translate_bedrock_to_langchain(self, output_path: str) -> dict:
         """Translate Bedrock agent config to LangChain code."""
-        self.translate(output_path, self.code_sections)
+        return self.translate(output_path, self.code_sections, "langchain")

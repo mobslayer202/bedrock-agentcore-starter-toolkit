@@ -65,7 +65,7 @@ class GatewayClient:
         :param role_arn: optional - the role arn to use (creates one if none provided).
         :param authorizer_config: optional - the authorizer config (will create one if none provided).
         :param enable_semantic_search: optional - whether to enable search tool (defaults to True).
-        :return: the created Gateway.
+        :return: the created Gateway
         """
         if not name:
             name = f"TestGateway{GatewayClient.generate_random_id()}"

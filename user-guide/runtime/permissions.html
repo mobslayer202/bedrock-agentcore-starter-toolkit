@@ -2160,10 +2160,10 @@ agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class=
 <div class="highlight"><pre><span></span><code><span class="c1"># Creates all required roles and resources</span>
 agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class="w"> </span>my_agent.py
 </code></pre></div></p>
-<p><strong>Auto-Creation with CodeBuild Deployment:</strong>
-<div class="highlight"><pre><span></span><code><span class="c1"># Perfect for SageMaker notebooks</span>
+<p><strong>Auto-Creation with Default Deployment:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Uses CodeBuild by default</span>
 agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class="w"> </span>my_agent.py
-agentcore<span class="w"> </span>launch<span class="w"> </span>--codebuild
+agentcore<span class="w"> </span>launch
 </code></pre></div></p>
 <p><strong>Mixed Approach:</strong>
 <div class="highlight"><pre><span></span><code><span class="c1"># Auto-create execution role, use existing ECR</span>
@@ -2340,7 +2340,7 @@ agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class=
 <p>The Runtime Execution Role is an IAM role that AgentCore Runtime assumes to run an agent. Replace the following:</p>
 <ul>
 <li><code>region</code> with the AWS Region that you are using</li>
-<li><code>accountId</code> with your AWS account ID  </li>
+<li><code>accountId</code> with your AWS account ID</li>
 <li><code>agentName</code> with the name of your agent. You'll need to decide the agent name before creating the role and AgentCore Runtime.</li>
 </ul>
 <h3 id="permissions-policy">Permissions Policy<a class="headerlink" href="#permissions-policy" title="Permanent link">&para;</a></h3>

@@ -119,8 +119,8 @@ class BaseBedrockTranslator:
 
         # AgentCore
         self.enabled_primitives = enabled_primitives
-        self.gateway_enabled = enabled_primitives.get("gateway", False)
-        self.created_gateway = self.create_gateway() if self.gateway_enabled and self.custom_ags else {}
+        self.gateway_enabled = enabled_primitives.get("gateway", False) and self.custom_ags
+        self.created_gateway = self.create_gateway() if self.gateway_enabled else {}
         self.gateway_cognito_result = {}
 
         self.agentcore_memory_enabled = enabled_primitives.get("memory", False) and self.memory_enabled
@@ -340,8 +340,6 @@ class BaseBedrockTranslator:
 
         tool_code = ""
         tool_instances = []
-
-        self.gateway_enabled = self.gateway_enabled and self.custom_ags
 
         # OpenAPI and Function Action Groups
         if self.gateway_enabled:

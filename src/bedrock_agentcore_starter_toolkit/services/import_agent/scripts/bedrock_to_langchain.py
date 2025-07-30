@@ -64,7 +64,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         return """
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-    from langchain_aws import ChatBedrockConverse
+    from langchain_aws import ChatBedrock
     from langchain_aws.retrievers import AmazonKnowledgeBasesRetriever
 
     from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
@@ -90,25 +90,27 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
 
             # Build model configuration string
             model_config = f"""
-    llm_{prompt_type} = ChatBedrockConverse(
+    # {prompt_type} LLM configuration
+    llm_{prompt_type} = ChatBedrock(
         model_id="{self.model_id}",
         region_name="{self.agent_region}",
         provider="{self.agent_info["model"]["providerName"].lower()}",
-        temperature={inference_config.get("temperature", 0)},
-        max_tokens={inference_config.get("maximumLength", 2048)},
-        stop_sequences={repr(inference_config.get("stopSequences", []))},
-        top_p={inference_config.get("topP", 1.0)}
-            """
+        model_kwargs={{
+            {f'"top_k": {inference_config.get("topK", 250)},' if self.agent_info["model"]["providerName"].lower() in ["anthropic", "amazon"] else ""}
+            "top_p":{inference_config.get("topP", 1.0)},
+            "temperature": {inference_config.get("temperature", 0)},
+            "max_tokens": {inference_config.get("maximumLength", 2048)},
+            {f'"stop_sequences": {repr(inference_config.get("stopSequences", []))},'.strip() if self.agent_info["model"]["providerName"].lower() in ["anthropic", "amazon"] else ""}
+        }}"""
 
             # Add guardrails if available
-            if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
-                model_config += """,
-        guardrails={}""".format(self.guardrail_config)
+            if self.guardrail_config:
+                model_config += f""",
+        guardrails={self.guardrail_config}"""
 
             model_config += "\n)"
             model_configs.append(model_config)
 
-            # Generate the associated system prompt for this model
             self.generate_prompt(config)
 
         return "\n".join(model_configs)

@@ -120,8 +120,8 @@ class BaseBedrockTranslator:
         # AgentCore
         self.enabled_primitives = enabled_primitives
         self.gateway_enabled = enabled_primitives.get("gateway", False) and self.custom_ags
+        self.gateway_cognito_result = {}  # Initialize before create_gateway() call
         self.created_gateway = self.create_gateway() if self.gateway_enabled else {}
-        self.gateway_cognito_result = {}
 
         self.agentcore_memory_enabled = enabled_primitives.get("memory", False) and self.memory_enabled
         self.observability_enabled = enabled_primitives.get("observability", False)
@@ -383,6 +383,7 @@ class BaseBedrockTranslator:
                 self.imports_code += """
     from mcp.client.streamable_http import streamablehttp_client
     from strands.tools.mcp.mcp_client import MCPClient
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 """
                 tool_code += f"""
     mcp_url = '{self.created_gateway.get("gatewayUrl", "")}'
@@ -392,8 +393,19 @@ class BaseBedrockTranslator:
     }}
 
     streamable_http_mcp_client = MCPClient(lambda: streamablehttp_client(mcp_url, headers=headers))
-    streamable_http_mcp_client.start()
-    mcp_tools = streamable_http_mcp_client.get_tools()
+
+    # To avoid erroring out on tool discovery
+    try:
+        def init_mcp():
+            streamable_http_mcp_client.start()
+            return streamable_http_mcp_client.list_tools_sync()
+
+        with ThreadPoolExecutor() as executor:
+            future = executor.submit(init_mcp)
+            mcp_tools = future.result(timeout=10)
+
+    except (FutureTimeoutError, Exception):
+        mcp_tools = []
 """
         else:
             for action_group in self.custom_ags:
@@ -556,8 +568,7 @@ class BaseBedrockTranslator:
                     content_model_code = """
             if request_body:
                 payload["requestBody"] = request_body
-                if content_type:
-                    payload["contentType"] = content_type"""
+                """
 
                     tool_code += f"""
 
@@ -765,7 +776,7 @@ class BaseBedrockTranslator:
                     if query.lower() == "exit":
                         break
 
-                    result = endpoint({{"prompt": query}}, RequestContext(session_id=session_id)).get('result', {{}})
+                    result = endpoint({{"message": query}}, RequestContext(session_id=session_id)).get('result', {{}})
                     if not result:
                         print("  Error:" + str(result.get('error', {{}})))
                         continue
@@ -1041,9 +1052,9 @@ class BaseBedrockTranslator:
             session_id = context.session_id or payload.get("sessionId", uuid.uuid4().hex[:8])
 
             tools_used.clear()
-            agent_query = payload.get("prompt", "")
+            agent_query = payload.get("message", "")
             if not agent_query:
-                return {{'error': "No query provided, please provide a 'prompt' field in the payload."}}
+                return {{'error': "No query provided, please provide a 'message' field in the payload."}}
 
             agent_result = invoke_agent(agent_query)
 

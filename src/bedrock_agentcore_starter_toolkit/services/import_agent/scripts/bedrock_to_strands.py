@@ -82,11 +82,14 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         top_p={inference_config.get("topP", 1.0)},
         top_k={inference_config.get("topK", 250)}"""
 
+            # NOTE: Converse Models support guardrails, but they are applied too eagerly on 2nd invocations.
+            # Disabling guardrail support for Strands for now.
+
             # Add guardrails if available
-            if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
-                model_config += f""",
-        guardrail_id="{self.guardrail_config["guardrailIdentifier"]}",
-        guardrail_version="{self.guardrail_config["guardrailVersion"]}\""""
+            #     if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
+            #         model_config += f""",
+            # guardrail_id="{self.guardrail_config["guardrailIdentifier"]}",
+            # guardrail_version="{self.guardrail_config["guardrailVersion"]}\""""
 
             model_config += "\n)"
             model_configs.append(model_config)

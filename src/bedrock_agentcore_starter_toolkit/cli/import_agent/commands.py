@@ -1,6 +1,5 @@
 """Bedrock Agent Translation Tool."""
 
-import json
 import os
 import subprocess  # nosec # needed to run the agent file
 import traceback
@@ -12,6 +11,8 @@ import typer
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+
+from bedrock_agentcore_starter_toolkit.services.runtime import generate_session_id
 
 from ...services.import_agent.scripts.bedrock_to_langchain import BedrockLangchainTranslation
 from ...services.import_agent.scripts.bedrock_to_strands import BedrockStrandsTranslation
@@ -79,8 +80,9 @@ def _run_agent(output_dir, output_path):
         )
 
 
-def _agentcore_invoke_cli():
+def _agentcore_invoke_cli(output_dir):
     """Run the generated agent."""
+    session_id = generate_session_id()
     while True:
         query = input("\nEnter your query (or type 'exit' to quit): ")
         if query.lower() == "exit":
@@ -88,7 +90,7 @@ def _agentcore_invoke_cli():
             break
 
         try:
-            os.system("agentcore invoke " + json.dumps({"message": query}))  # nosec
+            subprocess.check_call(["agentcore", "invoke", str(query), "-s", session_id], cwd=output_dir)  # nosec
         except Exception as e:
             console.print(
                 Panel(
@@ -393,6 +395,7 @@ def import_agent(
         # AgentCore Runtime deployment options
         output_path = os.path.abspath(output_path)
         output_dir = os.path.abspath(output_dir)
+        requirements_path = os.path.join(output_dir, "requirements.txt")
 
         # Ask about deployment if not provided via flag
         if not deploy_runtime:  # Only ask if deploy_runtime is False (default)
@@ -416,9 +419,11 @@ def import_agent(
                     else "--env " + " --env ".join(f"{k}={v}" for k, v in environment_variables.items())
                 )
 
-                os.system(
-                    f"cd {output_dir} && agentcore configure --entrypoint {output_path} --requirements-file requirements.txt --ecr auto -n '{agent_name}' && agentcore configure set-default '{agent_name}' && agentcore launch {env_injection_code}"  # nosec # noqa: E501
-                )
+                configure_cmd = f"agentcore configure --entrypoint {output_path} --requirements-file {requirements_path} --ecr auto -n '{agent_name}'"  # noqa: E501
+                set_default_cmd = f"agentcore configure set-default '{agent_name}'"
+                launch_cmd = f"agentcore launch {env_injection_code}"
+
+                os.system(f"cd {output_dir} && {configure_cmd} && {set_default_cmd} && {launch_cmd}")  # nosec
 
             except Exception as e:
                 console.print(
@@ -496,7 +501,7 @@ def import_agent(
                 border_style="green",
             )
         )
-        _agentcore_invoke_cli()
+        _agentcore_invoke_cli(output_dir)
     else:
         console.print(
             Panel(

@@ -1130,7 +1130,7 @@ class BaseBedrockTranslator:
         """Create the gateway and proxy for the agent."""
         print("  Creating Gateway for Agent...")
         gateway_client = GatewayClient(region_name=self.agent_region)
-        gateway_name = f"{self.cleaned_agent_name}-gateway-{uuid.uuid4().hex[:5].lower()}"
+        gateway_name = f"{self.cleaned_agent_name.replace('_', '-')}-gateway-{uuid.uuid4().hex[:5].lower()}"
 
         self.gateway_cognito_result = gateway_client.create_oauth_authorizer_with_cognito(gateway_name=gateway_name)
 

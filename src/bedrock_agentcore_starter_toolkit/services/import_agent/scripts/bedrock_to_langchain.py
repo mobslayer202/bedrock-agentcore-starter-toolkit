@@ -103,9 +103,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
             # Add guardrails if available
             if self.guardrail_config and prompt_type != "MEMORY_SUMMARIZATION":
                 model_config += """,
-        guardrails={}""".format(
-                    self.guardrail_config
-                )
+        guardrails={}""".format(self.guardrail_config)
 
             model_config += "\n)"
             model_configs.append(model_config)
@@ -331,7 +329,7 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         {preprocess_code}
         {memory_add_user}
 
-        response = agent.invoke({{"messages": [{{"role": "user", "content": question}}]}}, config)
+        response = asyncio.run(agent.ainvoke({{"messages": [{{"role": "user", "content": question}}]}}, config))
         {memory_add_assistant}
         {kb_code}
         {post_process_code}

@@ -355,10 +355,10 @@ def generate_pydantic_models(
     return textwrap.indent(code, "    "), clean_class_name(root_model_name)
 
 
-def prune_tool_name(tool_name: str) -> str:
+def prune_tool_name(tool_name: str, length=50) -> str:
     """Prune tool name to avoid maxiumum of 64 characters. If it exceeds, truncate and append a random suffix."""
-    if len(tool_name) > 50:
-        tool_name = tool_name[:50]
+    if len(tool_name) > length:
+        tool_name = tool_name[:length]
         tool_name += f"_{secrets.token_hex(3)}"
     return tool_name
 

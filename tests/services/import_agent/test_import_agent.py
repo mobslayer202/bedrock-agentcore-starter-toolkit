@@ -48,8 +48,7 @@ class TestImportAgent:
         output_dir = os.path.join(base_dir, "output", "langchain_with_primitives")
         os.makedirs(output_dir, exist_ok=True)
 
-        # Enable AgentCore memory primitive
-        enabled_primitives = {"memory": True, "code_interpreter": True, "observability": True}
+        enabled_primitives = {"memory": True, "code_interpreter": True, "observability": True, "gateway": False}
 
         translator = bedrock_to_langchain.BedrockLangchainTranslation(
             agent_config=agent_config, debug=False, output_dir=output_dir, enabled_primitives=enabled_primitives
@@ -70,8 +69,7 @@ class TestImportAgent:
         output_dir = os.path.join(base_dir, "output", "strands_with_primitives")
         os.makedirs(output_dir, exist_ok=True)
 
-        # Enable AgentCore memory primitive
-        enabled_primitives = {"memory": True, "code_interpreter": True, "observability": True}
+        enabled_primitives = {"memory": True, "code_interpreter": True, "observability": True, "gateway": False}
 
         translator = bedrock_to_strands.BedrockStrandsTranslation(
             agent_config=agent_config, debug=False, output_dir=output_dir, enabled_primitives=enabled_primitives

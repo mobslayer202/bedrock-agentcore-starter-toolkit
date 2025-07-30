@@ -153,7 +153,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "questionary", specifier = ">=2.1.0" },
     { name = "requests", specifier = ">=2.25.0" },
-    { name = "rich", specifier = ">=14.0.0,<15.0.0" },
+    { name = "rich", specifier = ">=13.0.0" },
     { name = "ruamel-yaml", specifier = ">=0.18.14" },
     { name = "toml", specifier = ">=0.10.2" },
     { name = "typer", specifier = ">=0.16.0" },

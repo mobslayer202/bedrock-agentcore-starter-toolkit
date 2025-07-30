@@ -163,6 +163,9 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         """Generate agent setup code."""
         agent_code = f"tools = [{','.join(self.tools)}]\ntools_used = set()"
 
+        if self.gateway_enabled:
+            agent_code += """\ntools += mcp_tools"""
+
         if self.debug:
             self.imports_code += "\nfrom strands.telemetry import StrandsTelemetry"
             agent_code += """

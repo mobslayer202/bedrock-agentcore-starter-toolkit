@@ -6,18 +6,17 @@ AWS Bedrock Agent configurations into different frameworks.
 Contains all the common logic between Langchain and Strands translations.
 """
 
-import os
-import uuid
-from typing import Dict, Tuple
 import io
-import zipfile
 import json
+import os
 import time
+import uuid
+import zipfile
+from typing import Dict, Tuple
 
 import autopep8
 import boto3
 from bedrock_agentcore.memory import MemoryClient
-
 from openapi_schema_to_json_schema import to_json_schema
 
 from ....operations.gateway import GatewayClient
@@ -92,6 +91,7 @@ class BaseBedrockTranslator:
             for group in agent_config.get("action_groups", [])
             if group.get("actionGroupState", "DISABLED") == "ENABLED"
         ]
+        self.custom_ags = [group for group in self.action_groups if "parentActionSignature" not in group]
         self.tools = []
         self.mcp_tools = []
         self.action_group_tools = []
@@ -120,10 +120,9 @@ class BaseBedrockTranslator:
         # AgentCore
         self.enabled_primitives = enabled_primitives
         self.gateway_enabled = enabled_primitives.get("gateway", False)
-        self.created_gateway = self.create_gateway() if self.gateway_enabled else {}
-        self.gateway_proxy_tool_name_mappings = (
-            {}
-        )  # used in the proxy to map pruned tool names to get more information about the tool (action group, method/function, type)
+        self.created_gateway = self.create_gateway() if self.gateway_enabled and self.custom_ags else {}
+        self.gateway_cognito_result = {}
+
         self.agentcore_memory_enabled = enabled_primitives.get("memory", False) and self.memory_enabled
         self.observability_enabled = enabled_primitives.get("observability", False)
         self.code1p = enabled_primitives.get("code_interpreter", False) and self.code_interpreter_enabled
@@ -339,15 +338,14 @@ class BaseBedrockTranslator:
         if not self.action_groups:
             return ""
 
-        custom_ags = [ag for ag in self.action_groups if "parentActionSignature" not in ag]
         tool_code = ""
         tool_instances = []
 
-        self.gateway_enabled = self.gateway_enabled and custom_ags
+        self.gateway_enabled = self.gateway_enabled and self.custom_ags
 
         # OpenAPI and Function Action Groups
         if self.gateway_enabled:
-            self.create_gateway_proxy_and_targets(custom_ags)
+            self.create_gateway_proxy_and_targets()
 
             self.imports_code += "\nfrom bedrock_agentcore_starter_toolkit.operations.gateway import GatewayClient\n"
             tool_code += f"""
@@ -396,12 +394,11 @@ class BaseBedrockTranslator:
     }}
 
     streamable_http_mcp_client = MCPClient(lambda: streamablehttp_client(mcp_url, headers=headers))
-
-    with streamable_http_mcp_client as mcp_client:
-        mcp_tools = mcp_client.get_tools()
+    streamable_http_mcp_client.start()
+    mcp_tools = streamable_http_mcp_client.get_tools()
 """
         else:
-            for action_group in custom_ags:
+            for action_group in self.custom_ags:
                 additional_tool_instances = []
                 additional_code = ""
 
@@ -1002,7 +999,7 @@ class BaseBedrockTranslator:
                 model=llm_ORCHESTRATION,
                 system_prompt=coding_prompt,
                 tools=coding_tools,
-                max_parallel_tools=1)
+                )
 
             return str(coding_agent(original_question))
             """
@@ -1057,7 +1054,7 @@ class BaseBedrockTranslator:
 
             # Gathering sources from the response
             sources = []
-            urls = re.findall(r'(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{{2,}}(?:/[^/\s]*)*', response_content)
+            urls = re.findall(r'(?:https?://|www\r.)(?:[a-zA-Z0-9\r-]+\r.)+[a-zA-Z]{{2,}}(?:/[^/\rs]*)*', response_content)
             source_tags = re.findall(r"<source>(.*?)</source>", response_content)
             sources.extend(urls)
             sources.extend(source_tags)
@@ -1133,10 +1130,12 @@ class BaseBedrockTranslator:
             enable_semantic_search=True,
             authorizer_config=self.gateway_cognito_result["authorizer_config"],
         )
+        print(gateway)
         return gateway
 
-    def create_gateway_proxy_and_targets(self, action_groups):
+    def create_gateway_proxy_and_targets(self):
         """Create gateway proxy for the agent."""
+        action_groups = self.custom_ags
         function_name = f"gateway_proxy_{uuid.uuid4().hex[:8].lower()}"
         account_id = boto3.client("sts").get_caller_identity().get("Account")
         lambda_arn = f"arn:aws:lambda:{self.agent_region}:{account_id}:function:{function_name}"
@@ -1151,6 +1150,7 @@ class BaseBedrockTranslator:
                 continue
 
             action_group_name = ag.get("actionGroupName", "AG")
+            clean_action_group_name = clean_variable_name(action_group_name)
             action_group_desc = ag.get("description", "").replace('"', '\\"')
             end_lambda_arn = ag.get("actionGroupExecutor", {}).get("lambda", "")
             tools = []
@@ -1161,9 +1161,12 @@ class BaseBedrockTranslator:
                 for func_name, func_spec in openapi_schema.get("paths", {}).items():
                     clean_func_name = clean_variable_name(func_name)
                     for method, method_spec in func_spec.items():
-                        tool_name = prune_tool_name(f"{action_group_name}_{clean_func_name}_{method}")
+                        tool_name_unpruned = f"{action_group_name}_{clean_func_name}_{method}"
+                        tool_name = prune_tool_name(
+                            tool_name_unpruned, length=(54 - len(clean_action_group_name))
+                        )  # to ensure the tool is below 64 characters
 
-                        tool_mappings[tool_name] = {
+                        tool_mappings[f"{clean_action_group_name}___{tool_name}"] = {
                             "actionGroup": action_group_name,
                             "apiPath": func_name,
                             "httpMethod": method.upper(),
@@ -1201,6 +1204,7 @@ class BaseBedrockTranslator:
                                     "contentType": {"description": f"MUST BE SET TO {content_type}", "type": "string"}
                                 }  # NOTE: GATEWAY DOES NOT SUPPORT ENUM OR CONST YET
                             )
+                            converted.get("required", []).append("contentType")
                             del converted["$schema"]
                             content_schemas.append(converted)
 
@@ -1231,6 +1235,7 @@ class BaseBedrockTranslator:
                                             }
                                         }  # NOTE: GATEWAY DOES NOT SUPPORT ENUM OR CONST YET
                                     )
+                                    converted.get("required", []).append("contentType")
                                     del converted["$schema"]
                                     content_schemas.append(converted)
 
@@ -1281,7 +1286,7 @@ class BaseBedrockTranslator:
                     clean_func_name = clean_variable_name(func_name)
                     tool_name = prune_tool_name(f"{action_group_name}_{clean_func_name}")
 
-                    tool_mappings[tool_name] = {
+                    tool_mappings[f"{clean_action_group_name}___{tool_name}"] = {
                         "actionGroup": action_group_name,
                         "function": func_name,
                         "type": "structured",
@@ -1323,7 +1328,7 @@ class BaseBedrockTranslator:
                     )
 
             if tools:
-                self.create_gateway_lambda_target(tools, lambda_arn, clean_variable_name(action_group_name))
+                self.create_gateway_lambda_target(tools, lambda_arn, clean_action_group_name)
 
         agent_metadata = {
             "name": self.agent_info.get("agentName", ""),
@@ -1374,12 +1379,12 @@ def transform_object(event_obj):
     return result
 
 def lambda_handler(event, context):
-    tool_name = context.client_context.custom['bedrockAgentCoreToolName']
-    session_id = context.client_context.custom['bedrockAgentCoreSessionId']
+    tool_name = context.client_context.custom.get('bedrockAgentCoreToolName', '')
+    session_id = context.client_context.custom.get('bedrockAgentCoreSessionId', '')
 
     tool_info = tool_mappings.get(tool_name, {{}})
     if not tool_info:
-        return {{'statusCode': 400, 'body': 'Tool not found'}}
+        return {{'statusCode': 400, 'body': f"Tool {{tool_name}} not found"}}
 
     action_group = tool_info.get('actionGroup', '')
     end_lambda_arn = tool_info.get('lambdaArn', '')
@@ -1629,6 +1634,7 @@ def lambda_handler(event, context):
             target_payload={"lambdaArn": lambda_arn, "toolSchema": {"inlinePayload": tools}},
             name=target_name,
         )
+        print(target)
         return target
 
     # --------------------------------

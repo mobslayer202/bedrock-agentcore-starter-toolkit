@@ -758,7 +758,7 @@ class BaseBedrockTranslator:
         """Generate example usage code for the agent."""
         memory_code = (
             "LongTermMemoryManager.end_all_sessions()"
-            if (self.multi_agent_enabled or self.memory_enabled) and not self.agentcore_memory_enabled
+            if self.memory_enabled and not self.agentcore_memory_enabled
             else ""
         )
         run_code = "else: app.run()" if not self.is_collaborator else ""

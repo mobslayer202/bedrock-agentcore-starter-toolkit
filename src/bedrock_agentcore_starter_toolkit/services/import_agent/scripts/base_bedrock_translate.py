@@ -1054,7 +1054,7 @@ class BaseBedrockTranslator:
 
             # Gathering sources from the response
             sources = []
-            urls = re.findall(r'(?:https?://|www\r.)(?:[a-zA-Z0-9\r-]+\r.)+[a-zA-Z]{{2,}}(?:/[^/\rs]*)*', response_content)
+            urls = re.findall(r'(?:https?://|www\.)(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{{2,}}(?:/[^/\s]*)*', response_content)
             source_tags = re.findall(r"<source>(.*?)</source>", response_content)
             sources.extend(urls)
             sources.extend(source_tags)
@@ -1130,7 +1130,6 @@ class BaseBedrockTranslator:
             enable_semantic_search=True,
             authorizer_config=self.gateway_cognito_result["authorizer_config"],
         )
-        print(gateway)
         return gateway
 
     def create_gateway_proxy_and_targets(self):
@@ -1634,7 +1633,6 @@ def lambda_handler(event, context):
             target_payload={"lambdaArn": lambda_arn, "toolSchema": {"inlinePayload": tools}},
             name=target_name,
         )
-        print(target)
         return target
 
     # --------------------------------

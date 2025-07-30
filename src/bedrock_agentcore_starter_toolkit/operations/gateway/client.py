@@ -347,7 +347,6 @@ class GatewayClient:
                 AllowedOAuthFlowsUserPoolClient=True,
                 SupportedIdentityProviders=["COGNITO"],
             )
-            print(f"User Pool Client Response: {user_pool_client_response}")  # Debugging line
 
             client_id = user_pool_client_response["UserPoolClient"]["ClientId"]
             client_secret = user_pool_client_response["UserPoolClient"]["ClientSecret"]

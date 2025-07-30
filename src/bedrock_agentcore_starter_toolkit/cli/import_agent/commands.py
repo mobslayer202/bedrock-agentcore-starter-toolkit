@@ -120,7 +120,7 @@ def import_agent(
     run_option: str = typer.Option(None, "--run-option", help="How to run the agent (locally, runtime, none)"),
     output_dir: str = typer.Option("./output/", "--output-dir", help="Output directory for generated code"),
 ):
-    """Migrate a Bedrock Agent to LangChain or Strands."""
+    """Use a Bedrock Agent to generate a LangChain or Strands agent with AgentCore primitives."""
     try:
         os.makedirs(output_dir, exist_ok=True)
 

@@ -10,10 +10,12 @@ from typing import Any, Dict, Optional
 import boto3
 import requests
 from botocore.exceptions import ClientError
+from rich.console import Console
 
 from ..utils.endpoints import get_control_plane_endpoint, get_data_plane_endpoint
 
 logger = logging.getLogger(__name__)
+console = Console()
 
 
 def generate_session_id() -> str:
@@ -49,12 +51,24 @@ def _handle_aws_response(response) -> dict:
 
 
 def _handle_streaming_response(response) -> Dict[str, Any]:
+    complete_text = ""
     for line in response.iter_lines(chunk_size=1):
         if line:
             line = line.decode("utf-8")
             if line.startswith("data: "):
-                logger.info(line)
-
+                json_chunk = line[6:]
+                try:
+                    parsed_chunk = json.loads(json_chunk)
+                    if isinstance(parsed_chunk, str):
+                        text_chunk = parsed_chunk
+                    else:
+                        text_chunk = json.dumps(parsed_chunk, ensure_ascii=False)
+                        text_chunk += "\n"
+                    console.print(text_chunk, end="", style="bold cyan")
+                    complete_text += text_chunk
+                except json.JSONDecodeError:
+                    continue
+    console.print()
     return {}
 
 

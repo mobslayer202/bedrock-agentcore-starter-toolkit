@@ -577,23 +577,24 @@ class TestHandleStreamingResponse:
 
     def test_handle_streaming_response_with_data_lines(self):
         """Test streaming response with data: prefixed lines."""
-        # Mock response object
+        # Mock response object with JSON data chunks
         mock_response = Mock()
         mock_response.iter_lines.return_value = [
-            b"data: Hello from agent",
-            b"data: This is a streaming response",
-            b"data: Final chunk",
+            b'data: "Hello from agent"',
+            b'data: "This is a streaming response"',
+            b'data: "Final chunk"',
         ]
 
-        # Mock logger to capture log calls
-        with patch("bedrock_agentcore_starter_toolkit.services.runtime.logger") as mock_logger:
+        # Mock console to capture print calls
+        with patch("bedrock_agentcore_starter_toolkit.services.runtime.console") as mock_console:
             result = _handle_streaming_response(mock_response)
 
             # Verify result structure - function returns empty dict for streaming
             assert result == {}
 
-            # Verify log messages were called for each data line
-            assert mock_logger.info.call_count == 3
-            mock_logger.info.assert_any_call("data: Hello from agent")
-            mock_logger.info.assert_any_call("data: This is a streaming response")
-            mock_logger.info.assert_any_call("data: Final chunk")
+            # Verify console.print was called for each JSON chunk + final newline
+            assert mock_console.print.call_count == 4  # 3 chunks + 1 final newline
+            mock_console.print.assert_any_call("Hello from agent", end="", style="bold cyan")
+            mock_console.print.assert_any_call("This is a streaming response", end="", style="bold cyan")
+            mock_console.print.assert_any_call("Final chunk", end="", style="bold cyan")
+            mock_console.print.assert_any_call()  # Final newline call

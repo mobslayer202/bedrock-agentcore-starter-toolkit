@@ -67,6 +67,7 @@ def _handle_streaming_response(response) -> Dict[str, Any]:
                     console.print(text_chunk, end="", style="bold cyan")
                     complete_text += text_chunk
                 except json.JSONDecodeError:
+                    console.print(json_chunk, style="bold cyan")
                     continue
     console.print()
     return {}

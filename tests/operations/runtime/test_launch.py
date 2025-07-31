@@ -757,6 +757,47 @@ class TestLaunchBedrockAgentCore:
             with pytest.raises(RuntimeError, match="Cannot run locally - no container runtime available"):
                 launch_bedrock_agentcore(config_path, local=True)
 
+    def test_launch_with_codebuild_from_main_function(self, mock_boto3_clients, mock_container_runtime, tmp_path):
+        """Test that environment variables are passed from launch_bedrock_agentcore to _launch_with_codebuild."""
+        # Create config file
+        config_path = tmp_path / ".bedrock_agentcore.yaml"
+        agent_config = BedrockAgentCoreAgentSchema(
+            name="test-agent",
+            entrypoint="test_agent.py",
+            container_runtime="docker",
+            aws=AWSConfig(
+                region="us-west-2",
+                account="123456789012",
+                execution_role="arn:aws:iam::123456789012:role/TestRole",
+                ecr_repository="123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo",
+                network_configuration=NetworkConfiguration(),
+                observability=ObservabilityConfig(),
+            ),
+            bedrock_agentcore=BedrockAgentCoreDeploymentInfo(),
+        )
+        project_config = BedrockAgentCoreConfigSchema(default_agent="test-agent", agents={"test-agent": agent_config})
+        save_config(project_config, config_path)
+
+        # Create a test agent file
+        agent_file = tmp_path / "test_agent.py"
+        agent_file.write_text("# test agent")
+
+        # Test environment variables
+        test_env_vars = {"TEST_VAR1": "value1", "TEST_VAR2": "value2"}
+
+        with patch(
+            "bedrock_agentcore_starter_toolkit.operations.runtime.launch._launch_with_codebuild"
+        ) as mock_launch_with_codebuild:
+            mock_launch_with_codebuild.return_value = MagicMock()
+
+            # Run launch_bedrock_agentcore with use_codebuild=True and env_vars
+            launch_bedrock_agentcore(config_path=config_path, use_codebuild=True, env_vars=test_env_vars)
+
+            # Verify _launch_with_codebuild was called with the environment variables
+            mock_launch_with_codebuild.assert_called_once()
+            # Check that env_vars parameter was passed to _launch_with_codebuild
+            assert mock_launch_with_codebuild.call_args.kwargs["env_vars"] == test_env_vars
+
 
 class TestEnsureExecutionRole:
     """Test _ensure_execution_role functionality."""
@@ -978,3 +1019,87 @@ class TestEnsureExecutionRole:
         result = _validate_execution_role("arn:aws:iam::123456789012:role/nonexistent-role", mock_session)
 
         assert result is False
+
+    def test_launch_with_codebuild_passes_env_vars(self, mock_boto3_clients, mock_container_runtime, tmp_path):
+        """Test that environment variables are passed with CodeBuild deployment."""
+        from bedrock_agentcore_starter_toolkit.operations.runtime.launch import _launch_with_codebuild
+
+        # Create config file
+        config_path = tmp_path / ".bedrock_agentcore.yaml"
+        agent_config = BedrockAgentCoreAgentSchema(
+            name="test-agent",
+            entrypoint="test_agent.py",
+            container_runtime="docker",
+            aws=AWSConfig(
+                region="us-west-2",
+                account="123456789012",
+                execution_role="arn:aws:iam::123456789012:role/TestRole",
+                ecr_repository="123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo",
+                network_configuration=NetworkConfiguration(),
+                observability=ObservabilityConfig(),
+            ),
+            bedrock_agentcore=BedrockAgentCoreDeploymentInfo(),
+        )
+        project_config = BedrockAgentCoreConfigSchema(default_agent="test-agent", agents={"test-agent": agent_config})
+        save_config(project_config, config_path)
+
+        # Create a test agent file
+        agent_file = tmp_path / "test_agent.py"
+        agent_file.write_text("# test agent")
+
+        # Mock CodeBuild service
+        mock_codebuild_service = MagicMock()
+        mock_codebuild_service.create_codebuild_execution_role.return_value = (
+            "arn:aws:iam::123456789012:role/CodeBuildRole"
+        )
+        mock_codebuild_service.upload_source.return_value = "s3://test-bucket/test-source.zip"
+        mock_codebuild_service.create_or_update_project.return_value = "test-project"
+        mock_codebuild_service.start_build.return_value = "test-build-id"
+        mock_codebuild_service.wait_for_completion.return_value = None
+        mock_codebuild_service.source_bucket = "test-bucket"
+
+        # Test environment variables
+        test_env_vars = {"TEST_VAR1": "value1", "TEST_VAR2": "value2"}
+
+        # Mock IAM client for role validation
+        mock_iam_client = MagicMock()
+        mock_iam_client.get_role.return_value = {
+            "Role": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [{"Effect": "Allow", "Principal": {"Service": "bedrock-agentcore.amazonaws.com"}}]
+                }
+            }
+        }
+
+        with (
+            patch(
+                "bedrock_agentcore_starter_toolkit.operations.runtime.launch.CodeBuildService",
+                return_value=mock_codebuild_service,
+            ),
+            patch(
+                "bedrock_agentcore_starter_toolkit.operations.runtime.launch._deploy_to_bedrock_agentcore"
+            ) as mock_deploy,
+            patch("bedrock_agentcore_starter_toolkit.operations.runtime.launch.boto3.Session") as mock_session,
+        ):
+            # Set up the session's client method to return our mock IAM client
+            mock_session.return_value.client.return_value = mock_iam_client
+
+            # Configure _deploy_to_bedrock_agentcore mock to return agent_id and agent_arn
+            mock_deploy.return_value = (
+                "test-agent-id",
+                "arn:aws:bedrock-agentcore:us-west-2:123456789012:agent/test-agent-id",
+            )
+
+            # Run _launch_with_codebuild with environment variables
+            _launch_with_codebuild(
+                config_path=config_path,
+                agent_name="test-agent",
+                agent_config=agent_config,
+                project_config=project_config,
+                env_vars=test_env_vars,
+            )
+
+            # Verify _deploy_to_bedrock_agentcore was called with the environment variables
+            mock_deploy.assert_called_once()
+            # Check the env_vars parameter
+            assert mock_deploy.call_args.kwargs["env_vars"] == test_env_vars

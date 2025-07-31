@@ -440,7 +440,7 @@ class HttpBedrockAgentCoreClient:
                 params={"qualifier": endpoint_name},
                 headers=headers,
                 json=body,
-                timeout=100,
+                timeout=900,
                 stream=True,
             )
             return _handle_http_response(response)
@@ -478,7 +478,7 @@ class LocalBedrockAgentCoreClient:
 
         try:
             # Make request with timeout
-            response = requests.post(url, headers=headers, json=body, timeout=100, stream=True)
+            response = requests.post(url, headers=headers, json=body, timeout=900, stream=True)
             return _handle_http_response(response)
         except requests.exceptions.RequestException as e:
             self.logger.error("Failed to invoke agent endpoint: %s", str(e))

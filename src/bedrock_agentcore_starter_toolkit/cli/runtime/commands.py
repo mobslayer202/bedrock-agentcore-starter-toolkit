@@ -565,15 +565,16 @@ def invoke(
             local_mode=local_mode,
         )
         console.print(f"Session ID: [cyan]{result.session_id}[/cyan]")
-        console.print("\n[bold]Response:[/bold]")
-        console.print(
-            Syntax(
-                json.dumps(result.response, indent=2, default=str, ensure_ascii=False),
-                "json",
-                background_color="default",
-                word_wrap=True,
+        if result.response != {}:
+            console.print("\n[bold]Response:[/bold]")
+            console.print(
+                Syntax(
+                    json.dumps(result.response, indent=2, default=str, ensure_ascii=False),
+                    "json",
+                    background_color="default",
+                    word_wrap=True,
+                )
             )
-        )
 
     except FileNotFoundError:
         console.print("[red].bedrock_agentcore.yaml not found[/red]")

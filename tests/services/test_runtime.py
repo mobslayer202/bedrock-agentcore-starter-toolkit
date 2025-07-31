@@ -586,23 +586,14 @@ class TestHandleStreamingResponse:
         ]
 
         # Mock logger to capture log calls
-        with patch("bedrock_agentcore_starter_toolkit.services.runtime.logging.getLogger") as mock_get_logger:
-            mock_logger = Mock()
-            mock_get_logger.return_value = mock_logger
-
+        with patch("bedrock_agentcore_starter_toolkit.services.runtime.logger") as mock_logger:
             result = _handle_streaming_response(mock_response)
 
-            # Verify result structure
-            assert "response" in result
-            expected_content = "Hello from agent\nThis is a streaming response\nFinal chunk"
-            assert result["response"] == expected_content
-
-            # Verify logger was configured and used
-            mock_get_logger.assert_called_once_with("bedrock_agentcore.stream")
-            mock_logger.setLevel.assert_called_once_with(20)  # logging.INFO = 20
+            # Verify result structure - function returns empty dict for streaming
+            assert result == {}
 
             # Verify log messages were called for each data line
             assert mock_logger.info.call_count == 3
-            mock_logger.info.assert_any_call("Hello from agent")
-            mock_logger.info.assert_any_call("This is a streaming response")
-            mock_logger.info.assert_any_call("Final chunk")
+            mock_logger.info.assert_any_call("data: Hello from agent")
+            mock_logger.info.assert_any_call("data: This is a streaming response")
+            mock_logger.info.assert_any_call("data: Final chunk")

@@ -13,6 +13,8 @@ from botocore.exceptions import ClientError
 
 from ..utils.endpoints import get_control_plane_endpoint, get_data_plane_endpoint
 
+logger = logging.getLogger(__name__)
+
 
 def generate_session_id() -> str:
     """Generate session ID."""
@@ -47,19 +49,13 @@ def _handle_aws_response(response) -> dict:
 
 
 def _handle_streaming_response(response) -> Dict[str, Any]:
-    logger = logging.getLogger("bedrock_agentcore.stream")
-    logger.setLevel(logging.INFO)
-
-    content = []
     for line in response.iter_lines(chunk_size=1):
         if line:
             line = line.decode("utf-8")
             if line.startswith("data: "):
-                line = line[6:]
                 logger.info(line)
-                content.append(line)
 
-    return {"response": "\n".join(content)}
+    return {}
 
 
 class BedrockAgentCoreClient:

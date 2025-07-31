@@ -282,6 +282,7 @@ def launch_bedrock_agentcore(
             agent_config=agent_config,
             project_config=project_config,
             auto_update_on_conflict=auto_update_on_conflict,
+            env_vars=env_vars,
         )
 
     # Log which agent is being launched
@@ -378,6 +379,7 @@ def _launch_with_codebuild(
     agent_config,
     project_config,
     auto_update_on_conflict: bool = False,
+    env_vars: Optional[dict] = None,
 ) -> LaunchResult:
     """Launch using CodeBuild for ARM64 builds."""
     log.info(
@@ -441,7 +443,7 @@ def _launch_with_codebuild(
         agent_name,
         ecr_uri,
         region,
-        env_vars=None,
+        env_vars=env_vars,
         auto_update_on_conflict=auto_update_on_conflict,
     )
 

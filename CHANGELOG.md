@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.3] - 2025-08-01
+
+### BREAKING CHANGES
+- **CodeBuild is now the default launch method** - The `--codebuild` flag is no longer needed
+  - To use local Docker builds, you must now explicitly use `--local-build` flag
+  - This change improves the default user experience by building ARM64 containers in the cloud without requiring local Docker
+
+### Added
+- **Streaming invoke support re-enabled** - Restored streaming functionality for real-time agent responses
+- **Extended request timeout** - Increased invoke request timeout from default to 900 seconds (15 minutes) to support long-running agent operations
+
+### Changed
+- **Default launch behavior** - CodeBuild is now the default (`use_codebuild=True`)
+  - Users no longer need Docker installed locally for standard deployments
+  - Automatic ARM64 container builds in AWS CodeBuild
+  - Use `agentcore launch` for cloud builds (default)
+  - Use `agentcore launch --local-build` for local Docker builds
+
+### Improved
+- **Enhanced CLI help text** - Clearer descriptions guide users toward recommended options
+- **Better error messages** - Actionable recommendations for common issues
+- **Conflict handling** - Enhanced exception messages now suggest using `--auto-update-on-conflict` flag
+
+
 ## [0.1.2] - 2025-07-23
 
 ### Fixed

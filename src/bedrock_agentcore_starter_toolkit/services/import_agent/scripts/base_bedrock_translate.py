@@ -1111,7 +1111,7 @@ class BaseBedrockTranslator:
                 env_file.write(f"{key}={value}\n")
 
         # Copy over requirements.txt
-        requirements_path = os.path.join(get_base_dir(__file__), "assets", f"requirements_{platform}.txt")
+        requirements_path = os.path.join(get_base_dir(__file__), "assets", f"requirements_{platform}.j2")
         if os.path.exists(requirements_path):
             with (
                 open(requirements_path, "r", encoding="utf-8") as src_file,

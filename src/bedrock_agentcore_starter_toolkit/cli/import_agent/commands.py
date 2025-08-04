@@ -108,8 +108,7 @@ def import_agent(
     agent_alias_id: str = typer.Option(None, "--agent-alias-id", help="ID of the Agent Alias to use"),
     target_platform: str = typer.Option(None, "--target-platform", help="Target platform (langchain or strands)"),
     region: str = typer.Option(None, "--region", help="AWS region for Bedrock (e.g., us-west-2)"),
-    debug: bool = typer.Option(False, "--debug", help="Enable debug mode"),
-    verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode"),
+    verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode for ghte generated agent"),
     disable_gateway: bool = typer.Option(False, "--disable-gateway", help="Disable AgentCore Gateway primitive"),
     disable_memory: bool = typer.Option(False, "--disable-memory", help="Disable AgentCore Memory primitive"),
     disable_code_interpreter: bool = typer.Option(
@@ -326,7 +325,7 @@ def import_agent(
                 return
 
         # Set verbose mode based on flags or ask user
-        verbose_mode = verbose or debug
+        verbose_mode = verbose
 
         # Ask about verbose mode if not provided via flags
         if not verbose_mode:  # Only ask if neither verbose nor debug is True

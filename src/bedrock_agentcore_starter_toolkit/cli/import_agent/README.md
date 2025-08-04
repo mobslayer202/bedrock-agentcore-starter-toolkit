@@ -12,7 +12,6 @@ The workflow can be started with `agentcore import-agent`. Additionally, the fol
 | `--agent-id` | ID of the Bedrock Agent to import | string | None |
 | `--agent-alias-id` | ID of the Agent Alias to use | string | None |
 | `--target-platform` | Target platform (langchain + langgraph or strands) | string | None |
-| `--debug` | Enable debug mode | boolean | False |
 | `--verbose` | Enable verbose mode | boolean | False |
 | `--disable-memory` | Disable AgentCore Memory primitive | boolean | False |
 | `--disable-code-interpreter` | Disable AgentCore Code Interpreter primitive | boolean | False |
@@ -26,7 +25,7 @@ The workflow can be started with `agentcore import-agent`. Additionally, the fol
 - If required flags like `--agent-id`, `--agent-alias-id`, or `--target-platform` are not provided, the command will fall back to interactive prompts.
 - Boolean flags like `--verbose`, `--debug`, `--disable-memory`, etc. don't require values; their presence sets them to `True`.
 - If neither `--verbose` nor `--debug` flags are provided, the command will prompt the user to enable verbose mode.
-- Either `--verbose` or `--debug` will enable verbose mode. Use `--verbose` for standard verbose output and `--debug` for more detailed debugging information.
+- `--verbose` will enable verbose mode. Use `--verbose` for standard verbose output for the generated agent.
 - Memory, Code Interpreter, and Observability primitives are enabled by default. Use `--disable-memory`, `--disable-code-interpreter`, or `--disable-observability` to disable them.
 - If the `--deploy-runtime` flag is not provided, the command will prompt the user whether to deploy the agent to AgentCore Runtime.
 - If the `--run-option` flag is not provided, the command will prompt the user to select how to run the agent.

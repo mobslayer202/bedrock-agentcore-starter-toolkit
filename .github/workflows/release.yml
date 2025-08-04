@@ -89,10 +89,10 @@ jobs:
           source .venv/bin/activate
 
           # Make script executable
-          chmod +x scripts/bump_version.py
+          chmod +x scripts/bump-version.py
 
           # Build command with all options
-          CMD="python scripts/bump_version.py ${{ github.event.inputs.bump_type }}"
+          CMD="python scripts/bump-version.py ${{ github.event.inputs.bump_type }}"
 
           # Add SDK update if specified
           if [ -n "${{ github.event.inputs.sdk_version }}" ]; then

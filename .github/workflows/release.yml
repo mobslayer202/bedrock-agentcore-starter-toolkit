@@ -219,14 +219,30 @@ jobs:
 
   build:
     name: Build Distribution
-    needs: [prepare-release, test]
+    needs: prepare-release
     runs-on: ubuntu-latest
-    if: needs.test.result == 'success' || needs.prepare-release.result == 'success'
+    if: needs.prepare-release.result == 'success'
 
     steps:
       - uses: actions/checkout@v4
         with:
           ref: release/v${{ needs.prepare-release.outputs.version }}
+
+      - name: Verify version before build
+        run: |
+          EXPECTED_VERSION="${{ needs.prepare-release.outputs.version }}"
+          ACTUAL_VERSION=$(grep -m1 -oP '^version = "\K[^"]+' pyproject.toml)
+
+          echo "Expected version: $EXPECTED_VERSION"
+          echo "Actual version: $ACTUAL_VERSION"
+
+          if [ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "Expected $EXPECTED_VERSION but found $ACTUAL_VERSION"
+            exit 1
+          fi
+
+          echo "✓ Version verified: $ACTUAL_VERSION"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -242,6 +258,12 @@ jobs:
         run: |
           # Build doesn't need venv
           uv build
+
+          ls -la dist/
+          if ! ls dist/*-${{ needs.prepare-release.outputs.version }}-*.whl; then
+            echo "❌ ERROR: Built package has wrong version!"
+            exit 1
+          fi
 
           # Check with twine using tool run
           uv tool run twine check dist/*
@@ -262,7 +284,7 @@ jobs:
     name: Publish to TestPyPI
     needs: build
     runs-on: ubuntu-latest
-    # No condition needed - runs when build succeeds
+
     environment:
       name: test-pypi
       url: https://test.pypi.org/project/bedrock-agentcore-starter-toolkit/

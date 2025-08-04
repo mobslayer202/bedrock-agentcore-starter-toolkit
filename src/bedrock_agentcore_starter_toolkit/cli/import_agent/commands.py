@@ -108,7 +108,7 @@ def import_agent(
     agent_alias_id: str = typer.Option(None, "--agent-alias-id", help="ID of the Agent Alias to use"),
     target_platform: str = typer.Option(None, "--target-platform", help="Target platform (langchain or strands)"),
     region: str = typer.Option(None, "--region", help="AWS region for Bedrock (e.g., us-west-2)"),
-    verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode for ghte generated agent"),
+    verbose: bool = typer.Option(False, "--verbose", help="Enable verbose mode for the generated agent"),
     disable_gateway: bool = typer.Option(False, "--disable-gateway", help="Disable AgentCore Gateway primitive"),
     disable_memory: bool = typer.Option(False, "--disable-memory", help="Disable AgentCore Memory primitive"),
     disable_code_interpreter: bool = typer.Option(

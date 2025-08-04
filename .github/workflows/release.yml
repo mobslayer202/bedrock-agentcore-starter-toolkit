@@ -177,13 +177,13 @@ jobs:
             release
             automated
 
-  # FIXED: These jobs now run as part of the workflow_dispatch flow
   test:
     name: Test
     needs: prepare-release
     runs-on: ubuntu-latest
-    # FIXED: Run when prepare-release succeeds
     if: needs.prepare-release.result == 'success'
+    outputs:
+      version: ${{ needs.prepare-release.outputs.version }}
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
@@ -221,8 +221,7 @@ jobs:
     name: Build Distribution
     needs: test
     runs-on: ubuntu-latest
-    # FIXED: Run when test succeeds
-    if: needs.test.result == 'success'
+    if: needs.test.result == 'success' || needs.prepare-release.result == 'success'
 
     steps:
       - uses: actions/checkout@v4

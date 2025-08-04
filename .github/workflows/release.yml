@@ -1,7 +1,6 @@
 name: Release
 
 on:
-  # Manual trigger with version bump type
   workflow_dispatch:
     inputs:
       bump_type:
@@ -27,11 +26,6 @@ on:
         required: false
         type: string
 
-  # Trigger on release branch push
-  push:
-    branches:
-      - 'release/*'
-
 permissions:
   contents: write
   pull-requests: write
@@ -41,10 +35,9 @@ jobs:
   prepare-release:
     name: Prepare Release
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.bump.outputs.version }}
-      pr_number: ${{ steps.create-pr.outputs.pr_number }}
+      pr_created: ${{ steps.create-pr.outputs.pull-request-number }}
 
     steps:
       - name: Checkout code
@@ -173,7 +166,7 @@ jobs:
             2. The release workflow will automatically:
                - Build and test the package
                - Publish to Test PyPI
-               - Wait for approval
+               - Wait for approval (when enabled)
                - Publish to PyPI (when enabled)
                - Create a GitHub release
                - Tag the release
@@ -184,16 +177,21 @@ jobs:
             release
             automated
 
+  # FIXED: These jobs now run as part of the workflow_dispatch flow
   test:
     name: Test
+    needs: prepare-release
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
+    # FIXED: Run when prepare-release succeeds
+    if: needs.prepare-release.result == 'success'
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: release/v${{ needs.prepare-release.outputs.version }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -222,10 +220,13 @@ jobs:
     name: Build Distribution
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
+    # FIXED: Run when test succeeds
+    if: needs.test.result == 'success'
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: release/v${{ needs.prepare-release.outputs.version }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -261,6 +262,7 @@ jobs:
     name: Publish to TestPyPI
     needs: build
     runs-on: ubuntu-latest
+    # No condition needed - runs when build succeeds
     environment:
       name: test-pypi
       url: https://test.pypi.org/project/bedrock-agentcore-starter-toolkit/

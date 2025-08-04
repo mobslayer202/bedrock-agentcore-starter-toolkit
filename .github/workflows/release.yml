@@ -219,7 +219,7 @@ jobs:
 
   build:
     name: Build Distribution
-    needs: test
+    needs: [prepare-release, test]
     runs-on: ubuntu-latest
     if: needs.test.result == 'success' || needs.prepare-release.result == 'success'
 

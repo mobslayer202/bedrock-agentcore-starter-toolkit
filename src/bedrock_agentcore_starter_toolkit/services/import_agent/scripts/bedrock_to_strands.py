@@ -27,13 +27,6 @@ class BedrockStrandsTranslation(BaseBedrockTranslator):
         self.agent_setup_code = self.generate_agent_setup()
         self.usage_code = self.generate_example_usage()
 
-        # if not a collaborator, create a BedrockAgentCore entrypoint
-        if not self.is_collaborator:
-            self.imports_code += """
-    from bedrock_agentcore import BedrockAgentCoreApp
-
-    app = BedrockAgentCoreApp()"""
-
         # make prompts more readable
         self.prompts_code = textwrap.fill(
             self.prompts_code, width=150, break_long_words=False, replace_whitespace=False

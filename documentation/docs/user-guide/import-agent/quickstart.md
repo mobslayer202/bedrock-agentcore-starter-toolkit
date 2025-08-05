@@ -5,6 +5,7 @@ Get started with importing your Bedrock Agent to AgentCore in just a few minutes
 ## Prerequisites
 
 - AWS credentials configured with access to Bedrock Agents
+  - Use `ada` or `aws configure` to ensure that your credentials are available for the utility to assume.
 - Bedrock AgentCore Starter Toolkit installed
 - An existing Amazon Bedrock Agent
 
@@ -56,7 +57,7 @@ agentcore import-agent
 
 ### 3. Select Your Agent
 
-The utility will list your available Bedrock Agents:
+The utility will list your available Bedrock Agents in the selected region:
 
 ```
 ? Select Bedrock Agent:
@@ -77,8 +78,8 @@ The utility will list your available Bedrock Agents:
 
 ```
 ? Choose target platform:
-  > Strands - AWS-native agent framework
-    LangChain + LangGraph - Popular open-source framework
+  > strands (1.0.x)
+    langchain (0.3.x) + langgraph (0.5.x)
 ```
 
 ### 7. Deployment Options
@@ -86,9 +87,9 @@ The utility will list your available Bedrock Agents:
 ```
 ? Deploy to AgentCore Runtime? [y/N]: Y
 ? How would you like to run the agent?
-  > Runtime - Deploy to AgentCore Runtime
-    Locally - Run on your local machine
-    None - Just generate code
+  > Run on AgentCore Runtime
+    Install dependencies and run locally
+    Don't run now
 ```
 
 ## Generated Output
@@ -118,6 +119,7 @@ python strands_agent.py
 If deployed to runtime:
 
 ```bash
+cd ./output
 agentcore invoke "Hello, test message"
 ```
 
@@ -154,6 +156,6 @@ agentcore import-agent --output-dir ./my-custom-agent
 - **Review Generated Code**: Examine the converted agent implementation
 - **Test Functionality**: Verify your agent works as expected
 - **Customize Integration**: Add custom AgentCore primitive configurations
-- **Production Deployment**: Deploy to AgentCore Runtime for enterprise use
+- **Production Deployment**: Deploy to AgentCore Runtime for production usage
 
 For detailed configuration options, see the [Configuration Reference](configuration.md).

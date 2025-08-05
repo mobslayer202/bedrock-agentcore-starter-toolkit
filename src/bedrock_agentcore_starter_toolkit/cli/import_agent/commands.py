@@ -2,7 +2,6 @@
 
 import os
 import subprocess  # nosec # needed to run the agent file
-import traceback
 import uuid
 
 import boto3
@@ -54,12 +53,12 @@ def _run_agent(output_dir, output_path):
         )
 
         # Create a virutal environment for the translated agent, install dependencies, and run CLI
-        subprocess.check_call(["python3.10", "-m", "venv", ".venv"], cwd=output_dir)  # nosec
+        subprocess.check_call(["python", "-m", "venv", ".venv"], cwd=output_dir)  # nosec
         subprocess.check_call(
-            [".venv/bin/python3.10", "-m", "pip", "-q", "install", "--no-cache-dir", "-r", "requirements.txt"],
+            [".venv/bin/python", "-m", "pip", "-q", "install", "--no-cache-dir", "-r", "requirements.txt"],
             cwd=output_dir,
         )  # nosec
-        process = subprocess.Popen([".venv/bin/python3.10", output_path, "--cli"], cwd=output_dir)  # nosec
+        process = subprocess.Popen([".venv/bin/python", output_path, "--cli"], cwd=output_dir)  # nosec
 
         while True:
             try:
@@ -123,6 +122,9 @@ def import_agent(
 ):
     """Use a Bedrock Agent to generate a LangChain or Strands agent with AgentCore primitives."""
     try:
+        run_agent_choice = ""
+        output_path = ""
+
         os.makedirs(output_dir, exist_ok=True)
 
         # Display welcome banner
@@ -381,10 +383,13 @@ def import_agent(
 
                 console.print(f"\n[bold green]✓[/bold green] Agent translated to {target_platform}!")
                 console.print(f"[bold]  Output file:[/bold] {output_path}\n")
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Translation process cancelled by user.[/yellow]")
+                return
             except Exception as e:
                 console.print(
                     Panel(
-                        f"[bold red]Failed to translate agent![/bold red]\nError: {str(e), traceback.print_exc()}",
+                        f"[bold red]Failed to translate agent![/bold red]\nError: {str(e)}",
                         title="Translation Error",
                         border_style="red",
                     )
@@ -501,7 +506,7 @@ def import_agent(
             )
         )
         _agentcore_invoke_cli(output_dir)
-    else:
+    elif run_agent_choice == "Don't run now":
         console.print(
             Panel(
                 f"[bold green]Migration completed successfully![/bold green]\n"

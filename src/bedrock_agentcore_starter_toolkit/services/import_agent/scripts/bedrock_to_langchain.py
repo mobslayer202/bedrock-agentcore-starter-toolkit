@@ -27,14 +27,6 @@ class BedrockLangchainTranslation(BaseBedrockTranslator):
         self.agent_setup_code = self.generate_agent_setup()
         self.usage_code = self.generate_example_usage()
 
-        # If this agent is not a collaborator, create a BedrockAgentCore entrypoint
-        if not self.is_collaborator:
-            self.imports_code += """
-    from bedrock_agentcore import BedrockAgentCoreApp
-
-    app = BedrockAgentCoreApp()
-    """
-
         # Observability
         if self.observability_enabled:
             self.imports_code += """

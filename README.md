@@ -89,7 +89,10 @@ Import from Bedrock Agents to AgentCore using the `import-agent` utility.
 agentcore import-agent
 ```
 
-This will generate an equivalent Langchain or Strands agent in `./output`, leveraging AgentCore primitives, and provide an option to deploy the agent to AgentCore Runtime.
+This will generate an equivalent Langchain or Strands agent in `./output`, leveraging AgentCore primitives, and provide an option to deploy the agent to AgentCore Runtime. See additional documentation on this utility:
+- [Quickstart Guide](https://github.com/aws/bedrock-agentcore-starter-toolkit/blob/main/documentation/docs/user-guide/import-agent/quickstart.md)
+- [Utility Overview](https://github.com/aws/bedrock-agentcore-starter-toolkit/blob/main/documentation/docs/user-guide/import-agent/overview.md)
+
 
 ## 📚 About Amazon Bedrock AgentCore
 

@@ -419,21 +419,25 @@ class BaseBedrockTranslator:
     except (FutureTimeoutError, Exception):
         mcp_tools = []
 """
-        else:
-            for action_group in self.custom_ags:
-                additional_tool_instances = []
-                additional_code = ""
 
-                if action_group.get("apiSchema", False):
-                    additional_tool_instances, additional_code = self.generate_openapi_ag_code(action_group, platform)
+        remaining_action_groups = (
+            self.custom_ags
+            if not self.gateway_enabled
+            else [ag for ag in self.custom_ags if "lambda" not in ag.get("actionGroupExecutor", {})]
+        )
 
-                elif action_group.get("functionSchema", False):
-                    additional_tool_instances, additional_code = self.generate_structured_ag_code(
-                        action_group, platform
-                    )
+        for action_group in remaining_action_groups:
+            additional_tool_instances = []
+            additional_code = ""
 
-                tool_code += additional_code
-                tool_instances.extend(additional_tool_instances)
+            if action_group.get("apiSchema", False):
+                additional_tool_instances, additional_code = self.generate_openapi_ag_code(action_group, platform)
+
+            elif action_group.get("functionSchema", False):
+                additional_tool_instances, additional_code = self.generate_structured_ag_code(action_group, platform)
+
+            tool_code += additional_code
+            tool_instances.extend(additional_tool_instances)
 
         # User Input Action Group
         if self.user_input_enabled:

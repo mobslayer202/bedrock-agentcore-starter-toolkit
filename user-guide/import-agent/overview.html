@@ -776,6 +776,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#feature-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Support
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       Next Steps
@@ -1814,6 +1823,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#feature-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Support
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       Next Steps
@@ -1843,12 +1861,18 @@
 
 <h1 id="import-agent-overview">Import Agent Overview<a class="headerlink" href="#import-agent-overview" title="Permanent link">&para;</a></h1>
 <p>The <code>import-agent</code> utility enables you to migrate existing Amazon Bedrock Agents to Bedrock AgentCore, converting them into framework-specific implementations while leveraging AgentCore's enterprise-grade primitives.</p>
+<blockquote>
+<p><strong>Note</strong>
+Use the output agent definition as a starting point for your custom agent implementation.
+Review the generated code, evaluate agent behavior, and make necessary changes before deploying.
+Extend the agent with additional tools, memory, and other features as required.</p>
+</blockquote>
 <h2 id="what-is-import-agent">What is Import Agent?<a class="headerlink" href="#what-is-import-agent" title="Permanent link">&para;</a></h2>
 <p>The import-agent utility automates the process of:</p>
 <ol>
 <li><strong>Fetching</strong> your existing Bedrock Agent configuration</li>
 <li><strong>Converting</strong> it to LangChain/LangGraph or Strands framework code</li>
-<li><strong>Integrating</strong> AgentCore primitives (Memory, Code Interpreter, Observability)</li>
+<li><strong>Integrating</strong> AgentCore primitives (Memory, Code Interpreter, Observability, Gateway)</li>
 <li><strong>Deploying</strong> to AgentCore Runtime (optional)</li>
 </ol>
 <h2 id="key-benefits">Key Benefits<a class="headerlink" href="#key-benefits" title="Permanent link">&para;</a></h2>
@@ -1865,7 +1889,7 @@
 <h3 id="strands">Strands<a class="headerlink" href="#strands" title="Permanent link">&para;</a></h3>
 <p>Ideal for teams wanting AWS-native agent development with streamlined patterns.</p>
 <h2 id="generated-output">Generated Output<a class="headerlink" href="#generated-output" title="Permanent link">&para;</a></h2>
-<p>The utility generates a complete agent implementation including:</p>
+<p>The utility generates a SUPPORTED agent implementation including:</p>
 <ul>
 <li><strong>Agent Code</strong>: Framework-specific implementation of your Bedrock Agent</li>
 <li><strong>Dependencies</strong>: All required packages and versions</li>
@@ -1883,10 +1907,168 @@
     F --&gt; G{Deploy to Runtime?}
     G --&gt;|Yes| H[AgentCore Runtime]
     G --&gt;|No| I[Local Development]</code></pre>
+<h2 id="feature-support">Feature Support<a class="headerlink" href="#feature-support" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Bedrock Agent Feature</th>
+<th>Langchain</th>
+<th>Strands</th>
+<th>AgentCore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Guardrails</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Orchestration (via reAct)</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Knowledge Bases</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Code Interpreter</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: 1P Code Interpreter</td>
+</tr>
+<tr>
+<td><em>Lambda Function Definitions</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Gateway</td>
+</tr>
+<tr>
+<td><em>Lambda OpenAPI Definitions</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Gateway</td>
+</tr>
+<tr>
+<td><em>Return of Control</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Short Term (Conversational) Memory</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Long Term (Cross-Session) Memory</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Memory</td>
+</tr>
+<tr>
+<td><em>Session Summarization</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Memory</td>
+</tr>
+<tr>
+<td><em>Pre Processing Step</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Post Processing Step</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>KB Generation Routing/Optimizations</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Idle Timeouts</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>User Input (as a tool)</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Traces</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Observability</td>
+</tr>
+<tr>
+<td><em>Multi-Agent Collaboration - Supervisor Mode</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Multi-Agent Collaboration - Routing Mode</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Multi-Agent Collaboration - Conversation Relay</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Custom Bedrock Model Usage</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Chat Interface (via CLI)</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Custom Inference Configurations</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Agent Deployment</em></td>
+<td>N/A</td>
+<td>N/A</td>
+<td>SUPPORTED: AgentCore Runtime</td>
+</tr>
+<tr>
+<td><em>Lambda Parsing and Orchestration</em></td>
+<td>N/A</td>
+<td>N/A</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="quickstart.html">Quick Start Guide</a> - Get started in 5 minutes</li>
 <li><a href="configuration.html">Configuration Reference</a> - Detailed parameter guide</li>
+<li><a href="design.html">Design Choices</a> - Details on the design of the generated agent</li>
 </ul>
 
 

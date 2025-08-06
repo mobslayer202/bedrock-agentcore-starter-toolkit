@@ -2098,6 +2098,7 @@
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
 <ul>
 <li>AWS credentials configured with access to Bedrock Agents</li>
+<li>Use <code>ada</code> or <code>aws configure</code> to ensure that your credentials are available for the utility to assume.</li>
 <li>Bedrock AgentCore Starter Toolkit installed</li>
 <li>An existing Amazon Bedrock Agent</li>
 </ul>
@@ -2132,7 +2133,7 @@
 <div class="highlight"><pre><span></span><code>? Select AWS Region: us-east-1
 </code></pre></div>
 <h3 id="3-select-your-agent">3. Select Your Agent<a class="headerlink" href="#3-select-your-agent" title="Permanent link">&para;</a></h3>
-<p>The utility will list your available Bedrock Agents:</p>
+<p>The utility will list your available Bedrock Agents in the selected region:</p>
 <div class="highlight"><pre><span></span><code>? Select Bedrock Agent:
   &gt; my-customer-service-agent (ID: ABCD1234)
     my-research-agent (ID: EFGH5678)
@@ -2145,15 +2146,15 @@
 </code></pre></div>
 <h3 id="5-select-target-platform">5. Select Target Platform<a class="headerlink" href="#5-select-target-platform" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>? Choose target platform:
-  &gt; Strands - AWS-native agent framework
-    LangChain + LangGraph - Popular open-source framework
+  &gt; strands (1.0.x)
+    langchain (0.3.x) + langgraph (0.5.x)
 </code></pre></div>
 <h3 id="7-deployment-options">7. Deployment Options<a class="headerlink" href="#7-deployment-options" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>? Deploy to AgentCore Runtime? [y/N]: Y
 ? How would you like to run the agent?
-  &gt; Runtime - Deploy to AgentCore Runtime
-    Locally - Run on your local machine
-    None - Just generate code
+  &gt; Run on AgentCore Runtime
+    Install dependencies and run locally
+    Don&#39;t run now
 </code></pre></div>
 <h2 id="generated-output">Generated Output<a class="headerlink" href="#generated-output" title="Permanent link">&para;</a></h2>
 <p>After completion, you'll find:</p>
@@ -2171,7 +2172,8 @@ python<span class="w"> </span>strands_agent.py
 </code></pre></div>
 <h3 id="agentcore-runtime-testing">AgentCore Runtime Testing<a class="headerlink" href="#agentcore-runtime-testing" title="Permanent link">&para;</a></h3>
 <p>If deployed to runtime:</p>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s2">&quot;Hello, test message&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>./output
+agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s2">&quot;Hello, test message&quot;</span>
 </code></pre></div>
 <h2 id="common-options">Common Options<a class="headerlink" href="#common-options" title="Permanent link">&para;</a></h2>
 <h3 id="enable-debug-mode">Enable Debug Mode<a class="headerlink" href="#enable-debug-mode" title="Permanent link">&para;</a></h3>
@@ -2193,7 +2195,7 @@ python<span class="w"> </span>strands_agent.py
 <li><strong>Review Generated Code</strong>: Examine the converted agent implementation</li>
 <li><strong>Test Functionality</strong>: Verify your agent works as expected</li>
 <li><strong>Customize Integration</strong>: Add custom AgentCore primitive configurations</li>
-<li><strong>Production Deployment</strong>: Deploy to AgentCore Runtime for enterprise use</li>
+<li><strong>Production Deployment</strong>: Deploy to AgentCore Runtime for production usage</li>
 </ul>
 <p>For detailed configuration options, see the <a href="configuration.html">Configuration Reference</a>.</p>
 

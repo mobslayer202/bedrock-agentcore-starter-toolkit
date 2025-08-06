@@ -11,24 +11,22 @@
     
     
     
-      <link rel="prev" href="tools.html">
     
     
-    
-    <link rel="icon" href=".." sizes="any">
-    <link rel="icon" href="../assets/images/favicon.png" type="image/svg+xml">
+    <link rel="icon" href="../.." sizes="any">
+    <link rel="icon" href="../../assets/images/favicon.png" type="image/svg+xml">
     <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
 
     
       
-        <title>AgentCore CLI - Amazon Bedrock AgentCore</title>
+        <title>Import Agent Design - Amazon Bedrock AgentCore</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -42,16 +40,16 @@
         
         
         
-        <link rel="stylesheet" href="../assets/external/fonts.googleapis.com/css.49ea35f2.css">
+        <link rel="stylesheet" href="../../assets/external/fonts.googleapis.com/css.49ea35f2.css">
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +75,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cli" class="md-skip">
+        <a href="#import-agent-design" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +95,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Amazon Bedrock AgentCore" class="md-header__button md-logo" aria-label="Amazon Bedrock AgentCore" data-md-component="logo">
+    <a href="../.." title="Amazon Bedrock AgentCore" class="md-header__button md-logo" aria-label="Amazon Bedrock AgentCore" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -117,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              AgentCore CLI
+              Import Agent Design
             
           </span>
         </div>
@@ -224,7 +222,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../index.html" class="md-tabs__link">
+        <a href="../../index.html" class="md-tabs__link">
           
   
   
@@ -244,7 +242,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../examples/index.html" class="md-tabs__link">
+        <a href="../../examples/index.html" class="md-tabs__link">
           
   
   
@@ -279,8 +277,6 @@
   
   
   
-    
-  
   
     
     
@@ -288,13 +284,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="runtime.html" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../api-reference/runtime.html" class="md-tabs__link">
           
   
   
@@ -337,7 +331,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Amazon Bedrock AgentCore" class="md-nav__button md-logo" aria-label="Amazon Bedrock AgentCore" data-md-component="logo">
+    <a href="../.." title="Amazon Bedrock AgentCore" class="md-nav__button md-logo" aria-label="Amazon Bedrock AgentCore" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -410,7 +404,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../index.html" class="md-nav__link">
+      <a href="../../index.html" class="md-nav__link">
         
   
   
@@ -476,7 +470,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/runtime/quickstart.html" class="md-nav__link">
+      <a href="../runtime/quickstart.html" class="md-nav__link">
         
   
   
@@ -499,7 +493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/runtime/overview.html" class="md-nav__link">
+      <a href="../runtime/overview.html" class="md-nav__link">
         
   
   
@@ -522,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/runtime/permissions.html" class="md-nav__link">
+      <a href="../runtime/permissions.html" class="md-nav__link">
         
   
   
@@ -545,7 +539,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/runtime/async.html" class="md-nav__link">
+      <a href="../runtime/async.html" class="md-nav__link">
         
   
   
@@ -568,7 +562,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/runtime/notebook.html" class="md-nav__link">
+      <a href="../runtime/notebook.html" class="md-nav__link">
         
   
   
@@ -642,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/import-agent/overview.html" class="md-nav__link">
+      <a href="overview.html" class="md-nav__link">
         
   
   
@@ -665,7 +659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/import-agent/quickstart.html" class="md-nav__link">
+      <a href="quickstart.html" class="md-nav__link">
         
   
   
@@ -688,7 +682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/import-agent/configuration.html" class="md-nav__link">
+      <a href="configuration.html" class="md-nav__link">
         
   
   
@@ -762,7 +756,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/gateway/quickstart.html" class="md-nav__link">
+      <a href="../gateway/quickstart.html" class="md-nav__link">
         
   
   
@@ -785,7 +779,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/gateway/overview.html" class="md-nav__link">
+      <a href="../gateway/overview.html" class="md-nav__link">
         
   
   
@@ -859,7 +853,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/memory/quickstart.html" class="md-nav__link">
+      <a href="../memory/quickstart.html" class="md-nav__link">
         
   
   
@@ -933,7 +927,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/identity/quickstart.html" class="md-nav__link">
+      <a href="../identity/quickstart.html" class="md-nav__link">
         
   
   
@@ -1007,7 +1001,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/builtin-tools/quickstart-browser.html" class="md-nav__link">
+      <a href="../builtin-tools/quickstart-browser.html" class="md-nav__link">
         
   
   
@@ -1030,7 +1024,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/builtin-tools/quickstart-code-interpreter.html" class="md-nav__link">
+      <a href="../builtin-tools/quickstart-code-interpreter.html" class="md-nav__link">
         
   
   
@@ -1104,7 +1098,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/observability/quickstart.html" class="md-nav__link">
+      <a href="../observability/quickstart.html" class="md-nav__link">
         
   
   
@@ -1185,7 +1179,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/index.html" class="md-nav__link">
+      <a href="../../examples/index.html" class="md-nav__link">
         
   
   
@@ -1208,7 +1202,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/session-management.html" class="md-nav__link">
+      <a href="../../examples/session-management.html" class="md-nav__link">
         
   
   
@@ -1231,7 +1225,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/async-processing.html" class="md-nav__link">
+      <a href="../../examples/async-processing.html" class="md-nav__link">
         
   
   
@@ -1254,7 +1248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/gateway-integration.html" class="md-nav__link">
+      <a href="../../examples/gateway-integration.html" class="md-nav__link">
         
   
   
@@ -1303,31 +1297,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -1340,7 +1329,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             API Reference
@@ -1360,20 +1349,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
         
           
-          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
             
   
   
@@ -1400,7 +1386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runtime.html" class="md-nav__link">
+      <a href="../../api-reference/runtime.html" class="md-nav__link">
         
   
   
@@ -1423,7 +1409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="identity.html" class="md-nav__link">
+      <a href="../../api-reference/identity.html" class="md-nav__link">
         
   
   
@@ -1446,7 +1432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="memory.html" class="md-nav__link">
+      <a href="../../api-reference/memory.html" class="md-nav__link">
         
   
   
@@ -1469,7 +1455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tools.html" class="md-nav__link">
+      <a href="../../api-reference/tools.html" class="md-nav__link">
         
   
   
@@ -1497,31 +1483,26 @@
                 
   
   
-    
   
   
-  
     
     
     
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
         
           
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
             
   
   
@@ -1534,7 +1515,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_2">
             <span class="md-nav__icon md-icon"></span>
             Bedrock AgentCore Starter Toolkit
@@ -1545,32 +1526,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    AgentCore CLI
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="cli.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../api-reference/cli.html" class="md-nav__link">
         
   
   
@@ -1581,181 +1540,6 @@
   
 
       </a>
-      
-        
-
-  
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#runtime-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Runtime Commands
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Runtime Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#configure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configure
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#launch" class="md-nav__link">
-    <span class="md-ellipsis">
-      Launch
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      Invoke
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Status
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#gateway-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Gateway Commands
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Gateway Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create-mcp-gateway" class="md-nav__link">
-    <span class="md-ellipsis">
-      Create MCP Gateway
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#create-mcp-gateway-target" class="md-nav__link">
-    <span class="md-ellipsis">
-      Create MCP Gateway Target
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example Usage
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#configure-an-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configure an Agent
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#deploy-and-run-agents" class="md-nav__link">
-    <span class="md-ellipsis">
-      Deploy and Run Agents
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#invoke-agents" class="md-nav__link">
-    <span class="md-ellipsis">
-      Invoke Agents
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#check-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Check Status
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gateway-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Gateway Operations
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#importing-from-bedrock-agents" class="md-nav__link">
-    <span class="md-ellipsis">
-      Importing from Bedrock Agents
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1805,155 +1589,92 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#runtime-commands" class="md-nav__link">
+  <a href="#feature-support" class="md-nav__link">
     <span class="md-ellipsis">
-      Runtime Commands
+      Feature Support
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Runtime Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#configure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configure
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#launch" class="md-nav__link">
-    <span class="md-ellipsis">
-      Launch
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      Invoke
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Status
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#gateway-commands" class="md-nav__link">
+  <a href="#action-groups-agentcore-gateway-target" class="md-nav__link">
     <span class="md-ellipsis">
-      Gateway Commands
+      Action Groups -&gt; AgentCore Gateway Target
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Gateway Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create-mcp-gateway" class="md-nav__link">
-    <span class="md-ellipsis">
-      Create MCP Gateway
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#create-mcp-gateway-target" class="md-nav__link">
-    <span class="md-ellipsis">
-      Create MCP Gateway Target
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-usage" class="md-nav__link">
+  <a href="#session-memory-agentcore-memory" class="md-nav__link">
     <span class="md-ellipsis">
-      Example Usage
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Example Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#configure-an-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configure an Agent
+      Session Memory -&gt; AgentCore Memory
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#deploy-and-run-agents" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#code-interpreter-agentcore-code-interpreter" class="md-nav__link">
     <span class="md-ellipsis">
-      Deploy and Run Agents
+      Code Interpreter -&gt; AgentCore Code Interpreter
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#invoke-agents" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#traces-agentcore-observability" class="md-nav__link">
     <span class="md-ellipsis">
-      Invoke Agents
+      Traces -&gt; AgentCore Observability
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#check-status" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#guardrails" class="md-nav__link">
     <span class="md-ellipsis">
-      Check Status
+      Guardrails
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#gateway-operations" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#knowledge-bases" class="md-nav__link">
     <span class="md-ellipsis">
-      Gateway Operations
+      Knowledge Bases
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#importing-from-bedrock-agents" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#multi-agent-collaboration" class="md-nav__link">
     <span class="md-ellipsis">
-      Importing from Bedrock Agents
+      Multi-Agent Collaboration
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#code-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Code Structure
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompt-generation-testing-and-agent-similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prompt Generation, Testing, and Agent Similarity
+    </span>
+  </a>
   
 </li>
       
@@ -1976,243 +1697,217 @@
   
 
 
-<h1 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h1>
-<p>Command-line interface for BedrockAgentCore Starter Toolkit.</p>
-<p>The <code>agentcore</code> CLI provides commands for configuring, launching, managing agents, and working with gateways.</p>
-<h2 id="runtime-commands">Runtime Commands<a class="headerlink" href="#runtime-commands" title="Permanent link">&para;</a></h2>
-<h3 id="configure">Configure<a class="headerlink" href="#configure" title="Permanent link">&para;</a></h3>
-<p>Configure agents and runtime environments.</p>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>configure<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+<h1 id="import-agent-design">Import Agent Design<a class="headerlink" href="#import-agent-design" title="Permanent link">&para;</a></h1>
+<p>Design overview for the import-agent utility, explaining the choices behind the generated agent.</p>
+<h2 id="feature-support">Feature Support<a class="headerlink" href="#feature-support" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Bedrock Agent Feature</th>
+<th>Langchain</th>
+<th>Strands</th>
+<th>AgentCore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Guardrails</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Orchestration (via reAct)</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Knowledge Bases</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Code Interpreter</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: 1P Code Interpreter</td>
+</tr>
+<tr>
+<td><em>Lambda Function Definitions</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Gateway</td>
+</tr>
+<tr>
+<td><em>Lambda OpenAPI Definitions</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Gateway</td>
+</tr>
+<tr>
+<td><em>Return of Control</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Short Term (Conversational) Memory</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Long Term (Cross-Session) Memory</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Memory</td>
+</tr>
+<tr>
+<td><em>Session Summarization</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Memory</td>
+</tr>
+<tr>
+<td><em>Pre Processing Step</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Post Processing Step</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>KB Generation Routing/Optimizations</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Idle Timeouts</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>User Input (as a tool)</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Traces</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td>SUPPORTED: AgentCore Observability</td>
+</tr>
+<tr>
+<td><em>Multi-Agent Collaboration - Supervisor Mode</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Multi-Agent Collaboration - Routing Mode</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Multi-Agent Collaboration - Conversation Relay</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Custom Bedrock Model Usage</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Chat Interface (via CLI)</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Custom Inference Configurations</em></td>
+<td>SUPPORTED</td>
+<td>SUPPORTED</td>
+<td></td>
+</tr>
+<tr>
+<td><em>Agent Deployment</em></td>
+<td>N/A</td>
+<td>N/A</td>
+<td>SUPPORTED: AgentCore Runtime</td>
+</tr>
+<tr>
+<td><em>Lambda Parsing and Orchestration</em></td>
+<td>N/A</td>
+<td>N/A</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="action-groups-agentcore-gateway-target">Action Groups -&gt; AgentCore Gateway Target<a class="headerlink" href="#action-groups-agentcore-gateway-target" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can define Action Groups for their agent. An Action Group is a collection of tools either executed via Lambda or with a local callback (Return of Control) and defined with an OpenAPI spec or structured function schema. BR Agents, at runtime, will call your Lambda function with an event of the following format, depending on which schema option you chose: <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/agents-lambda.html">https://docs.aws.amazon.com/bedrock/latest/userguide/agents-lambda.html</a>.</p>
+<p>In AgentCore Gateway, we create one gateway for the output agent. Each action group is equivalent to one target in this gateway, and each function or path/method is one tool in this target. In order to maintain backwards compatibility with the action group lambda functions, we create a proxy Lambda function that serves as the Lambda for all the gateway's targets. This proxy handles an incoming tool call in Gateway's format, finds the correct end action group Lambda function to call for that tool, and then reformats data to call that Lambda function and return its output.</p>
+<p>If AgentCore Gateway is opted out, then the utility generates local tools for each function and path/method, exposes their relevant argument schema to the agent via Pydantic model generation, then has each tool format its input correctly to call the relevant action group lambda. This also applies for ROC action groups, where such a tool invocation will ask the user for local input to continue execution.</p>
+<h2 id="session-memory-agentcore-memory">Session Memory -&gt; AgentCore Memory<a class="headerlink" href="#session-memory-agentcore-memory" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can enable Long Term Memory for their agent. This is based on session summarization, where BR Agents uses an LLM to summarize the conversation’s discussion topics based on a session’s messages. A max number of sessions and max days threshold can be set. In the orchestration prompt in BR agents, a synopsis of the long-term memory, consisting of multiple of these session summaries, is injected.</p>
+<p>In AgentCore Memory, we create a memory store adopting the summarization strategy:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;summaryMemoryStrategy&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;SessionSummarizer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;namespaces&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;/summaries/</span><span class="si">{actorId}</span><span class="s2">/</span><span class="si">{sessionId}</span><span class="s2">&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>Options:</p>
+<p>On each entrypoint invocation, we save formatted messages to this memory store by creating an event with the correct user id and session id. During agent initialization within the agent update loop (<code>get_agent</code>), we retrieve the top session summary memories from the memory store, format the memories correctly, and inject them as a memory synopsis into the agent's system prompt.</p>
+<p>If AgentCore Memory is opted out, then we replicate the behavior with a local long term memory manager, which uses a memory summarization LLM and the memory summarization BR agents prompt to create and manage session summaries. The generated summaries are saved and maintained in a local session summaries JSON file.</p>
+<h2 id="code-interpreter-agentcore-code-interpreter">Code Interpreter -&gt; AgentCore Code Interpreter<a class="headerlink" href="#code-interpreter-agentcore-code-interpreter" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can enable Code Interpreter. This gives a Bedrock Agent access to a sandbox for it to write, troubleshoot, and return the output of code.</p>
+<p>We use AgentCore Code Interpreter for an equivalent experience. The utility defines a <code>code_tool</code> which creates a code sandbox session and defines a sub-agent with access to code interpreter operations (as tools). This sub-agent is fed the code tool's input query and runs in a loop using the sandbox operations to accomplish the coding task and return the output.</p>
+<p>When AgentCore Code Interpreter is opted-out, we use open-interpreter, an open source and local code interpreter that can write, execute, and troubleshoot code.</p>
+<h2 id="traces-agentcore-observability">Traces -&gt; AgentCore Observability<a class="headerlink" href="#traces-agentcore-observability" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can view traces that describe pre/post processing steps, routing classifier steps, guardrail invocation, agent orchestration, and other information. These traces are in a format specific to Bedrock Agents, and can be viewed either in the console or as output of an invoke_agent call to a BR agent.</p>
+<p>The equivalent for this with AgentCore is to use AgentCore Observability (if not opted-out). For both Langchain and Strands, the agent will output OTEL logs on a session, trace, and span level. These logs are captured by AgentCore Observability when the agent is deployed to AgentCore Runtime, and the logs will be visible in CloudWatch under the GenAI Observability section.</p>
+<h2 id="guardrails">Guardrails<a class="headerlink" href="#guardrails" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can add Bedrock Guardrails to their agent. This applies the guardrail on the model level and Bedrock Agents will have defined behavior for when a guardrail is invoked to redact or block an input. Equivalently, the utility applies the same guardrail on Bedrock models, as there is support for this in both Langchain and Strands.</p>
+<h2 id="knowledge-bases">Knowledge Bases<a class="headerlink" href="#knowledge-bases" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can add existing Knowledge Bases (defined via Bedrock Knowledge Bases) to their agent via the Console or SDK. The AgentCore + Langchain/Strands equivalent of this feature is to use each of those KBs to define a KB retrieval tool for an agent to use. This tool uses the AWS SDK to retrieve from connected knowledge bases using a query decided by the agent and then returns the document results for the agent to use.</p>
+<h2 id="multi-agent-collaboration">Multi-Agent Collaboration<a class="headerlink" href="#multi-agent-collaboration" title="Permanent link">&para;</a></h2>
+<p>In Bedrock Agents, users can promote an agent and add collaborators to it. This hierarchy can be up to 5 levels deep. A collaborator can receive shared conversation history from the parent, and can be invoked with routing mode (parent uses a routing classifier prompt to find a relevant collaborator for a user query) or supervisor mode (an agents-as-tools approach).</p>
+<p>The utility's approach to this is to recursively translate a parent agent and its children, and then orchestrate them together via an Agents-as-Tools approach by default. If conversation sharing is enabled, then the parent will inject its state into the child's via these collaboration tools. If routing mode is enabled for the parent, then the parent agent uses a routing classifier prompt, before orchestration, to invoke a relevant child agent. In AgentCore Runtime, the code for a parent agent and its children are packaged together, in the same container image, to enable this setup.</p>
+<h2 id="code-structure">Code Structure<a class="headerlink" href="#code-structure" title="Permanent link">&para;</a></h2>
+<p>In general, the generated agents follow the structure below:</p>
+<ol>
+<li>Imports</li>
+<li>Model configurations</li>
+<li>Prompt definitions</li>
+<li>Action Group / MCP Tools</li>
+<li>Knowledge Base Tools</li>
+<li>Agent Initialization and Update Loop</li>
+<li>Agent Invocation Logic</li>
+<li>AgentCore Runtime Entrypoint</li>
+<li>CLI for Local Agent Testing</li>
+</ol>
+<h2 id="prompt-generation-testing-and-agent-similarity">Prompt Generation, Testing, and Agent Similarity<a class="headerlink" href="#prompt-generation-testing-and-agent-similarity" title="Permanent link">&para;</a></h2>
+<p>Bedrock Agents prompts are constructed at runtime, by substituting in template fixtures (ie. variables in the prompt). For example, an orchestration prompt may have the fixture called knowledge_base_guidelines. This variable is filled in depending on the model provider and model version in use.</p>
+<p>To approximate the same behavior and deliver translated agents that are functionally equivalent, the utility uses ONE collection of template fixtures (<code>template_fixtures_merged.json</code>) and substitutes them in to build the correct prompts.</p>
+<p>This, along with all the design choices above, yield translated agents that are very similar semantically and functionally to the original Bedrock Agents. Below are functional testing results on a sample of 400 randomly generated and translated BR agents on a shared prompt suite:</p>
 <ul>
-<li>
-<p><code>--entrypoint, -e TEXT</code>: Python file of agent</p>
-</li>
-<li>
-<p><code>--name, -n TEXT</code>: Agent name (defaults to Python file name)</p>
-</li>
-<li>
-<p><code>--execution-role, -er TEXT</code>: IAM execution role ARN</p>
-</li>
-<li>
-<p><code>--ecr, -ecr TEXT</code>: ECR repository name (use "auto" for automatic creation)</p>
-</li>
-<li>
-<p><code>--container-runtime, -ctr TEXT</code>: Container runtime</p>
-</li>
-<li>
-<p><code>--requirements-file, -rf TEXT</code>: Path to requirements file of agent</p>
-</li>
-<li>
-<p><code>--disable-otel, -do</code>: Disable OpenTelemetry</p>
-</li>
-<li>
-<p><code>--authorizer-config, -ac TEXT</code>: OAuth authorizer configuration as JSON string</p>
-</li>
-<li>
-<p><code>--verbose, -v</code>: Enable verbose output</p>
-</li>
-<li>
-<p><code>--region, -r TEXT</code>: AWS region</p>
-</li>
-<li>
-<p><code>--protocol, -p TEXT</code>: Agent server protocol (HTTP or MCP)</p>
-</li>
+<li>~95% match in average semantic similarity of responses via text embedding</li>
+<li>97.50% match in Langchain agent usage of KBs, collaborators, guardrails, action groups</li>
+<li>100% match in Strands agent usage of KBs, collaborators, guardrails, action groups</li>
 </ul>
-<p>Subcommands:</p>
-<ul>
-<li>
-<p><code>list</code>: List configured agents</p>
-</li>
-<li>
-<p><code>set-default</code>: Set default agent</p>
-</li>
-</ul>
-<h3 id="launch">Launch<a class="headerlink" href="#launch" title="Permanent link">&para;</a></h3>
-<p>Deploy agents to AWS or run locally.</p>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>launch<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</code></pre></div>
-<p>Options:</p>
-<ul>
-<li>
-<p><code>--agent, -a TEXT</code>: Agent name</p>
-</li>
-<li>
-<p><code>--local, -l</code>: Run locally</p>
-</li>
-<li>
-<p><code>--push-ecr, -p</code>: Build and push to ECR only (no deployment)</p>
-</li>
-<li>
-<p><code>--env, -env TEXT</code>: Environment variables for agent (format: KEY=VALUE)</p>
-</li>
-</ul>
-<h3 id="invoke">Invoke<a class="headerlink" href="#invoke" title="Permanent link">&para;</a></h3>
-<p>Invoke deployed agents.</p>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="o">[</span>PAYLOAD<span class="o">]</span><span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</code></pre></div>
-<p>Arguments:</p>
-<ul>
-<li><code>PAYLOAD</code>: JSON payload to send</li>
-</ul>
-<p>Options:</p>
-<ul>
-<li>
-<p><code>--agent, -a TEXT</code>: Agent name</p>
-</li>
-<li>
-<p><code>--session-id, -s TEXT</code>: Session ID</p>
-</li>
-<li>
-<p><code>--bearer-token, -bt TEXT</code>: Bearer token for OAuth authentication</p>
-</li>
-<li>
-<p><code>--local, -l</code>: Send request to a running local container</p>
-</li>
-<li>
-<p><code>--user-id, -u TEXT</code>: User ID for authorization flows</p>
-</li>
-</ul>
-<h3 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h3>
-<p>Get Bedrock AgentCore status including config and runtime details.</p>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>status<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</code></pre></div>
-<p>Options:</p>
-<ul>
-<li>
-<p><code>--agent, -a TEXT</code>: Agent name</p>
-</li>
-<li>
-<p><code>--verbose, -v</code>: Verbose JSON output of config, agent, and endpoint status</p>
-</li>
-</ul>
-<h2 id="gateway-commands">Gateway Commands<a class="headerlink" href="#gateway-commands" title="Permanent link">&para;</a></h2>
-<p>Access gateway subcommands:</p>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>gateway<span class="w"> </span><span class="o">[</span>COMMAND<span class="o">]</span>
-</code></pre></div>
-<h3 id="create-mcp-gateway">Create MCP Gateway<a class="headerlink" href="#create-mcp-gateway" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>gateway<span class="w"> </span>create-mcp-gateway<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</code></pre></div>
-<p>Options:</p>
-<ul>
-<li>
-<p><code>--region TEXT</code>: Region to use (defaults to us-west-2)</p>
-</li>
-<li>
-<p><code>--name TEXT</code>: Name of the gateway (defaults to TestGateway)</p>
-</li>
-<li>
-<p><code>--role-arn TEXT</code>: Role ARN to use (creates one if none provided)</p>
-</li>
-<li>
-<p><code>--authorizer-config TEXT</code>: Serialized authorizer config</p>
-</li>
-<li>
-<p><code>--enable-semantic-search, -sem</code>: Whether to enable search tool (defaults to True)</p>
-</li>
-</ul>
-<h3 id="create-mcp-gateway-target">Create MCP Gateway Target<a class="headerlink" href="#create-mcp-gateway-target" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>agentcore<span class="w"> </span>gateway<span class="w"> </span>create-mcp-gateway-target<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</code></pre></div>
-<p>Options:</p>
-<ul>
-<li>
-<p><code>--gateway-arn TEXT</code>: ARN of the created gateway</p>
-</li>
-<li>
-<p><code>--gateway-url TEXT</code>: URL of the created gateway</p>
-</li>
-<li>
-<p><code>--role-arn TEXT</code>: Role ARN of the created gateway</p>
-</li>
-<li>
-<p><code>--region TEXT</code>: Region to use (defaults to us-west-2)</p>
-</li>
-<li>
-<p><code>--name TEXT</code>: Name of the target (defaults to TestGatewayTarget)</p>
-</li>
-<li>
-<p><code>--target-type TEXT</code>: Type of target (lambda, openApiSchema, smithyModel)</p>
-</li>
-<li>
-<p><code>--target-payload TEXT</code>: Specification of the target (required for openApiSchema)</p>
-</li>
-<li>
-<p><code>--credentials TEXT</code>: Credentials for calling this target (API key or OAuth2)</p>
-</li>
-</ul>
-<h2 id="example-usage">Example Usage<a class="headerlink" href="#example-usage" title="Permanent link">&para;</a></h2>
-<h3 id="configure-an-agent">Configure an Agent<a class="headerlink" href="#configure-an-agent" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Basic configuration</span>
-agentcore<span class="w"> </span>configure<span class="w"> </span>--entrypoint<span class="w"> </span>agent_example.pt
-
-<span class="c1"># Configure with execution role</span>
-agentcore<span class="w"> </span>configure<span class="w"> </span>--entrypoint<span class="w"> </span>agent_example.py<span class="w"> </span>--execution-role<span class="w"> </span>arn:aws:iam::123456789012:role/MyRole
-
-<span class="c1"># List configured agents</span>
-agentcore<span class="w"> </span>configure<span class="w"> </span>list
-
-<span class="c1"># Set default agent</span>
-agentcore<span class="w"> </span>configure<span class="w"> </span>set-default<span class="w"> </span>my_agent
-</code></pre></div>
-<h3 id="deploy-and-run-agents">Deploy and Run Agents<a class="headerlink" href="#deploy-and-run-agents" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Deploy to AWS</span>
-agentcore<span class="w"> </span>launch
-
-<span class="c1"># Run locally</span>
-agentcore<span class="w"> </span>launch<span class="w"> </span>--local
-
-<span class="c1"># Launch with environment variables</span>
-agentcore<span class="w"> </span>launch<span class="w"> </span>--env<span class="w"> </span><span class="nv">API_KEY</span><span class="o">=</span>abc123<span class="w"> </span>--env<span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span><span class="nb">true</span>
-</code></pre></div>
-<h3 id="invoke-agents">Invoke Agents<a class="headerlink" href="#invoke-agents" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Basic invocation</span>
-agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Hello world!&quot;}&#39;</span>
-
-<span class="c1"># Invoke with session ID</span>
-agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Continue our conversation&quot;}&#39;</span><span class="w"> </span>--session-id<span class="w"> </span>abc123
-
-<span class="c1"># Invoke with OAuth authentication</span>
-agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Secure request&quot;}&#39;</span><span class="w"> </span>--bearer-token<span class="w"> </span>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-<span class="c1"># Invoke local agent</span>
-agentcore<span class="w"> </span>invoke<span class="w"> </span><span class="s1">&#39;{&quot;prompt&quot;: &quot;Test locally&quot;}&#39;</span><span class="w"> </span>--local
-</code></pre></div>
-<h3 id="check-status">Check Status<a class="headerlink" href="#check-status" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Get status of default agent</span>
-agentcore<span class="w"> </span>status
-
-<span class="c1"># Get status of specific agent</span>
-agentcore<span class="w"> </span>status<span class="w"> </span>--agent<span class="w"> </span>my-agent
-</code></pre></div>
-<h3 id="gateway-operations">Gateway Operations<a class="headerlink" href="#gateway-operations" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Create MCP Gateway</span>
-agentcore<span class="w"> </span>gateway<span class="w"> </span>create-mcp-gateway<span class="w"> </span>--name<span class="w"> </span>MyGateway
-
-<span class="c1"># Create MCP Gateway Target</span>
-agentcore<span class="w"> </span>gateway<span class="w"> </span>create-mcp-gateway-target<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--gateway-arn<span class="w"> </span>arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/abcdef<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--gateway-url<span class="w"> </span>https://gateway-url.us-west-2.amazonaws.com<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--role-arn<span class="w"> </span>arn:aws:iam::123456789012:role/GatewayRole
-</code></pre></div>
-<h3 id="importing-from-bedrock-agents">Importing from Bedrock Agents<a class="headerlink" href="#importing-from-bedrock-agents" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Interactive Mode</span>
-agentcore<span class="w"> </span>import-agent
-
-<span class="c1"># For Automation</span>
-agentcore<span class="w"> </span>import-agent<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--region<span class="w"> </span>us-east-1<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--agent-id<span class="w"> </span>ABCD1234<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--agent-alias-id<span class="w"> </span>TSTALIASID<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--target-platform<span class="w"> </span>strands<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output-dir<span class="w"> </span>./my-agent<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--deploy-runtime<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--run-option<span class="w"> </span>runtime
-
-<span class="c1"># AgentCore Primitive Opt-out</span>
-agentcore<span class="w"> </span>import-agent<span class="w"> </span>--disable-gateway<span class="w"> </span>--disable-memory<span class="w"> </span>--disable-code-interpreter<span class="w"> </span>--disable-observability
-</code></pre></div>
 
 
 
@@ -2281,14 +1976,14 @@ agentcore<span class="w"> </span>import-agent<span class="w"> </span>--disable-g
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
+      <script src="../../assets/javascripts/bundle.50899def.min.js"></script>
       
-        <script src="../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
+        <script src="../../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
       
-        <script src="../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
+        <script src="../../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
       
     
   </body>

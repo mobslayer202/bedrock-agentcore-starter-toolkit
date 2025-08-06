@@ -103,7 +103,7 @@ In general, the generated agents follow the structure below:
 
 ## Prompt Generation, Testing, and Agent Similarity
 
-Bedrock Agents prompts are constructed at runtime, by substituting in template fixtures (ie. variables in the prompt). For example, an orchestration prompt may have the fixture $knowledge_base_guidelines$. This variable is filled in depending on the model provider and model version in use.
+Bedrock Agents prompts are constructed at runtime, by substituting in template fixtures (ie. variables in the prompt). For example, an orchestration prompt may have the fixture called knowledge_base_guidelines. This variable is filled in depending on the model provider and model version in use.
 
 To approximate the same behavior and deliver translated agents that are functionally equivalent, the utility uses ONE collection of template fixtures (`template_fixtures_merged.json`) and substitutes them in to build the correct prompts.
 

@@ -105,7 +105,7 @@ jobs:
           eval $CMD
 
           # Update lockfile after all changes
-          uv lock --no-progress || echo "Note: uv.lock update failed"
+          uv lock --no-progress
 
           # Get new version
           NEW_VERSION=$(grep -m1 -oP '^version = "\K[^"]+' pyproject.toml)
@@ -129,53 +129,70 @@ jobs:
 
           # Create fresh branch
           git checkout -b $BRANCH_NAME
+
+          # Add all changes
           git add -A
+
+          # Commit with co-author
           git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}
 
           Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+          # Push the branch
           git push origin $BRANCH_NAME
+
+          # Verify the version was committed
+          COMMITTED_VERSION=$(git show HEAD:pyproject.toml | grep -m1 -oP '^version = "\K[^"]+')
+          if [ "$COMMITTED_VERSION" != "${{ steps.bump.outputs.version }}" ]; then
+            echo "❌ ERROR: Version not committed correctly!"
+            exit 1
+          fi
 
       - name: Create Pull Request
         id: create-pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: release/v${{ steps.bump.outputs.version }}
-          base: main
-          title: "Release v${{ steps.bump.outputs.version }}"
-          body: |
-            ## 🚀 Release v${{ steps.bump.outputs.version }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH_NAME="release/v${{ steps.bump.outputs.version }}"
 
-            This PR was automatically created by the release workflow.
+          # Create PR using GitHub CLI
+          PR_URL=$(gh pr create \
+            --base main \
+            --head $BRANCH_NAME \
+            --title "Release v${{ steps.bump.outputs.version }}" \
+            --body "## 🚀 Release v${{ steps.bump.outputs.version }}
 
-            ### Changes
-            - Version bumped from ${{ steps.current.outputs.version }} to ${{ steps.bump.outputs.version }}
-            - Updated CHANGELOG.md
-            - Updated uv.lock
-            ${{ github.event.inputs.sdk_version && format('- Updated SDK dependency to >={0}', github.event.inputs.sdk_version) || '' }}
+          This PR was automatically created by the release workflow.
 
-            ### Pre-release Checklist
-            - [ ] Review CHANGELOG.md entries
-            - [ ] Verify version numbers are correct
-            - [ ] All tests passing
-            - [ ] Documentation updated (if needed)
-            ${{ github.event.inputs.sdk_version && '- [ ] Verify SDK version is available on PyPI' || '' }}
+          ### Changes
+          - Version bumped from ${{ steps.current.outputs.version }} to ${{ steps.bump.outputs.version }}
+          - Updated CHANGELOG.md
+          - Updated uv.lock
+          ${{ github.event.inputs.sdk_version && format('- Updated SDK dependency to >={0}', github.event.inputs.sdk_version) || '' }}
 
-            ### Release Process
-            1. Approve and merge this PR
-            2. The release workflow will automatically:
-               - Build and test the package
-               - Publish to Test PyPI
-               - Wait for approval (when enabled)
-               - Publish to PyPI (when enabled)
-               - Create a GitHub release
-               - Tag the release
+          ### Pre-release Checklist
+          - [ ] Review CHANGELOG.md entries
+          - [ ] Verify version numbers are correct
+          - [ ] All tests passing
+          - [ ] Documentation updated (if needed)
+          ${{ github.event.inputs.sdk_version && '- [ ] Verify SDK version is available on PyPI' || '' }}
 
-            ---
-            *Triggered by @${{ github.actor }}*
-          labels: |
-            release
-            automated
+          ### Release Process
+          1. Approve and merge this PR
+          2. The release workflow will automatically:
+             - Build and test the package
+             - Publish to Test PyPI
+             - Wait for approval
+             - Publish to PyPI
+             - Create a GitHub release
+             - Tag the release
+
+          ---
+          *Triggered by @${{ github.actor }}*")
+
+          # Extract PR number from URL
+          PR_NUMBER=$(echo "$PR_URL" | grep -oP '\d+$')
+          echo "pull-request-number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
   test:
     name: Test
@@ -256,7 +273,6 @@ jobs:
 
       - name: Build package
         run: |
-          # Build doesn't need venv
           uv build
 
           ls -la dist/
@@ -271,8 +287,6 @@ jobs:
           # Show package contents
           echo "=== Package contents ==="
           python -m zipfile -l dist/*.whl | head -20
-          echo "=== Checking for version ==="
-          ls -la dist/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -322,86 +336,86 @@ jobs:
           # Test CLI
           agentcore --help
 
-  # ============================================================
-  # PRODUCTION PYPI PUBLISHING - CURRENTLY DISABLED
-  # ============================================================
-  #
-  # Uncomment the following jobs when ready for production:
-  # 1. release-approval - Manual approval gate
-  # 2. publish-pypi - Production PyPI upload
-  #
-  # ============================================================
+  release-approval:
+    name: Release Approval
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-approval
 
-  # release-approval:
-  #   name: Release Approval
-  #   needs: publish-testpypi
-  #   runs-on: ubuntu-latest
-  #   environment:
-  #     name: pypi-approval
-  #
-  #   steps:
-  #     - name: Approval checkpoint
-  #       run: |
-  #         echo "✓ TestPyPI deployment successful"
-  #         echo "✓ Package available at: https://test.pypi.org/project/bedrock-agentcore-starter-toolkit/"
-  #         echo ""
-  #         echo "This job requires manual approval to proceed with production PyPI release"
+    steps:
+      - name: Approval checkpoint
+        run: |
+          echo "✓ TestPyPI deployment successful"
+          echo "✓ Package available at: https://test.pypi.org/project/bedrock-agentcore-starter-toolkit/"
+          echo ""
+          echo "⚠️  MANUAL APPROVAL REQUIRED"
+          echo ""
+          echo "Before approving production release:"
+          echo "1. Test the package from TestPyPI:"
+          echo "   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ bedrock-agentcore-starter-toolkit"
+          echo ""
+          echo "2. Verify the CLI works: agentcore --help"
+          echo "3. Check version number is correct"
+          echo "4. Test basic functionality"
+          echo ""
+          echo "Only approve if everything looks good!"
 
-  # publish-pypi:
-  #   name: Publish to PyPI
-  #   needs: release-approval
-  #   runs-on: ubuntu-latest
-  #   environment:
-  #     name: pypi
-  #     url: https://pypi.org/project/bedrock-agentcore-starter-toolkit/
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #
-  #     - name: Download artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: dist
-  #         path: dist/
-  #
-  #     - name: Get version
-  #       id: version
-  #       run: |
-  #         VERSION=$(ls dist/*.whl | sed -n 's/.*-\([0-9.]*\)-.*/\1/p')
-  #         echo "version=$VERSION" >> $GITHUB_OUTPUT
-  #
-  #     - name: Publish to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         password: ${{ secrets.PYPI_API_TOKEN }}
-  #
-  #     - name: Create and push tag
-  #       run: |
-  #         git config --global user.name "github-actions[bot]"
-  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-  #         git tag -a v${{ steps.version.outputs.version }} \
-  #           -m "Release v${{ steps.version.outputs.version }}"
-  #         git push origin v${{ steps.version.outputs.version }}
-  #
-  #     - name: Create GitHub Release
-  #       uses: softprops/action-gh-release@v2
-  #       with:
-  #         tag_name: v${{ steps.version.outputs.version }}
-  #         name: Bedrock AgentCore Starter Toolkit v${{ steps.version.outputs.version }}
-  #         files: dist/*
-  #         generate_release_notes: true
-  #         body: |
-  #           ## Installation
-  #           ```bash
-  #           pip install bedrock-agentcore-starter-toolkit==${{ steps.version.outputs.version }}
-  #           ```
-  #
-  #           ## What's Changed
-  #           See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/CHANGELOG.md) for details.
-  #
-  #           ${{ github.event.inputs.sdk_version && format('### SDK Dependency\nThis release requires `bedrock-agentcore>={0}`', github.event.inputs.sdk_version) || '' }}
+  publish-pypi:
+    name: Publish to PyPI
+    needs: release-approval
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/bedrock-agentcore-starter-toolkit/
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(ls dist/*.whl | sed -n 's/.*-\([0-9.]*\)-.*/\1/p')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Create and push tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a v${{ steps.version.outputs.version }} \
+            -m "Release v${{ steps.version.outputs.version }}"
+          git push origin v${{ steps.version.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Bedrock AgentCore Starter Toolkit v${{ steps.version.outputs.version }}
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            ## Installation
+            ```bash
+            pip install bedrock-agentcore-starter-toolkit==${{ steps.version.outputs.version }}
+            ```
+
+            ## What's Changed
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/CHANGELOG.md) for details.
+
+            ${{ github.event.inputs.sdk_version && format('### SDK Dependency\nThis release requires `bedrock-agentcore>={0}`', github.event.inputs.sdk_version) || '' }}
 
   summary:
     name: Release Summary

@@ -1866,12 +1866,17 @@
 Use the output agent definition as a starting point for your custom agent implementation.
 Review the generated code, evaluate agent behavior, and make necessary changes before deploying.
 Extend the agent with additional tools, memory, and other features as required.</p>
+<p><strong>Note</strong>
+Use the output agent definition as a starting point for your custom agent implementation.
+Review the generated code, evaluate agent behavior, and make necessary changes before deploying.
+Extend the agent with additional tools, memory, and other features as required.</p>
 </blockquote>
 <h2 id="what-is-import-agent">What is Import Agent?<a class="headerlink" href="#what-is-import-agent" title="Permanent link">&para;</a></h2>
 <p>The import-agent utility automates the process of:</p>
 <ol>
 <li><strong>Fetching</strong> your existing Bedrock Agent configuration</li>
 <li><strong>Converting</strong> it to LangChain/LangGraph or Strands framework code</li>
+<li><strong>Integrating</strong> AgentCore primitives (Memory, Code Interpreter, Observability, Gateway)</li>
 <li><strong>Integrating</strong> AgentCore primitives (Memory, Code Interpreter, Observability, Gateway)</li>
 <li><strong>Deploying</strong> to AgentCore Runtime (optional)</li>
 </ol>
@@ -1889,7 +1894,7 @@ Extend the agent with additional tools, memory, and other features as required.<
 <h3 id="strands">Strands<a class="headerlink" href="#strands" title="Permanent link">&para;</a></h3>
 <p>Ideal for teams wanting AWS-native agent development with streamlined patterns.</p>
 <h2 id="generated-output">Generated Output<a class="headerlink" href="#generated-output" title="Permanent link">&para;</a></h2>
-<p>The utility generates a SUPPORTED agent implementation including:</p>
+<p>The utility generates an agent implementation including:</p>
 <ul>
 <li><strong>Agent Code</strong>: Framework-specific implementation of your Bedrock Agent</li>
 <li><strong>Dependencies</strong>: All required packages and versions</li>
@@ -2068,6 +2073,7 @@ Extend the agent with additional tools, memory, and other features as required.<
 <ul>
 <li><a href="quickstart.html">Quick Start Guide</a> - Get started in 5 minutes</li>
 <li><a href="configuration.html">Configuration Reference</a> - Detailed parameter guide</li>
+<li><a href="design.html">Design Choices</a> - Details on the design of the generated agent</li>
 <li><a href="design.html">Design Choices</a> - Details on the design of the generated agent</li>
 </ul>
 

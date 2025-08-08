@@ -51,10 +51,15 @@ class StrandsCreate(BaseAgentCreator):
         match (self.provider_model):
             case "bedrock":
                 self.imports_code += "from strands.models import BedrockModel\n"
+                guardrail_code = (
+                    f",guardrail_id='{self.guardrail_id}', guardrail_version='{self.guardrail_version}'"
+                    if self.guardrail_id
+                    else ""
+                )
                 return f"""
     llm = BedrockModel(
         model_id="{self.foundation_model}",
-        temperature={self.temperature},
+        temperature={self.temperature}{guardrail_code}
     )
                 """
             case "openai":

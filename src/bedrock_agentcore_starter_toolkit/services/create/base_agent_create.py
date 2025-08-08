@@ -33,6 +33,12 @@ class BaseAgentCreator:
         self.foundation_model = config.get("agent", {}).get("foundationModel", "anthropic.claude-opus-4-20250514-v1:0")
         self.provider_model = config.get("agent", {}).get("providerModel", "bedrock")
         self.temperature = 0.3
+        self.guardrail_id = (
+            config.get("agent", {}).get("modelConfig", {}).get("guardrailConfiguration", {}).get("guardrailId", None)
+        )
+        self.guardrail_version = (
+            config.get("agent", {}).get("modelConfig", {}).get("guardrailConfiguration", {}).get("version", None)
+        )
 
         # Knowledge Bases
         self.knowledge_bases = config.get("knowledge_bases", [])

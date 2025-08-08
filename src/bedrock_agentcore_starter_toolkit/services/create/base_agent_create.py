@@ -650,7 +650,7 @@ class BaseAgentCreator:
                 env_file.write(f"\n{key}={value}")
 
         # Copy over requirements.txt
-        requirements_path = os.path.join(get_base_dir(__file__), "assets", f"requirements_{self.platform}.txt")
+        requirements_path = os.path.join(get_base_dir(__file__), "assets", f"requirements_{self.platform}.j2")
         if os.path.exists(requirements_path):
             with (
                 open(requirements_path, "r", encoding="utf-8") as src_file,

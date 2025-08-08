@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.5] - 2025-08-08
+
+### Changes
+
+- ci(deps): bump trufflesecurity/trufflehog from 3.82.3 to 3.90.3 (#99) (c055722)
+- ci(deps): bump astral-sh/setup-uv from 3 to 6 (#80) (8f70a8c)
+- increase botocore timeout (#108) (db90f00)
+- bump the default otel dependency (#107) (4fd8429)
+- bump version to 0.1.4 (#105) (a21ecfb)
+
 ## [0.1.4] - 2025-08-06
 
 Added a utility to import from Bedrock Agents -> Bedrock AgentCore. Developers can generate and deploy a Langchain/Strands + AgentCore agent from a selected Bedrock Agent. The output agent leverages AgentCore primitives such as Gateway, Observability, Memory, and Code Interpreter. Added documentation on usage and design of this utility. This utility does not introduce any breaking changes. It is aimed towards Bedrock Agents customers who want to try a code-first, extensible approach with AgentCore.

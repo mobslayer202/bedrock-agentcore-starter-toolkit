@@ -280,6 +280,7 @@ def launch_bedrock_agentcore(
             agent_config=agent_config,
             project_config=project_config,
             auto_update_on_conflict=auto_update_on_conflict,
+            env_vars=env_vars,
         )
 
     # Log which agent is being launched
@@ -396,20 +397,15 @@ def _execute_codebuild_workflow(
     project_config,
     ecr_only: bool = False,
     auto_update_on_conflict: bool = False,
-) -> tuple[str, str, str, str]:
-    """Execute CodeBuild workflow with common logic.
-
-    Args:
-        config_path: Path to BedrockAgentCore configuration file
-        agent_name: Name of agent
-        agent_config: Agent configuration
-        project_config: Project configuration
-        ecr_only: If True, skip execution role setup for agent deployment and skip saving project config
-        auto_update_on_conflict: Whether to automatically update when agent already exists
-
-    Returns:
-        tuple: (build_id, ecr_uri, region, account_id)
-    """
+    env_vars: Optional[dict] = None,
+) -> LaunchResult:
+    """Launch using CodeBuild for ARM64 builds."""
+    log.info(
+        "Starting CodeBuild ARM64 deployment for agent '%s' to account %s (%s)",
+        agent_name,
+        agent_config.aws.account,
+        agent_config.aws.region,
+    )
     # Validate configuration
     errors = agent_config.validate(for_local=False)
     if errors:
@@ -476,6 +472,7 @@ def _launch_with_codebuild(
     agent_config,
     project_config,
     auto_update_on_conflict: bool = False,
+    env_vars: Optional[dict] = None,
 ) -> LaunchResult:
     """Launch using CodeBuild for ARM64 builds."""
     log.info(
@@ -493,6 +490,7 @@ def _launch_with_codebuild(
         project_config=project_config,
         ecr_only=False,
         auto_update_on_conflict=auto_update_on_conflict,
+        env_vars=env_vars,
     )
 
     # Deploy to Bedrock AgentCore
@@ -503,7 +501,7 @@ def _launch_with_codebuild(
         agent_name,
         ecr_uri,
         region,
-        env_vars=None,
+        env_vars=env_vars,
         auto_update_on_conflict=auto_update_on_conflict,
     )
 

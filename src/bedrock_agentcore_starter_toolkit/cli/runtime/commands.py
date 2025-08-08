@@ -263,10 +263,7 @@ def launch(
         None, "--agent", "-a", help="Agent name (use 'agentcore configure list' to see available agents)"
     ),
     local: bool = typer.Option(
-        False, 
-        "--local", 
-        "-l", 
-        help="Build locally and run container locally - requires Docker/Finch/Podman"
+        False, "--local", "-l", help="Build locally and run container locally - requires Docker/Finch/Podman"
     ),
     local_build: bool = typer.Option(
         False,
@@ -290,21 +287,21 @@ def launch(
         hidden=True,
     ),
 ):
-    """Launch Bedrock AgentCore with three deployment modes:
+    """Launch Bedrock AgentCore with three deployment modes.
 
     🚀 DEFAULT (no flags): CodeBuild + cloud runtime (RECOMMENDED)
-       - Build ARM64 containers in the cloud with CodeBuild  
+       - Build ARM64 containers in the cloud with CodeBuild
        - Deploy to Bedrock AgentCore runtime
        - No local Docker required
        - CHANGED: CodeBuild is now the default (previously required --code-build flag)
 
-    💻 --local: Local build + local runtime  
+    💻 --local: Local build + local runtime
        - Build container locally and run locally
        - requires Docker/Finch/Podman
        - For local development and testing
 
     🔧 --local-build: Local build + cloud runtime
-       - Build container locally with Docker  
+       - Build container locally with Docker
        - Deploy to Bedrock AgentCore runtime
        - requires Docker/Finch/Podman
        - Use when you need custom build control but want cloud deployment
@@ -355,10 +352,10 @@ def launch(
             console.print("[dim]   • Build ARM64 containers in the cloud with CodeBuild[/dim]")
             console.print("[dim]   • No local Docker required (DEFAULT behavior)[/dim]")
             console.print("[dim]   • Production-ready deployment[/dim]\n")
-            
+
             # Show deployment options hint for first-time users
             console.print("[dim]💡 Deployment options:[/dim]")
-            console.print("[dim]   • agentcore launch                 → CodeBuild (current)[/dim]")
+            console.print("[dim]   • agentcore launch                → CodeBuild (current)[/dim]")
             console.print("[dim]   • agentcore launch --local        → Local development[/dim]")
             console.print("[dim]   • agentcore launch --local-build  → Local build + cloud deploy[/dim]\n")
 
@@ -568,15 +565,16 @@ def invoke(
             local_mode=local_mode,
         )
         console.print(f"Session ID: [cyan]{result.session_id}[/cyan]")
-        console.print("\n[bold]Response:[/bold]")
-        console.print(
-            Syntax(
-                json.dumps(result.response, indent=2, default=str, ensure_ascii=False),
-                "json",
-                background_color="default",
-                word_wrap=True,
+        if result.response != {}:
+            console.print("\n[bold]Response:[/bold]")
+            console.print(
+                Syntax(
+                    json.dumps(result.response, indent=2, default=str, ensure_ascii=False),
+                    "json",
+                    background_color="default",
+                    word_wrap=True,
+                )
             )
-        )
 
     except FileNotFoundError:
         console.print("[red].bedrock_agentcore.yaml not found[/red]")

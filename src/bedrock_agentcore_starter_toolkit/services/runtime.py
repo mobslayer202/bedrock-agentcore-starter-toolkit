@@ -9,9 +9,14 @@ from typing import Any, Dict, Optional
 
 import boto3
 import requests
+from botocore.config import Config
 from botocore.exceptions import ClientError
+from rich.console import Console
 
 from ..utils.endpoints import get_control_plane_endpoint, get_data_plane_endpoint
+
+logger = logging.getLogger(__name__)
+console = Console()
 
 
 def generate_session_id() -> str:
@@ -47,19 +52,26 @@ def _handle_aws_response(response) -> dict:
 
 
 def _handle_streaming_response(response) -> Dict[str, Any]:
-    logger = logging.getLogger("bedrock_agentcore.stream")
-    logger.setLevel(logging.INFO)
-
-    content = []
+    complete_text = ""
     for line in response.iter_lines(chunk_size=1):
         if line:
             line = line.decode("utf-8")
             if line.startswith("data: "):
-                line = line[6:]
-                logger.info(line)
-                content.append(line)
-
-    return {"response": "\n".join(content)}
+                json_chunk = line[6:]
+                try:
+                    parsed_chunk = json.loads(json_chunk)
+                    if isinstance(parsed_chunk, str):
+                        text_chunk = parsed_chunk
+                    else:
+                        text_chunk = json.dumps(parsed_chunk, ensure_ascii=False)
+                        text_chunk += "\n"
+                    console.print(text_chunk, end="", style="bold cyan")
+                    complete_text += text_chunk
+                except json.JSONDecodeError:
+                    console.print(json_chunk, style="bold cyan")
+                    continue
+    console.print()
+    return {}
 
 
 class BedrockAgentCoreClient:
@@ -82,8 +94,18 @@ class BedrockAgentCoreClient:
         self.logger.debug("Control plane: %s", control_plane_url)
         self.logger.debug("Data plane: %s", data_plane_url)
 
-        self.client = boto3.client("bedrock-agentcore-control", region_name=region, endpoint_url=control_plane_url)
-        self.dataplane_client = boto3.client("bedrock-agentcore", region_name=region, endpoint_url=data_plane_url)
+        config = Config(
+            read_timeout=900,
+            connect_timeout=60,
+            retries={"max_attempts": 3},
+        )
+
+        self.client = boto3.client(
+            "bedrock-agentcore-control", region_name=region, endpoint_url=control_plane_url, config=config
+        )
+        self.dataplane_client = boto3.client(
+            "bedrock-agentcore", region_name=region, endpoint_url=data_plane_url, config=config
+        )
 
     def create_agent(
         self,
@@ -440,7 +462,7 @@ class HttpBedrockAgentCoreClient:
                 params={"qualifier": endpoint_name},
                 headers=headers,
                 json=body,
-                timeout=100,
+                timeout=900,
                 stream=True,
             )
             return _handle_http_response(response)
@@ -478,7 +500,7 @@ class LocalBedrockAgentCoreClient:
 
         try:
             # Make request with timeout
-            response = requests.post(url, headers=headers, json=body, timeout=100, stream=True)
+            response = requests.post(url, headers=headers, json=body, timeout=900, stream=True)
             return _handle_http_response(response)
         except requests.exceptions.RequestException as e:
             self.logger.error("Failed to invoke agent endpoint: %s", str(e))

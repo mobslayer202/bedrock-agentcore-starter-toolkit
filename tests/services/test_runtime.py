@@ -326,7 +326,7 @@ class TestHttpBedrockAgentCoreClient:
             assert params["qualifier"] == "DEFAULT"
 
             # Check timeout
-            assert call_args[1]["timeout"] == 100
+            assert call_args[1]["timeout"] == 900
 
             # Verify response
             assert result["response"] == "data: response content\n\n"
@@ -536,7 +536,7 @@ class TestLocalBedrockAgentCoreClient:
             assert body == {"message": "hello"}
 
             # Check timeout
-            assert call_args[1]["timeout"] == 100
+            assert call_args[1]["timeout"] == 900
             assert call_args[1]["stream"] is True
 
             # Verify response handling
@@ -577,32 +577,24 @@ class TestHandleStreamingResponse:
 
     def test_handle_streaming_response_with_data_lines(self):
         """Test streaming response with data: prefixed lines."""
-        # Mock response object
+        # Mock response object with JSON data chunks
         mock_response = Mock()
         mock_response.iter_lines.return_value = [
-            b"data: Hello from agent",
-            b"data: This is a streaming response",
-            b"data: Final chunk",
+            b'data: "Hello from agent"',
+            b'data: "This is a streaming response"',
+            b'data: "Final chunk"',
         ]
 
-        # Mock logger to capture log calls
-        with patch("bedrock_agentcore_starter_toolkit.services.runtime.logging.getLogger") as mock_get_logger:
-            mock_logger = Mock()
-            mock_get_logger.return_value = mock_logger
-
+        # Mock console to capture print calls
+        with patch("bedrock_agentcore_starter_toolkit.services.runtime.console") as mock_console:
             result = _handle_streaming_response(mock_response)
 
-            # Verify result structure
-            assert "response" in result
-            expected_content = "Hello from agent\nThis is a streaming response\nFinal chunk"
-            assert result["response"] == expected_content
+            # Verify result structure - function returns empty dict for streaming
+            assert result == {}
 
-            # Verify logger was configured and used
-            mock_get_logger.assert_called_once_with("bedrock_agentcore.stream")
-            mock_logger.setLevel.assert_called_once_with(20)  # logging.INFO = 20
-
-            # Verify log messages were called for each data line
-            assert mock_logger.info.call_count == 3
-            mock_logger.info.assert_any_call("Hello from agent")
-            mock_logger.info.assert_any_call("This is a streaming response")
-            mock_logger.info.assert_any_call("Final chunk")
+            # Verify console.print was called for each JSON chunk + final newline
+            assert mock_console.print.call_count == 4  # 3 chunks + 1 final newline
+            mock_console.print.assert_any_call("Hello from agent", end="", style="bold cyan")
+            mock_console.print.assert_any_call("This is a streaming response", end="", style="bold cyan")
+            mock_console.print.assert_any_call("Final chunk", end="", style="bold cyan")
+            mock_console.print.assert_any_call()  # Final newline call

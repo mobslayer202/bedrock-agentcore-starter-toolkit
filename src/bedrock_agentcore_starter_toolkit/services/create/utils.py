@@ -1,6 +1,9 @@
+"""Utility functions for the create service."""
+
 import os
-import boto3
 import re
+
+import boto3
 
 
 def get_base_dir(file):

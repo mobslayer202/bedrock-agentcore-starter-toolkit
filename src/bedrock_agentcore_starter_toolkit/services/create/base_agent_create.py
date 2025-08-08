@@ -1,13 +1,13 @@
 import os
-import sys
-import autopep8
 import uuid
 
-from .utils import unindent_by_one, get_base_dir, clean_variable_name
+import autopep8
+import boto3
+from bedrock_agentcore.memory import MemoryClient
 
 from bedrock_agentcore_starter_toolkit.operations.gateway import GatewayClient
-from bedrock_agentcore.memory import MemoryClient
-import boto3
+
+from .utils import clean_variable_name, get_base_dir, unindent_by_one
 
 
 class BaseAgentCreator:
@@ -89,7 +89,6 @@ class BaseAgentCreator:
 
     def generate_agent_usage_code(self):
         """Generate code for agent usage."""
-
         agentcore_memory_entrypoint_code = (
             """
             event = memory_client.create_event(
@@ -114,11 +113,11 @@ class BaseAgentCreator:
                 agent_query = payload.get("message", "")
             if not agent_query:
                 return {{'error': "No query provided, please provide a 'message' field in the payload."}}
-                
+
             agent_result = agent(agent_query)
             response_content = str(agent_result)
             formatted_messages = [(agent_query, "USER"), (response_content if response_content else "No Response.", "ASSISTANT")]
-            
+
             {agentcore_memory_entrypoint_code}
 
             return {{
@@ -134,7 +133,7 @@ class BaseAgentCreator:
         """
 
         cli_code = f"""
-    
+
     def cli():
         \"\"\"CLI for Local Development.\"\"\"
         {'user_id = "{uuid.uuid4().hex[:8].lower()}" # change user_id if necessary' if self.memory_enabled else ""}
@@ -147,7 +146,7 @@ class BaseAgentCreator:
                     if query.lower() == "exit":
                         break
 
-                    endpoint({{"message": query{', "userId": user_id' if self.memory_enabled else ''}}}, RequestContext(session_id=session_id)).get('result', {{}})
+                    endpoint({{"message": query{', "userId": user_id' if self.memory_enabled else ""}}}, RequestContext(session_id=session_id)).get('result', {{}})
 
                 except KeyboardInterrupt:
                     print("\\n\\nExiting...")
@@ -169,7 +168,7 @@ class BaseAgentCreator:
         """Generate code for agent prompts."""
         return f"""
     SYSTEM_PROMPT = \"\"\"
-    
+
     ## Instructions
     {self.instruction}
 
@@ -416,7 +415,7 @@ class BaseAgentCreator:
                 llm=llm,
                 browser_session=session,
             )
-            
+
             history = agent.run()
 
             return history.final_result()
@@ -541,7 +540,6 @@ class BaseAgentCreator:
                 gateway.update(cognito_result)
 
                 for target in tool_class.get("targets", []):
-
                     if target["target_type"] == "lambda":
                         payload = {
                             "lambdaArn": target["lambda_arn"],
@@ -663,3 +661,6 @@ class BaseAgentCreator:
                 dest_file.write(src_file.read())
 
         return environment_variables
+
+
+# ruff: noqa

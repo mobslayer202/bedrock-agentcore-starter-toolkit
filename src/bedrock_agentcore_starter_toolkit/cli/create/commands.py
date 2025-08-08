@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-import os
-import questionary
-from rich.panel import Panel
-from rich.text import Text
-from rich.table import Table
-import boto3
-import uuid
 import json
+import os
+import uuid
+
+import boto3
+import questionary
+import typer
 import yaml
 from dotenv import load_dotenv
-import typer
-
-from ..common import console
-from ...services.create.utils import get_clients, get_base_dir
+from rich.panel import Panel
+from rich.text import Text
 
 from ...services.create.strands_create import StrandsCreate
+from ...services.create.utils import get_clients
+from ..common import console
 
 load_dotenv()
 
@@ -748,7 +747,6 @@ class AgentConfigureWorkflow:
 
     def configure(self):
         """Create a new agent or import from Bedrock Agents."""
-
         # Verify AWS credentials
         self.console.print("[bold]Verifying AWS credentials...[/bold]")
         if not self.verify_aws_credentials():
@@ -785,7 +783,6 @@ class AgentCreationWorkflow:
 
     def create(self, output_dir: str):
         """Create the agent based on the selected platform."""
-
         platform = self.config.get("target_platform", "strands")
         os.makedirs(output_dir, exist_ok=True)
 
@@ -821,7 +818,6 @@ def create(
     ),
 ):
     """Create a new agent configuration interactively."""
-
     if not config:
         agent_config = AgentConfigureWorkflow(
             console=console, app=create_app, output_dir=output_dir, agent_name=agent_name, region=region
@@ -833,3 +829,6 @@ def create(
 
     if agent_config:
         AgentCreationWorkflow(console=console, app=create_app, config=agent_config).create(output_dir=output_dir)
+
+
+# ruff: noqa

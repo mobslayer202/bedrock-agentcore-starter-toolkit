@@ -1,7 +1,7 @@
+import uuid
+
 from .base_agent_create import BaseAgentCreator
 from .utils import clean_variable_name
-
-import uuid
 
 
 class StrandsCreate(BaseAgentCreator):
@@ -49,7 +49,7 @@ class StrandsCreate(BaseAgentCreator):
 
     def generate_models_code(self):
         """Generate code for the LLM."""
-        match (self.provider_model):
+        match self.provider_model:
             case "bedrock":
                 self.imports_code += "from strands.models import BedrockModel\n"
                 guardrail_code = (
@@ -152,7 +152,7 @@ class StrandsCreate(BaseAgentCreator):
     access_token_{access_token_uuid} = gateway_client.get_access_token_for_cognito({client_info})
 
     {client_name} = MCPClient(lambda: streamablehttp_client(
-        url='{gateway.get("gatewayUrl", '')}',
+        url='{gateway.get("gatewayUrl", "")}',
         headers={{
             "Content-Type": "application/json",
             "Authorization": f"Bearer {{access_token_{access_token_uuid}}}",
@@ -214,3 +214,6 @@ class StrandsCreate(BaseAgentCreator):
 
     def create_strands(self, name):
         return self.create(name, self.code_sections)
+
+
+# ruff: noqa

@@ -32,6 +32,7 @@ class StrandsCreate(BaseAgentCreator):
             self.models_code,
             self.prompts_code,
             self.kb_code,
+            self.tool_client_code,
             self.tools_1p_code,
             self.memory_code,
             self.agent_setup_code,
@@ -148,10 +149,10 @@ class StrandsCreate(BaseAgentCreator):
                 access_token_uuid = uuid.uuid4().hex[:5]
                 client_name = clean_variable_name(gateway.get("name", "")) + "_client"
                 tool_client_code += f"""
-    access_token_{access_token_uuid} = gateway_client.get_access_token({client_info})
+    access_token_{access_token_uuid} = gateway_client.get_access_token_for_cognito({client_info})
 
     {client_name} = MCPClient(lambda: streamablehttp_client(
-        mcp_url='{gateway.get("gatewayUrl", '')}',
+        url='{gateway.get("gatewayUrl", '')}',
         headers={{
             "Content-Type": "application/json",
             "Authorization": f"Bearer {{access_token_{access_token_uuid}}}",
@@ -190,6 +191,8 @@ class StrandsCreate(BaseAgentCreator):
     except (FutureTimeoutError, Exception):
         pass
         """
+
+        return tool_client_code
 
     def generate_agent_setup(self):
         """Generate the agent setup code."""

@@ -575,8 +575,11 @@ class BaseAgentCreator:
                 scope_names = [f"{gateway['name']}/{scope['ScopeName']}" for scope in gateway_scopes]
 
                 authorizer_config = gateway.get("authorizerConfiguration", {})
-                user_pool_id = authorizer_config.get("customJWTAuthorizer", {}).get("discoveryUrl", "").split("/")[-3]
-                cognito_client = boto3.client("cognito-idp", region_name=self.region)
+                discovery_url = authorizer_config.get("customJWTAuthorizer", {}).get("discoveryUrl", "")
+                user_pool_id = discovery_url.split("/")[-3]
+                # Extract region from discovery URL (e.g., us-west-2 from cognito-idp.us-west-2.amazonaws.com)
+                cognito_region = discovery_url.split("cognito-idp.")[1].split(".amazonaws.com")[0]
+                cognito_client = boto3.client("cognito-idp", region_name=cognito_region)
                 user_pool_client_response = cognito_client.create_user_pool_client(
                     UserPoolId=user_pool_id,
                     ClientName=f"agentcore-client-{GatewayClient.generate_random_id()}",

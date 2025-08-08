@@ -34,7 +34,7 @@ Ideal for teams wanting AWS-native agent development with streamlined patterns.
 
 ## Generated Output
 
-The utility generates a SUPPORTED agent implementation including:
+The utility generates an agent implementation including:
 
 - **Agent Code**: Framework-specific implementation of your Bedrock Agent
 - **Dependencies**: All required packages and versions
@@ -55,37 +55,6 @@ flowchart TD
     G -->|Yes| H[AgentCore Runtime]
     G -->|No| I[Local Development]
 ```
-
-## Feature Support
-
-
-| Bedrock Agent Feature                               | Langchain | Strands | AgentCore               |
-|-----------------------------------------------------|-------------------------------------|----------------------------------|--------------------------------------------------|
-| *Guardrails*                                        | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Orchestration (via reAct)*                         | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Knowledge Bases*                                   | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Code Interpreter*                                  | SUPPORTED                            | SUPPORTED                         | SUPPORTED: 1P Code Interpreter                    |
-| *Lambda Function Definitions*                       | SUPPORTED                            | SUPPORTED                         | SUPPORTED: AgentCore Gateway                  |
-| *Lambda OpenAPI Definitions*                        | SUPPORTED                            | SUPPORTED                         | SUPPORTED: AgentCore Gateway                  |
-| *Return of Control*                                 | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Short Term (Conversational) Memory*                | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Long Term (Cross-Session) Memory*                  | SUPPORTED                            | SUPPORTED                         | SUPPORTED: AgentCore Memory                      |
-| *Session Summarization*                             | SUPPORTED                            | SUPPORTED                         | SUPPORTED: AgentCore Memory                      |
-| *Pre Processing Step*                               | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Post Processing Step*                              | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *KB Generation Routing/Optimizations*               | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Idle Timeouts*                                     | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *User Input (as a tool)*                            | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Traces*                                            | SUPPORTED                            | SUPPORTED                         | SUPPORTED: AgentCore Observability               |
-| *Multi-Agent Collaboration - Supervisor Mode*       | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Multi-Agent Collaboration - Routing Mode*          | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Multi-Agent Collaboration - Conversation Relay*    | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Custom Bedrock Model Usage*                        | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Chat Interface (via CLI)*                          | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Custom Inference Configurations*                   | SUPPORTED                            | SUPPORTED                         |                                                  |
-| *Agent Deployment*                                  | N/A                                  | N/A                              | SUPPORTED: AgentCore Runtime                     |
-| *Lambda Parsing and Orchestration*                  | N/A                                  | N/A                              |                                                  |
-
 
 ## Next Steps
 

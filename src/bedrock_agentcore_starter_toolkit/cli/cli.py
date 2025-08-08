@@ -5,6 +5,7 @@ import typer
 from ..cli.gateway.commands import create_mcp_gateway, create_mcp_gateway_target, gateway_app
 from ..utils.logging_config import setup_toolkit_logging
 from .runtime.commands import configure_app, invoke, launch, status
+from .create.commands import create, create_app
 
 app = typer.Typer(name="agentcore", help="BedrockAgentCore CLI", add_completion=False)
 
@@ -21,6 +22,9 @@ app.add_typer(configure_app)
 app.command("create_mcp_gateway")(create_mcp_gateway)
 app.command("create_mcp_gateway_target")(create_mcp_gateway_target)
 app.add_typer(gateway_app, name="gateway")
+
+# create
+app.add_typer(create_app)
 
 
 def main():

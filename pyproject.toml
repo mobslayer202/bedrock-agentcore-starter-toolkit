@@ -42,6 +42,9 @@ dependencies = [
     "typer>=0.16.0",
     "typing-extensions>=4.13.2,<5.0.0",
     "uvicorn>=0.34.2",
+    "questionary>=2.1.0",
+    "python-dotenv>=1.1.1",
+    "autopep8>=2.3.2",
 ]
 
 [project.scripts]

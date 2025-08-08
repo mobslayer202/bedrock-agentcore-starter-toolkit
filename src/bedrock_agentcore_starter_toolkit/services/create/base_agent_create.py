@@ -17,6 +17,7 @@ class BaseAgentCreator:
         """Initialize the base agent creator with configuration and output directory."""
         self.config = config
         self.output_dir = output_dir
+        self.tool_class_results = {}
 
         # Deployment information
         self.platform = config.get("platform", "strands")
@@ -470,9 +471,8 @@ class BaseAgentCreator:
             memory_client = MemoryClient(region_name=self.region)
 
             print("  Creating AgentCore Memory (This will take a few minutes)...")
-            print(self.cleaned_agent_name)
             memory = memory_client.create_memory_and_wait(
-                name=f"{self.cleaned_agent_name}_memory_{uuid.uuid4().hex[:3].lower()}",
+                name=f"memory_{uuid.uuid4().hex[:3].lower()}",
                 strategies=strategies,
             )
 
@@ -515,7 +515,8 @@ class BaseAgentCreator:
 
     def create_tool_classes(self):
         """Create the gateway and proxy for the agent."""
-        print("  Creating Gateways for Agent...")
+        if self.tool_classes:
+            print("  Creating Tool Classes for Agent...")
 
         gateway_client = GatewayClient(region_name=self.region)
         agentcore_client = boto3.client("bedrock-agentcore-control")
@@ -628,6 +629,19 @@ class BaseAgentCreator:
             f.write(code)
 
         environment_variables = {}
+        for gateway in self.tool_class_results.get("gateways", []):
+            if "client_info" in gateway:
+                client_info = gateway["client_info"]
+                environment_variables.update(
+                    {
+                        f"{gateway['name']}_COGNITO_CLIENT_ID": client_info.get("client_id", ""),
+                        f"{gateway['name']}_COGNITO_CLIENT_SECRET": client_info.get("client_secret", ""),
+                        f"{gateway['name']}_COGNITO_USER_POOL_ID": client_info.get("user_pool_id", ""),
+                        f"{gateway['name']}_COGNITO_TOKEN_ENDPOINT": client_info.get("token_endpoint", ""),
+                        f"{gateway['name']}_COGNITO_SCOPE": client_info.get("scope", ""),
+                        f"{gateway['name']}_COGNITO_DOMAIN_PREFIX": client_info.get("domain_prefix", ""),
+                    }
+                )
 
         # Write a .env file with the environment variables
         env_file_path = os.path.join(self.output_dir, ".env")

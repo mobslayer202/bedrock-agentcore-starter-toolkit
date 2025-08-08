@@ -14,7 +14,7 @@ RUN pip install -r {{ dependencies_file }}
 {% endif %}
 
 {% if observability_enabled %}
-RUN pip install aws-opentelemetry-distro>=0.10.0
+RUN pip install aws-opentelemetry-distro>=0.10.1
 {% endif %}
 
 # Set AWS region environment variable

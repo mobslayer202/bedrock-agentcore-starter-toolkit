@@ -13,6 +13,7 @@ from botocore.exceptions import ClientError
 from ...services.codebuild import CodeBuildService
 from ...services.ecr import deploy_to_ecr, get_or_create_ecr_repository
 from ...services.runtime import BedrockAgentCoreClient
+from ...services.xray import setup_xray_transaction_search
 from ...utils.runtime.config import load_config, save_config
 from ...utils.runtime.container import ContainerRuntime
 from ...utils.runtime.schema import BedrockAgentCoreAgentSchema, BedrockAgentCoreConfigSchema
@@ -271,6 +272,17 @@ def launch_bedrock_agentcore(
     # Load project configuration
     project_config = load_config(config_path)
     agent_config = project_config.get_agent_config(agent_name)
+
+    # Setup observability for cloud deployments (skip for local mode)
+    if not local and agent_config.aws.observability.enabled:
+        log.info("Setting up observability...")
+        session = boto3.Session(region_name=agent_config.aws.region)
+        success, message = setup_xray_transaction_search(session)
+        if success:
+            log.info("✅ %s", message)
+        else:
+            log.warning("⚠️ Observability setup failed: %s", message)
+            log.warning("Agent will still deploy, but traces may not be collected efficiently")
 
     # Handle CodeBuild deployment (but not for local mode)
     if use_codebuild and not local:

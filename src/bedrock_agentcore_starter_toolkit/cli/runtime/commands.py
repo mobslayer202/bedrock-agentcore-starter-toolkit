@@ -235,6 +235,9 @@ def configure(
         if oauth_config:
             auth_info = "OAuth (customJWTAuthorizer)"
 
+        # Prepare observability info
+        observability_info = "Enabled (auto-setup at launch)" if not disable_otel else "Disabled"
+
         console.print(
             Panel(
                 f"[green]Configuration Summary[/green]\n\n"
@@ -244,7 +247,8 @@ def configure(
                 f"Account: {result.account_id}\n"
                 f"Execution Role: {result.execution_role}\n"
                 f"ECR: {'Auto-create' if result.auto_create_ecr else result.ecr_repository or 'N/A'}\n"
-                f"Authorization: {auth_info}\n\n"
+                f"Authorization: {auth_info}\n"
+                f"Observability: {observability_info}\n\n"
                 f"Configuration saved to: {result.config_path}",
                 title="Bedrock AgentCore Configured",
                 border_style="green",

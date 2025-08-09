@@ -3,10 +3,16 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 
 from bedrock_agentcore_starter_toolkit.operations.runtime.launch import (
     _ensure_execution_role,
     launch_bedrock_agentcore,
+)
+from bedrock_agentcore_starter_toolkit.services.xray import (
+    is_xray_transaction_search_configured,
+    setup_xray_transaction_search,
+    validate_aws_credentials,
 )
 from bedrock_agentcore_starter_toolkit.utils.runtime.config import save_config
 from bedrock_agentcore_starter_toolkit.utils.runtime.schema import (
@@ -978,3 +984,466 @@ class TestEnsureExecutionRole:
         result = _validate_execution_role("arn:aws:iam::123456789012:role/nonexistent-role", mock_session)
 
         assert result is False
+
+
+class TestXRayService:
+    """Test X-Ray service functionality."""
+
+    def test_validate_aws_credentials_success(self):
+        """Test successful AWS credentials validation."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_session.client.return_value = mock_sts_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+
+        result = validate_aws_credentials(mock_session)
+
+        assert result is True
+        mock_session.client.assert_called_once_with("sts")
+        mock_sts_client.get_caller_identity.assert_called_once()
+
+    def test_validate_aws_credentials_no_credentials(self):
+        """Test credentials validation when no credentials available."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_session.client.return_value = mock_sts_client
+        mock_sts_client.get_caller_identity.side_effect = NoCredentialsError()
+
+        result = validate_aws_credentials(mock_session)
+
+        assert result is False
+
+    def test_validate_aws_credentials_client_error(self):
+        """Test credentials validation with ClientError."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_session.client.return_value = mock_sts_client
+        mock_sts_client.get_caller_identity.side_effect = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}}, operation_name="GetCallerIdentity"
+        )
+
+        result = validate_aws_credentials(mock_session)
+
+        assert result is False
+
+    def test_validate_aws_credentials_botoccore_error(self):
+        """Test credentials validation with BotoCoreError."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_session.client.return_value = mock_sts_client
+        mock_sts_client.get_caller_identity.side_effect = BotoCoreError()
+
+        result = validate_aws_credentials(mock_session)
+
+        assert result is False
+
+    def test_is_xray_configured_true(self):
+        """Test X-Ray configuration check when already configured."""
+        mock_session = MagicMock()
+        mock_xray_client = MagicMock()
+        mock_session.client.return_value = mock_xray_client
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "CloudWatchLogs"}
+
+        result = is_xray_transaction_search_configured(mock_session)
+
+        assert result is True
+        mock_session.client.assert_called_once_with("xray")
+        mock_xray_client.get_trace_segment_destination.assert_called_once()
+
+    def test_is_xray_configured_false(self):
+        """Test X-Ray configuration check when not configured."""
+        mock_session = MagicMock()
+        mock_xray_client = MagicMock()
+        mock_session.client.return_value = mock_xray_client
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "S3"}
+
+        result = is_xray_transaction_search_configured(mock_session)
+
+        assert result is False
+
+    def test_is_xray_configured_client_error(self):
+        """Test X-Ray configuration check with ClientError."""
+        mock_session = MagicMock()
+        mock_xray_client = MagicMock()
+        mock_session.client.return_value = mock_xray_client
+        mock_xray_client.get_trace_segment_destination.side_effect = ClientError(
+            error_response={"Error": {"Code": "AccessDenied"}}, operation_name="GetTraceSegmentDestination"
+        )
+
+        result = is_xray_transaction_search_configured(mock_session)
+
+        assert result is False
+
+    def test_setup_xray_success(self):
+        """Test successful X-Ray setup."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_xray_client = MagicMock()
+
+        def mock_client(service):
+            if service == "sts":
+                return mock_sts_client
+            elif service == "xray":
+                return mock_xray_client
+
+        mock_session.client.side_effect = mock_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "S3"}  # Not configured
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is True
+        assert message == "X-Ray Transaction Search configured successfully"
+        mock_xray_client.update_trace_segment_destination.assert_called_once_with(Destination="CloudWatchLogs")
+        mock_xray_client.update_indexing_rule.assert_called_once_with(
+            Name="Default", Rule={"Probabilistic": {"DesiredSamplingPercentage": 1}}
+        )
+
+    def test_setup_xray_already_configured(self):
+        """Test X-Ray setup when already configured."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_xray_client = MagicMock()
+
+        def mock_client(service):
+            if service == "sts":
+                return mock_sts_client
+            elif service == "xray":
+                return mock_xray_client
+
+        mock_session.client.side_effect = mock_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "CloudWatchLogs"}
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is True
+        assert message == "X-Ray Transaction Search already configured"
+        mock_xray_client.update_trace_segment_destination.assert_not_called()
+        mock_xray_client.update_indexing_rule.assert_not_called()
+
+    def test_setup_xray_credentials_unavailable(self):
+        """Test X-Ray setup when credentials unavailable."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_session.client.return_value = mock_sts_client
+        mock_sts_client.get_caller_identity.side_effect = NoCredentialsError()
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is False
+        assert "AWS credentials not available" in message
+
+    def test_setup_xray_trace_destination_access_denied(self):
+        """Test X-Ray setup with access denied on trace destination."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_xray_client = MagicMock()
+
+        def mock_client(service):
+            if service == "sts":
+                return mock_sts_client
+            elif service == "xray":
+                return mock_xray_client
+
+        mock_session.client.side_effect = mock_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "S3"}
+        mock_xray_client.update_trace_segment_destination.side_effect = ClientError(
+            error_response={"Error": {"Code": "AccessDeniedException", "Message": "Access denied"}},
+            operation_name="UpdateTraceSegmentDestination",
+        )
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is False
+        assert "Insufficient permissions for X-Ray setup: Access denied" in message
+
+    def test_setup_xray_indexing_rule_validation_error(self):
+        """Test X-Ray setup with validation error on indexing rule."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_xray_client = MagicMock()
+
+        def mock_client(service):
+            if service == "sts":
+                return mock_sts_client
+            elif service == "xray":
+                return mock_xray_client
+
+        mock_session.client.side_effect = mock_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "S3"}
+        mock_xray_client.update_indexing_rule.side_effect = ClientError(
+            error_response={"Error": {"Code": "ValidationException", "Message": "Invalid rule"}},
+            operation_name="UpdateIndexingRule",
+        )
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is False
+        assert "Invalid indexing rule configuration: Invalid rule" in message
+
+    def test_setup_xray_botoccore_error(self):
+        """Test X-Ray setup with BotoCoreError."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_xray_client = MagicMock()
+
+        def mock_client(service):
+            if service == "sts":
+                return mock_sts_client
+            elif service == "xray":
+                return mock_xray_client
+
+        mock_session.client.side_effect = mock_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "S3"}
+        mock_xray_client.update_trace_segment_destination.side_effect = BotoCoreError()
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is False
+        assert "AWS service error configuring X-Ray Transaction Search" in message
+
+    def test_setup_xray_unexpected_error(self):
+        """Test X-Ray setup with unexpected error."""
+        mock_session = MagicMock()
+        mock_sts_client = MagicMock()
+        mock_xray_client = MagicMock()
+
+        def mock_client(service):
+            if service == "sts":
+                return mock_sts_client
+            elif service == "xray":
+                return mock_xray_client
+
+        mock_session.client.side_effect = mock_client
+        mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "S3"}
+        mock_xray_client.update_trace_segment_destination.side_effect = Exception("Unexpected error")
+
+        success, message = setup_xray_transaction_search(mock_session)
+
+        assert success is False
+        assert "Unexpected error configuring X-Ray Transaction Search: Unexpected error" in message
+
+    def test_setup_xray_default_session(self):
+        """Test X-Ray setup with default session creation."""
+        with patch("bedrock_agentcore_starter_toolkit.services.xray.boto3.Session") as mock_session_cls:
+            mock_session = MagicMock()
+            mock_session_cls.return_value = mock_session
+            mock_sts_client = MagicMock()
+            mock_xray_client = MagicMock()
+
+            def mock_client(service):
+                if service == "sts":
+                    return mock_sts_client
+                elif service == "xray":
+                    return mock_xray_client
+
+            mock_session.client.side_effect = mock_client
+            mock_sts_client.get_caller_identity.return_value = {"Account": "123456789012"}
+            mock_xray_client.get_trace_segment_destination.return_value = {"Destination": "CloudWatchLogs"}
+
+            success, message = setup_xray_transaction_search()  # No session provided
+
+            assert success is True
+            assert message == "X-Ray Transaction Search already configured"
+            # Session is created once in setup_xray_transaction_search when no session is provided
+            assert mock_session_cls.call_count >= 1
+
+
+class TestLaunchWithObservability:
+    """Test launch integration with observability features."""
+
+    def test_launch_cloud_with_observability_setup_success(self, mock_boto3_clients, tmp_path):
+        """Test cloud deployment with successful observability setup."""
+        config_path = create_test_config(
+            tmp_path,
+            execution_role="arn:aws:iam::123456789012:role/TestRole",
+            ecr_repository="123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo",
+        )
+        create_test_agent_file(tmp_path)
+
+        # Enable observability in config
+        from bedrock_agentcore_starter_toolkit.utils.runtime.config import load_config, save_config
+
+        project_config = load_config(config_path)
+        agent_config = project_config.agents["test-agent"]
+        agent_config.aws.observability.enabled = True
+        project_config.agents["test-agent"] = agent_config
+        save_config(project_config, config_path)
+
+        # Setup mock AWS clients
+        mock_factory = MockAWSClientFactory()
+        mock_factory.setup_session_mock(mock_boto3_clients)
+
+        with (
+            patch("bedrock_agentcore_starter_toolkit.services.ecr.get_or_create_ecr_repository") as mock_create_ecr,
+            patch("bedrock_agentcore_starter_toolkit.services.xray.setup_xray_transaction_search") as mock_setup_xray,
+        ):
+            mock_create_ecr.return_value = "123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo"
+            mock_setup_xray.return_value = (True, "X-Ray configured successfully")
+
+            result = launch_bedrock_agentcore(config_path, local=False)
+
+            # Verify observability setup was called
+            mock_setup_xray.assert_called_once()
+            call_args = mock_setup_xray.call_args[0]
+            assert len(call_args) == 1  # session parameter
+            session = call_args[0]
+            assert session.region_name == "us-west-2"
+
+            # Verify deployment succeeded
+            assert result.mode == "codebuild"
+            assert hasattr(result, "agent_arn")
+
+    def test_launch_cloud_with_observability_setup_failure(self, mock_boto3_clients, tmp_path):
+        """Test cloud deployment continues when observability setup fails."""
+        config_path = create_test_config(
+            tmp_path,
+            execution_role="arn:aws:iam::123456789012:role/TestRole",
+            ecr_repository="123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo",
+        )
+        create_test_agent_file(tmp_path)
+
+        # Enable observability in config
+        from bedrock_agentcore_starter_toolkit.utils.runtime.config import load_config, save_config
+
+        project_config = load_config(config_path)
+        agent_config = project_config.agents["test-agent"]
+        agent_config.aws.observability.enabled = True
+        project_config.agents["test-agent"] = agent_config
+        save_config(project_config, config_path)
+
+        # Setup mock AWS clients
+        mock_factory = MockAWSClientFactory()
+        mock_factory.setup_session_mock(mock_boto3_clients)
+
+        with (
+            patch("bedrock_agentcore_starter_toolkit.services.ecr.get_or_create_ecr_repository") as mock_create_ecr,
+            patch("bedrock_agentcore_starter_toolkit.services.xray.setup_xray_transaction_search") as mock_setup_xray,
+            patch("bedrock_agentcore_starter_toolkit.operations.runtime.launch.log") as mock_log,
+        ):
+            mock_create_ecr.return_value = "123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo"
+            mock_setup_xray.return_value = (False, "Access denied for X-Ray setup")
+
+            result = launch_bedrock_agentcore(config_path, local=False)
+
+            # Verify observability setup was called and failed
+            mock_setup_xray.assert_called_once()
+
+            # Verify warning was logged but deployment continued
+            mock_log.warning.assert_called_with("⚠️ Observability setup failed: %s", "Access denied for X-Ray setup")
+
+            # Verify deployment succeeded despite observability failure
+            assert result.mode == "codebuild"
+            assert hasattr(result, "agent_arn")
+
+    def test_launch_cloud_observability_disabled(self, mock_boto3_clients, tmp_path):
+        """Test cloud deployment with observability disabled."""
+        config_path = create_test_config(
+            tmp_path,
+            execution_role="arn:aws:iam::123456789012:role/TestRole",
+            ecr_repository="123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo",
+        )
+        create_test_agent_file(tmp_path)
+
+        # Observability is disabled by default in create_test_config
+
+        # Setup mock AWS clients
+        mock_factory = MockAWSClientFactory()
+        mock_factory.setup_session_mock(mock_boto3_clients)
+
+        with (
+            patch("bedrock_agentcore_starter_toolkit.services.ecr.get_or_create_ecr_repository") as mock_create_ecr,
+            patch("bedrock_agentcore_starter_toolkit.services.xray.setup_xray_transaction_search") as mock_setup_xray,
+        ):
+            mock_create_ecr.return_value = "123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo"
+
+            result = launch_bedrock_agentcore(config_path, local=False)
+
+            # Verify observability setup was NOT called
+            mock_setup_xray.assert_not_called()
+
+            # Verify deployment succeeded
+            assert result.mode == "codebuild"
+            assert hasattr(result, "agent_arn")
+
+    def test_launch_local_no_observability_setup(self, mock_container_runtime, tmp_path):
+        """Test local deployment skips observability setup."""
+        config_path = create_test_config(tmp_path)
+        create_test_agent_file(tmp_path)
+
+        # Enable observability in config
+        from bedrock_agentcore_starter_toolkit.utils.runtime.config import load_config, save_config
+
+        project_config = load_config(config_path)
+        agent_config = project_config.agents["test-agent"]
+        agent_config.aws.observability.enabled = True
+        project_config.agents["test-agent"] = agent_config
+        save_config(project_config, config_path)
+
+        # Mock the build to return success
+        mock_container_runtime.build.return_value = (True, ["Successfully built test-image"])
+
+        with (
+            patch(
+                "bedrock_agentcore_starter_toolkit.operations.runtime.launch.ContainerRuntime",
+                return_value=mock_container_runtime,
+            ),
+            patch("bedrock_agentcore_starter_toolkit.services.xray.setup_xray_transaction_search") as mock_setup_xray,
+        ):
+            result = launch_bedrock_agentcore(config_path, local=True)
+
+            # Verify observability setup was NOT called for local mode
+            mock_setup_xray.assert_not_called()
+
+            # Verify local deployment succeeded
+            assert result.mode == "local"
+            assert result.tag == "bedrock_agentcore-test-agent:latest"
+
+    def test_launch_cloud_with_observability_boto3_session_reuse(self, mock_boto3_clients, tmp_path):
+        """Test that observability setup reuses the same boto3 session pattern as other AWS operations."""
+        config_path = create_test_config(
+            tmp_path,
+            execution_role="arn:aws:iam::123456789012:role/TestRole",
+            ecr_repository="123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo",
+        )
+        create_test_agent_file(tmp_path)
+
+        # Enable observability in config
+        from bedrock_agentcore_starter_toolkit.utils.runtime.config import load_config, save_config
+
+        project_config = load_config(config_path)
+        agent_config = project_config.agents["test-agent"]
+        agent_config.aws.observability.enabled = True
+        project_config.agents["test-agent"] = agent_config
+        save_config(project_config, config_path)
+
+        # Setup mock AWS clients
+        mock_factory = MockAWSClientFactory()
+        mock_factory.setup_session_mock(mock_boto3_clients)
+
+        with (
+            patch("bedrock_agentcore_starter_toolkit.services.ecr.get_or_create_ecr_repository") as mock_create_ecr,
+            patch("bedrock_agentcore_starter_toolkit.services.xray.setup_xray_transaction_search") as mock_setup_xray,
+            patch("bedrock_agentcore_starter_toolkit.operations.runtime.launch.boto3.Session") as mock_session_cls,
+        ):
+            mock_create_ecr.return_value = "123456789012.dkr.ecr.us-west-2.amazonaws.com/test-repo"
+            mock_setup_xray.return_value = (True, "X-Ray configured successfully")
+
+            # Create a mock session that will be returned by boto3.Session()
+            mock_session_instance = MagicMock()
+            mock_session_instance.region_name = "us-west-2"
+            mock_session_cls.return_value = mock_session_instance
+
+            launch_bedrock_agentcore(config_path, local=False)
+
+            # Verify that observability setup was called with a session
+            mock_setup_xray.assert_called_once()
+            call_args = mock_setup_xray.call_args[0]
+            assert len(call_args) == 1
+            session = call_args[0]
+            assert session.region_name == "us-west-2"

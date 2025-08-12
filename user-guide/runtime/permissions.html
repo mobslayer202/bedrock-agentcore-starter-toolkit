@@ -2288,13 +2288,6 @@ agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class=
 agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class="w"> </span>my_agent.py
 agentcore<span class="w"> </span>launch
 </code></pre></div></p>
-<p><strong>Mixed Approach:</strong>
-<div class="highlight"><pre><span></span><code><span class="c1"># Auto-create execution role, use existing ECR</span>
-agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class="w"> </span>my_agent.py<span class="w"> </span>-ecr<span class="w"> </span>my-existing-repo
-</code></pre></div></p>
-<blockquote>
-<p><strong>💡 Recommendation</strong>: Use auto-creation for development and testing. For production deployments, consider using Infrastrcuture as Code semantics.</p>
-</blockquote>
 <h2 id="developercaller-permissions">Developer/Caller Permissions<a class="headerlink" href="#developercaller-permissions" title="Permanent link">&para;</a></h2>
 <h3 id="overview_2">Overview<a class="headerlink" href="#overview_2" title="Permanent link">&para;</a></h3>
 <p>Developers using the Bedrock AgentCore Starter Toolkit need specific IAM permissions to create roles, manage CodeBuild projects, and deploy agents. These permissions are separate from the execution roles and are required for the toolkit's operational functionality.</p>
@@ -2377,7 +2370,9 @@ agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class=
 <span class="w">            </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">                </span><span class="s2">&quot;s3:GetObject&quot;</span><span class="p">,</span>
 <span class="w">                </span><span class="s2">&quot;s3:PutObject&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="s2">&quot;s3:ListBucket&quot;</span>
+<span class="w">                </span><span class="s2">&quot;s3:ListBucket&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="s2">&quot;s3:CreateBucket&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="s2">&quot;s3:PutLifecycleConfiguration&quot;</span>
 <span class="w">            </span><span class="p">],</span>
 <span class="w">            </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">                </span><span class="s2">&quot;arn:aws:s3:::bedrock-agentcore-*&quot;</span><span class="p">,</span>
@@ -2418,7 +2413,7 @@ agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class=
 </code></pre></div>
 <h3 id="additional-required-permissions">Additional Required Permissions<a class="headerlink" href="#additional-required-permissions" title="Permanent link">&para;</a></h3>
 <p>You also need:
-- <strong>AgentCore Full Access</strong>: <code>AmazonBedrockAgentCoreFullAccess</code> managed policy
+- <strong>AgentCore Full Access</strong>: <code>BedrockAgentCoreFullAccess</code> managed policy
 - <strong>Bedrock Access</strong> (one of the following):
   - <strong>Option 1 (Development)</strong>: <code>AmazonBedrockFullAccess</code> managed policy
   - <strong>Option 2 (Production Recommended)</strong>: Custom policy with scoped permissions for specific models and actions</p>
@@ -2463,7 +2458,7 @@ agentcore<span class="w"> </span>configure<span class="w"> </span>-e<span class=
 <p>The Runtime Execution Role is an IAM role that AgentCore Runtime assumes to run an agent. Replace the following:</p>
 <ul>
 <li><code>region</code> with the AWS Region that you are using</li>
-<li><code>accountId</code> with your AWS account ID</li>
+<li><code>accountId</code> with your AWS account ID  </li>
 <li><code>agentName</code> with the name of your agent. You'll need to decide the agent name before creating the role and AgentCore Runtime.</li>
 </ul>
 <h3 id="permissions-policy">Permissions Policy<a class="headerlink" href="#permissions-policy" title="Permanent link">&para;</a></h3>

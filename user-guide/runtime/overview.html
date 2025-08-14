@@ -2174,9 +2174,6 @@ agentcore<span class="w"> </span>launch<span class="w">                    </spa
 <p>Built-in session handling with automatic creation, 15-minute timeout, and cross-invocation persistence:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.runtime.context</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestContext</span>
 
-<span class="err">```</span><span class="n">python</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">bedrock_agentcore.runtime.context</span><span class="w"> </span><span class="kn">import</span> <span class="n">RequestContext</span>
-
 <span class="nd">@app</span><span class="o">.</span><span class="n">entrypoint</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">session_aware_agent</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">RequestContext</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Agent with session awareness&quot;&quot;&quot;</span>

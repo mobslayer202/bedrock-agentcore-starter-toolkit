@@ -3399,8 +3399,7 @@ tasks in a secure, managed environment.</p>
 
               <details class="quote">
                 <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 30</span>
-<span class="normal"> 31</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 31</span>
 <span class="normal"> 32</span>
 <span class="normal"> 33</span>
 <span class="normal"> 34</span>
@@ -3666,7 +3665,15 @@ tasks in a secure, managed environment.</p>
 <span class="normal">294</span>
 <span class="normal">295</span>
 <span class="normal">296</span>
-<span class="normal">297</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BrowserClient</span><span class="p">:</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BrowserClient</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Client for interacting with the AWS Browser sandbox service.</span>
 
 <span class="sd">    This client handles the session lifecycle and browser automation for</span>
@@ -3853,14 +3860,21 @@ tasks in a secure, managed environment.</p>
 <span class="sd">        Args:</span>
 <span class="sd">            expires (int, optional): The number of seconds until the pre-signed URL expires.</span>
 <span class="sd">                Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</span>
+<span class="sd">                Maximum allowed value is MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT seconds.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            str: The pre-signed URL for viewing the browser session.</span>
 
 <span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If expires exceeds MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT seconds.</span>
 <span class="sd">            RuntimeError: If the URL generation fails.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating live view url...&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">expires</span> <span class="o">&gt;</span> <span class="n">MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expiry timeout cannot exceed </span><span class="si">{</span><span class="n">MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT</span><span class="si">}</span><span class="s2"> seconds, got </span><span class="si">{</span><span class="n">expires</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -4088,8 +4102,7 @@ tasks in a secure, managed environment.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">45</span>
-<span class="normal">46</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">46</span>
 <span class="normal">47</span>
 <span class="normal">48</span>
 <span class="normal">49</span>
@@ -4101,7 +4114,8 @@ tasks in a secure, managed environment.</p>
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
-<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">58</span>
+<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize a Browser client for the specified AWS region.</span>
 
 <span class="sd">    Args:</span>
@@ -4158,7 +4172,8 @@ If no session is active, a new session will be started.</p>
             <td>
               <div class="doc-md-description">
                 <p>The number of seconds until the pre-signed URL expires.
-Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</p>
+Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).
+Maximum allowed value is MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT seconds.</p>
               </div>
             </td>
             <td>
@@ -4203,6 +4218,16 @@ Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If expires exceeds MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT seconds.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
                   <code><span title="RuntimeError">RuntimeError</span></code>
             </td>
             <td>
@@ -4217,8 +4242,7 @@ Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">208</span>
-<span class="normal">209</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
@@ -4252,7 +4276,15 @@ Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</p>
 <span class="normal">240</span>
 <span class="normal">241</span>
 <span class="normal">242</span>
-<span class="normal">243</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_live_view_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expires</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_live_view_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expires</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a pre-signed URL for viewing the browser session.</span>
 
 <span class="sd">    Creates a pre-signed URL that can be used to view the current browser session.</span>
@@ -4261,14 +4293,21 @@ Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</p>
 <span class="sd">    Args:</span>
 <span class="sd">        expires (int, optional): The number of seconds until the pre-signed URL expires.</span>
 <span class="sd">            Defaults to DEFAULT_LIVE_VIEW_PRESIGNED_URL_TIMEOUT (300 seconds).</span>
+<span class="sd">            Maximum allowed value is MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT seconds.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The pre-signed URL for viewing the browser session.</span>
 
 <span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If expires exceeds MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT seconds.</span>
 <span class="sd">        RuntimeError: If the URL generation fails.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating live view url...&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">expires</span> <span class="o">&gt;</span> <span class="n">MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Expiry timeout cannot exceed </span><span class="si">{</span><span class="n">MAX_LIVE_VIEW_PRESIGNED_URL_TIMEOUT</span><span class="si">}</span><span class="s2"> seconds, got </span><span class="si">{</span><span class="n">expires</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -4359,8 +4398,7 @@ the headers dictionary.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">151</span>
-<span class="normal">152</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
@@ -4414,7 +4452,8 @@ the headers dictionary.</p>
 <span class="normal">203</span>
 <span class="normal">204</span>
 <span class="normal">205</span>
-<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_ws_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="normal">206</span>
+<span class="normal">207</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_ws_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the WebSocket headers needed for connecting to the browser sandbox.</span>
 
 <span class="sd">    This method creates properly signed WebSocket headers for connecting to</span>
@@ -4495,20 +4534,20 @@ and the method returns without taking action.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">273</span>
 <span class="normal">274</span>
 <span class="normal">275</span>
 <span class="normal">276</span>
 <span class="normal">277</span>
-<span class="normal">278</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">release_control</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">release_control</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Release control of the browser session by enabling the automation stream.</span>
 
 <span class="sd">    This method enables external automation capabilities of the browser session,</span>
@@ -4651,8 +4690,7 @@ Defaults to an empty string.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
-<span class="normal"> 97</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
@@ -4685,7 +4723,8 @@ Defaults to an empty string.</p>
 <span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
-<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span>
+<span class="normal">130</span>
+<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_IDENTIFIER</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -4766,8 +4805,7 @@ If no session is active, this method does nothing.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">132</span>
-<span class="normal">133</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
@@ -4783,7 +4821,8 @@ If no session is active, this method does nothing.</p>
 <span class="normal">146</span>
 <span class="normal">147</span>
 <span class="normal">148</span>
-<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">149</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop the current browser session if one is active.</span>
 
 <span class="sd">    This method stops any active session and clears the session state.</span>
@@ -4849,15 +4888,7 @@ will be started.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">253</span>
 <span class="normal">254</span>
 <span class="normal">255</span>
 <span class="normal">256</span>
@@ -4867,7 +4898,15 @@ will be started.</p>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
-<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">take_control</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">take_control</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Take control of the browser session by disabling the automation stream.</span>
 
 <span class="sd">    This method disables external automation capabilities of the browser session,</span>
@@ -4987,15 +5026,7 @@ ensuring the session is properly cleaned up when the context exits.</p>
 
             <details class="quote">
               <summary>Source code in <code>bedrock_agentcore/tools/browser_client.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">308</span>
 <span class="normal">309</span>
 <span class="normal">310</span>
 <span class="normal">311</span>
@@ -5012,7 +5043,15 @@ ensuring the session is properly cleaned up when the context exits.</p>
 <span class="normal">322</span>
 <span class="normal">323</span>
 <span class="normal">324</span>
-<span class="normal">325</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">browser_session</span><span class="p">(</span><span class="n">region</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">BrowserClient</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for creating and managing a browser sandbox session.</span>
 

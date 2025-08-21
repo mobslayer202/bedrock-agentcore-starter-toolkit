@@ -420,16 +420,21 @@ def launch(
                 from ...utils.runtime.logs import get_agent_log_paths, get_aws_tail_commands
 
                 runtime_logs, otel_logs = get_agent_log_paths(result.agent_id)
-                follow_cmd, since_cmd = get_aws_tail_commands(runtime_logs)
+                base_follow_cmd, base_since_cmd, cont_follow_cmd, cont_since_cmd, otel_follow_cmd, otel_since_cmd = get_aws_tail_commands(runtime_logs)
                 deploy_panel += (
                     f"\n\n📋 [cyan]Agent logs available at:[/cyan]\n"
                     f"   {runtime_logs}\n"
                     f"   {otel_logs}\n\n"
-                    f"💡 [dim]Tail logs with:[/dim]\n"
-                    f"   {follow_cmd}\n"
-                    f"   {since_cmd}"
+                    f"💡 [dim]Tail all logs:[/dim]\n"
+                    f"   {base_follow_cmd}\n"
+                    f"   {base_since_cmd}\n\n"
+                    f"🔍 [dim]Tail container logs only:[/dim]\n"
+                    f"   {cont_follow_cmd}\n"
+                    f"   {cont_since_cmd}\n\n"
+                    f"📊 [dim]Tail OTEL logs only:[/dim]\n"
+                    f"   {otel_follow_cmd}\n"
+                    f"   {otel_since_cmd}"
                 )
-
             console.print(
                 Panel(
                     deploy_panel,

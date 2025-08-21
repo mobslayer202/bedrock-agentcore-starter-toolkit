@@ -214,12 +214,16 @@ class Runtime:
                 from ...utils.runtime.logs import get_agent_log_paths, get_aws_tail_commands
 
                 runtime_logs, otel_logs = get_agent_log_paths(result.agent_id)
-                follow_cmd, since_cmd = get_aws_tail_commands(runtime_logs)
+                base_follow_cmd, base_since_cmd, cont_follow_cmd, cont_since_cmd, otel_follow_cmd, otel_since_cmd = get_aws_tail_commands(runtime_logs)
                 log.info("🔍 Agent logs available at:")
                 log.info("   %s", runtime_logs)
                 log.info("   %s", otel_logs)
-                log.info("💡 Tail logs with: %s", follow_cmd)
-                log.info("💡 Or view recent logs: %s", since_cmd)
+                log.info("💡 Tail logs with: %s", base_follow_cmd)
+                log.info("💡 Or view recent logs: %s", base_since_cmd)
+                log.info("💡 Tail agent logs with: %s", cont_follow_cmd)
+                log.info("💡 Or view recent agent logs: %s", cont_since_cmd)
+                log.info("💡 Tail otel logs with: %s", otel_follow_cmd)
+                log.info("💡 Or view recent otel logs: %s", otel_since_cmd)
         elif result.mode == "codebuild":
             log.info("Built with CodeBuild: %s", result.codebuild_id)
             log.info("Deployed to cloud: %s", result.agent_arn)
@@ -229,12 +233,16 @@ class Runtime:
                 from ...utils.runtime.logs import get_agent_log_paths, get_aws_tail_commands
 
                 runtime_logs, otel_logs = get_agent_log_paths(result.agent_id)
-                follow_cmd, since_cmd = get_aws_tail_commands(runtime_logs)
+                base_follow_cmd, base_since_cmd, cont_follow_cmd, cont_since_cmd, otel_follow_cmd, otel_since_cmd = get_aws_tail_commands(runtime_logs)
                 log.info("🔍 Agent logs available at:")
                 log.info("   %s", runtime_logs)
                 log.info("   %s", otel_logs)
-                log.info("💡 Tail logs with: %s", follow_cmd)
-                log.info("💡 Or view recent logs: %s", since_cmd)
+                log.info("💡 Tail logs with: %s", base_follow_cmd)
+                log.info("💡 Or view recent logs: %s", base_since_cmd)
+                log.info("💡 Tail agent logs with: %s", cont_follow_cmd)
+                log.info("💡 Or view recent agent logs: %s", cont_since_cmd)
+                log.info("💡 Tail otel logs with: %s", otel_follow_cmd)
+                log.info("💡 Or view recent otel logs: %s", otel_since_cmd)
         else:
             log.info("Built for local: %s", result.tag)
 

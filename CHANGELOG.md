@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.7] - 2025-08-28
+
+Enhanced execution role permissions - Added relevant permissions for Runtime, Memory and Identity services to auto-created execution role (#132)
+
 ## [0.1.6] - 2025-08-11
 
 Updated SDK dependency to >=0.1.2 for improved thread pool handling and concurrency fixes

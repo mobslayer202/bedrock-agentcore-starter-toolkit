@@ -30,19 +30,19 @@ AgentCore Observability offers two ways to configure monitoring to match differe
 
 ## Enabling Observability for AgentCore-Hosted Agents
 
-AgentCore Runtime-hosted agents are deployed and executed directly within the AgentCore environment, providing automatic instrumentation with minimal configuration. This approach offers the fastest path to deployment and is ideal for rapid development and testing. 
+AgentCore Runtime-hosted agents are deployed and executed directly within the AgentCore environment, providing automatic instrumentation with minimal configuration. This approach offers the fastest path to deployment and is ideal for rapid development and testing.
 
 For a complete example please refer to this [notebook](https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/01-tutorials/06-AgentCore-observability/01-Agentcore-runtime-hosted/runtime_with_strands_and_bedrock_models.ipynb)
 
 ### Step 1 : Create your Agent, shown below is an example with Strands Agents SDK:
 
-To enable OTEL exporting, please note to install [Strands Agents](https://strandsagents.com/latest/) with otel extra dependencies: 
+To enable OTEL exporting, please note to install [Strands Agents](https://strandsagents.com/latest/) with otel extra dependencies:
 
-```bash 
+```bash
 pip install 'strands-agents[otel]'
 ```
 
-Highlighted below are the steps to host a strands agent on AgentCore Runtime to get started: 
+Highlighted below are the steps to host a strands agent on AgentCore Runtime to get started:
 
 ```python
 ##  Save this as strands_claude.py
@@ -55,7 +55,7 @@ from strands.models import BedrockModel
 
 app = BedrockAgentCoreApp()
 
-# Create a custom tool 
+# Create a custom tool
 @tool
 def weather():
     """ Get weather """ # Dummy implementation
@@ -88,9 +88,9 @@ if __name__ == "__main__":
 
 ### Step 2 : Deploy and invoke your Agent on AgentCore Runtime
 
-Now that you created an agent ready to be hosted on AgentCore runtime, you can easily deploy it using the `bedrock_agentcore_starter_toolkit` package as shown below : 
+Now that you created an agent ready to be hosted on AgentCore runtime, you can easily deploy it using the `bedrock_agentcore_starter_toolkit` package as shown below :
 
-```python 
+```python
 from bedrock_agentcore_starter_toolkit import Runtime
 from boto3.session import Session
 boto_session = Session()
@@ -99,7 +99,7 @@ region = boto_session.region_name
 agentcore_runtime = Runtime()
 agent_name = "strands_claude_getting_started"
 response = agentcore_runtime.configure(
-    entrypoint="strands_claude.py", # file created in Step 1  
+    entrypoint="strands_claude.py", # file created in Step 1
     auto_create_execution_role=True,
     auto_create_ecr=True,
     requirements_file="requirements.txt", # ensure aws-opentelemetry-distro exists along with your libraries required to run your agent
@@ -111,7 +111,7 @@ launch_result = agentcore_runtime.launch()
 launch_result
 ```
 
-In these simple steps you deployed your strands agent on runtime with the Bedrock agentcore starter toolkit that automaticcally instruments your agent invocation using Open Telemetry. Now, you can invoke your agent using the command shown below and see the Traces, sessions and metrics on GenAI Obsrvability dashboard on Amazon Cloudwatch. 
+In these simple steps you deployed your strands agent on runtime with the Bedrock agentcore starter toolkit that automaticcally instruments your agent invocation using Open Telemetry. Now, you can invoke your agent using the command shown below and see the Traces, sessions and metrics on GenAI Obsrvability dashboard on Amazon Cloudwatch.
 
 ```python
 invoke_response = agentcore_runtime.invoke({"prompt": "How is the weather now?"})
@@ -120,7 +120,7 @@ invoke_response
 
 ## Enabling Observability for Non-AgentCore-Hosted Agents
 
-For agents running outside of the AgentCore runtime, deliver the same monitoring capabilities for agents deployed on your own infrastructure, allowing consistent observability regardless of where your agents run. Additionally, you would need to  follow the steps below to configure the environment variables needed to observe your agents. 
+For agents running outside of the AgentCore runtime, deliver the same monitoring capabilities for agents deployed on your own infrastructure, allowing consistent observability regardless of where your agents run. Additionally, you would need to  follow the steps below to configure the environment variables needed to observe your agents.
 
 For a complete example please refer to this [notebook](https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/01-tutorials/06-AgentCore-observability/02-Agent-not-hosted-on-runtime/Strands/Strands_Observability.ipynb)
 
@@ -134,7 +134,7 @@ export AWS_ACCESS_KEY_ID=<access key id>
 export AWS_SECRET_ACCESS_KEY=<secret key>
 ```
 
-### Step 2: Configure CloudWatch logging: 
+### Step 2: Configure CloudWatch logging:
 
 Create a log group and log stream for your agent in Amazon CloudWatch which you can use to configure below environment variables.
 
@@ -142,18 +142,18 @@ Create a log group and log stream for your agent in Amazon CloudWatch which you 
 
 ```bash
 export AGENT_OBSERVABILITY_ENABLED=true # Activates the ADOT pipeline
-export OTEL_PYTHON_DISTRO=aws_distro # Uses AWS Distro for OpenTelemetry 
+export OTEL_PYTHON_DISTRO=aws_distro # Uses AWS Distro for OpenTelemetry
 export OTEL_PYTHON_CONFIGURATOR=aws_configurator # Sets AWS configurator for ADOT SDK
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf # Configures export protocol
 export  OTEL_EXPORTER_OTLP_LOGS_HEADERS=x-aws-log-group=<YOUR-LOG-GROUP>,x-aws-log-stream=<YOUR-LOG-STREAM>,x-aws- metric-namespace=<YOUR-NAMESPACE>
-# Directs logs to CloudWatch groups 
+# Directs logs to CloudWatch groups
 export OTEL_RESOURCE_ATTRIBUTES=service.name=<YOUR-AGENT-NAME> # Identifies your agent in observability data
 ```
 
 Replace `<YOUR-AGENT-NAME>` with a unique name to identify this agent in the GenAI Observability dashboard and logs.
 
 
-### Step 4: Create an agent locally 
+### Step 4: Create an agent locally
 
 ```python
 # Create agent.py -  Strands agent that is a weather assistant
@@ -199,7 +199,7 @@ With aws-opetelemetry-distro in your requirements.txt, `opentelemetry-instrument
 - Send traces to CloudWatch
 - Enable you to visualize the agent's decision-making process in the GenAI Observability dashboard
 
-```bash 
+```bash
 opentelemetry-instrument python agent.py
 ```
 
@@ -222,14 +222,14 @@ opentelemetry-instrument python strands_travel_agent_with_session.py --session-i
 
 After implementing observability, you can view the collected data in CloudWatch:
 
-## Bedrock AgentCore Overview on GenAI Observability dashboard 
+## Bedrock AgentCore Overview on GenAI Observability dashboard
 
 1. Open the [GenAI Observability on CloudWatch console](https://console.aws.amazon.com/cloudwatch/home#gen-ai-observability)
 2. You are able to view the data related to model invocations and agents on Bedrock AgentCore on the dashboard.
-3. In the Bedrock Agentcore tab you are able to see Agents View, Sessions View and Traces View. 
+3. In the Bedrock Agentcore tab you are able to see Agents View, Sessions View and Traces View.
 4. Agents View lists all your Agents that are on and not on runtime, you can also click on the agent and view further details like runtime metrics, sessions and traces specific to an agent.
 5. In the Sessions View tab, you can navigate across all the sessions associated with agents.
-6. In the Trace View tab, you can look into the traces and span information for agents. Also explore the trace trajectory and timeline by clicking on a trace. 
+6. In the Trace View tab, you can look into the traces and span information for agents. Also explore the trace trajectory and timeline by clicking on a trace.
 
 
 ### View Logs in CloudWatch

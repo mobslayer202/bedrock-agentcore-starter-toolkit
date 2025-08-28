@@ -11,7 +11,7 @@ In the quick start guide you will learn how to set up a Gateway and integrate it
 
 ⚠️ Before starting, make sure you have:
 
-- **AWS Account** with credentials configured (`aws configure`). 
+- **AWS Account** with credentials configured (`aws configure`).
 - **Python 3.10+** installed.
 - **Access to** Anthropic's Sonnet 3.7 (or another model) for running the demo agent below.
 
@@ -40,7 +40,7 @@ client.logger.setLevel(logging.DEBUG)
 ```
 
 ### Creating an OAuth Authorization Server
-🔒 Gateways are secured by OAuth authorization servers which ensure that only allowed users can access your Gateway. Let's create an OAuth authorization server to use with this Gateway. If you already have an OAuth authorization server, you can skip this step. 
+🔒 Gateways are secured by OAuth authorization servers which ensure that only allowed users can access your Gateway. Let's create an OAuth authorization server to use with this Gateway. If you already have an OAuth authorization server, you can skip this step.
 ```python
 # create cognito authorizer
 cognito_response = client.create_oauth_authorizer_with_cognito("TestGateway")
@@ -53,7 +53,7 @@ cognito_response = client.create_oauth_authorizer_with_cognito("TestGateway")
 gateway = client.create_mcp_gateway(
     # the name of the Gateway - if you don't set one, one will be generated.
     name=None,
-    # the role arn that the Gateway will use - if you don't set one, one will be created. 
+    # the role arn that the Gateway will use - if you don't set one, one will be created.
     # NOTE: if you are using your own role make sure it has a trust policy that trusts bedrock-agentcore.amazonaws.com
     role_arn=None,
     # the OAuth authorization server details. If you are providing your own authorization server, then pass an input of the following form: {"customJWTAuthorizer": {"allowedClients": ["<INSERT CLIENT ID>"], "discoveryUrl": "<INSERT DISCOVERY URL">}}
@@ -63,7 +63,7 @@ gateway = client.create_mcp_gateway(
 )
 ```
 
-Now that we have a Gateway set up let's add a target. Targets can be Lambda functions, Open API schemas, or Smithy schemas (another type of API schema). Each Gateway can have multiple targets and each target can have many APIs. 
+Now that we have a Gateway set up let's add a target. Targets can be Lambda functions, Open API schemas, or Smithy schemas (another type of API schema). Each Gateway can have multiple targets and each target can have many APIs.
 
 ### Adding Lambda Targets
 
@@ -90,7 +90,7 @@ lambda_target = client.create_mcp_gateway_target(
 <summary>
 <strong> ➡️ Adding a custom Lambda</strong>
 </summary>
-Each Lambda target needs a schema defining the tools that the Lambda function implements. Your agent will see this schema and will send requests to your Lambda function in this format. You can decide how to implement the code for these tools in your Lambda. 
+Each Lambda target needs a schema defining the tools that the Lambda function implements. Your agent will see this schema and will send requests to your Lambda function in this format. You can decide how to implement the code for these tools in your Lambda.
 
 The schema has the following structure. **⚠️ Note don't forget to fill in the lambdaArn with your function ARN**
 
@@ -201,14 +201,14 @@ def lambda_handler(event, context):
 access_token = client.get_access_token_for_cognito(cognito_response["client_info"])
 ```
 
-🗒️ Copy and paste the below code to set up a simple agent that we can use to test out the Gateway. Note AgentCore Gateway can integrate with any Agent that uses MCP including agents / code not running on AWS. 
+🗒️ Copy and paste the below code to set up a simple agent that we can use to test out the Gateway. Note AgentCore Gateway can integrate with any Agent that uses MCP including agents / code not running on AWS.
 
 ```python
 from strands import Agent
 import logging
 from strands.models import BedrockModel
 from strands.tools.mcp.mcp_client import MCPClient
-from mcp.client.streamable_http import streamablehttp_client 
+from mcp.client.streamable_http import streamablehttp_client
 import os
 
 def create_streamable_http_transport(mcp_url: str, access_token: str):
@@ -224,7 +224,7 @@ def get_full_tools_list(client):
         if tmp_tools.pagination_token is None:
             more_tools = False
         else:
-            more_tools = True 
+            more_tools = True
             pagination_token = tmp_tools.pagination_token
     return tools
 
@@ -233,9 +233,9 @@ def run_agent(mcp_url: str, access_token: str, bedrock_model_id: str):
         inference_profile_id=bedrock_model_id,
         streaming=True,
     )
-     
+
     mcp_client = MCPClient(lambda: create_streamable_http_transport(mcp_url, access_token))
-     
+
     with mcp_client:
         tools = get_full_tools_list(mcp_client)
         print(f"Found the following tools: {[tool.tool_name for tool in tools]}")
@@ -265,7 +265,7 @@ If you're excited and want to learn more about Gateways and the other Target typ
 
 ### Adding OpenAPI Targets
 
-Let's add an OpenAPI target. This code uses the OpenAPI schema for a NASA API that provides Mars weather information. You can get an API key sent to your email in a minute by filling out the form here: https://api.nasa.gov/. 
+Let's add an OpenAPI target. This code uses the OpenAPI schema for a NASA API that provides Mars weather information. You can get an API key sent to your email in a minute by filling out the form here: https://api.nasa.gov/.
 
 **Open API Spec for NASA Mars weather API**
 <div style="max-height: 200px; overflow: auto;">
@@ -551,7 +551,7 @@ Alternatively if you have an API that uses OAuth, set the `credentials` field to
   }
 }
 ```
-There are other supported `oauth_2_provider` types including Microsoft, GitHub, Google, Salesforce, and Slack. For information on the structure of those provider configs see the [identity documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-idps.html). 
+There are other supported `oauth_2_provider` types including Microsoft, GitHub, Google, Salesforce, and Slack. For information on the structure of those provider configs see the [identity documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-idps.html).
 </details>
 
 ### Adding Smithy API Model Targets
@@ -604,10 +604,10 @@ While the Starter Toolkit makes it easy to get started, the Boto3 Python client 
 ### Setup
 
 Instantiate the client
-```python 
+```python
 import boto3
 
-boto_client = boto3.client("bedrock-agentcore-control", 
+boto_client = boto3.client("bedrock-agentcore-control",
                            region_name="us-east-1")
 ```
 
@@ -648,17 +648,17 @@ create_gw_request = {
     "clientToken": "string", # optional - used for idempotency
     "roleArn": "string", # required - execution role arn that Gateway will use when interacting with AWS resources
     "protocolType": "string", # required - must be MCP
-    "protocolConfiguration": { # optional 
+    "protocolConfiguration": { # optional
         "mcp": {
             "supportedVersions": ["enum_string"], # optional - e.g. 2025-06-18
             "instructions": "string", # optional - instructions for agents using this MCP server
             "searchType": "enum_string" # optional - must be SEMANTIC if specified. This enables the tool search tool
         }
     },
-    "authorizerType": "string", # required - must be CUSTOM_JWT  
+    "authorizerType": "string", # required - must be CUSTOM_JWT
     "authorizerConfiguration": { # required - the configuration for your authorizer
         "customJWTAuthorizer": { # required the custom JWT authorizer setup
-            "allowedAudience": [], # optional 
+            "allowedAudience": [], # optional
             "allowedClients": [], # optional
             "discoveryUrl": "string" # required - the URL of the authorization server
         },
@@ -677,7 +677,7 @@ example_create_gw_request = {
     "protocolType": "MCP",
     "authorizerType": "CUSTOM_JWT",
     "authorizerConfiguration":  {
-        "customJWTAuthorizer": {  
+        "customJWTAuthorizer": {
             "discoveryUrl": "<INSERT DISCOVERY URL e.g. https://cognito-idp.{region}.amazonaws.com/{user_pool_id}/.well-known/openid-configuration>",
             "allowedClients": ["<INSERT CLIENT ID>"]
         }
@@ -701,17 +701,17 @@ update_gw_request = {
     "description": "string", # optional - description of your gateway
     "roleArn": "string", # required - execution role arn that Gateway will use when interacting with AWS resources
     "protocolType": "string", # required - must be MCP
-    "protocolConfiguration": { # optional 
+    "protocolConfiguration": { # optional
         "mcp": {
             "supportedVersions": ["enum_string"], # optional - e.g. 2025-06-18
             "instructions": "string", # optional - instructions for agents using this MCP server
             "searchType": "enum_string" # optional - must be SEMANTIC if specified. This enables the tool search tool
         }
     },
-    "authorizerType": "string", # required - must be CUSTOM_JWT  
+    "authorizerType": "string", # required - must be CUSTOM_JWT
     "authorizerConfiguration": { # required - the configuration for your authorizer
         "customJWTAuthorizer": { # required the custom JWT authorizer setup
-            "allowedAudience": [], # optional 
+            "allowedAudience": [], # optional
             "allowedClients": [], # optional
             "discoveryUrl": "string" # required - the URL of the authorization server
         },
@@ -730,7 +730,7 @@ example_update_gw_request = {
     "protocolType": "MCP",
     "authorizerType": "CUSTOM_JWT",
     "authorizerConfiguration":  {
-        "customJWTAuthorizer": {  
+        "customJWTAuthorizer": {
             "discoveryUrl": "<INSERT DISCOVERY URL e.g. https://cognito-idp.{region}.amazonaws.com/{user_pool_id}/.well-known/openid-configuration>",
             "allowedClients": ["<INSERT CLIENT ID>"]
         }
@@ -774,7 +774,7 @@ create_target_request = {
             },
             "lambda": {
                 "lambdaArn": "string",
-                "toolSchema": { # union - choose one of either s3 or inlinePayload 
+                "toolSchema": { # union - choose one of either s3 or inlinePayload
                     "s3": {
                         "uri": "string",
                         "bucketOwnerAccountId": "string"
@@ -865,7 +865,7 @@ update_target_request = {
             },
             "lambda": {
                 "lambdaArn": "string",
-                "toolSchema": { # union - choose one of either s3 or inlinePayload 
+                "toolSchema": { # union - choose one of either s3 or inlinePayload
                     "s3": {
                         "uri": "string",
                         "bucketOwnerAccountId": "string"
@@ -946,4 +946,3 @@ delete_target_response = boto_client.delete_gateway_target(
 )
 ```
 </details>
-

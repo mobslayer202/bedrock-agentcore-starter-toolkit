@@ -2,7 +2,12 @@
 
 ## [0.1.7] - 2025-08-28
 
-Enhanced execution role permissions - Added relevant permissions for Runtime, Memory and Identity services to auto-created execution role (#132)
+- Enhanced execution role permissions - Added relevant permissions for Runtime, Memory and Identity services to auto-created execution role (#132)
+- Windows compatibility fix - Resolved file handle issue on Windows systems by properly closing NameTemporaryFile, fixing deployment failures with "process cannot access the file" errors (#106)
+- Corrected managed policy name from AmazonBedrockAgentCoreFullAccess to BedrockAgentCoreFullAccess (#124)
+- S3 permissions - Added missing S3 permissions documentation for bucket creation and lifecycle configuration (#124)
+- Fixed IaC reference - Corrected typo in Infrastructure as Code reference (#124)
+- Other documentation enhancements for clarity and completeness
 
 ## [0.1.6] - 2025-08-11
 
